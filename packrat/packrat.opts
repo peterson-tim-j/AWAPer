@@ -1,0 +1,21 @@
+auto.snapshot: TRUE
+use.cache: FALSE
+print.banner.on.startup: auto
+vcs.ignore.lib: TRUE
+vcs.ignore.src: FALSE
+external.packages:
+    ncdf4
+    R.utils
+    raster
+    chron
+    maptools
+    sp
+local.repos: 
+load.external.packages.on.startup: TRUE
+ignored.packages: 
+quiet.package.installation: TRUE
+snapshot.recommended.packages: FALSE
+snapshot.fields:
+    Imports
+    Depends
+    LinkingTo

@@ -20,11 +20,11 @@ makeNetCDF_file(ncdfFilename = file.path(getwd(), "AWAP.nc"),
 
 \item{ncdfSolarFilename}{is the file path (as string) and name to the netCDF file. The default is \code{file.path(getwd(),'AWAP_solar.nc')}.}
 
-\item{updateFrom}{is a date string specifying the start date for the AWAP data. If 
+\item{updateFrom}{is a date string specifying the start date for the AWAP data. If
 \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
 updated with new data from \code{pdateFrom}. The default is \code{"1900-1-1"}.}
 
-\item{updateTo}{is a date string specifying the end date for the AWAP data. If 
+\item{updateTo}{is a date string specifying the end date for the AWAP data. If
 \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
 updated with new data to \code{updateFrom}. The default is today's date as YYYY-MM-DD.}
 
@@ -32,19 +32,19 @@ updated with new data to \code{updateFrom}. The default is today's date as YYYY-
 
 \item{keepFiles}{is a logical scalar to keep the downloaded AWAP grid files. The default is \code{FALSE}.}
 
-\item{urlPrecip}{URL to the folder containing the AWAP daily precipittaion grids. 
+\item{urlPrecip}{URL to the folder containing the AWAP daily precipittaion grids.
 The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/rainfall/totals/daily/grid/0.05/history/nat/}.}
 
-\item{urlTmin}{URL to the folder containing the AWAP daily minimum temperature grids. 
+\item{urlTmin}{URL to the folder containing the AWAP daily minimum temperature grids.
 The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/temperature/minave/daily/grid/0.05/history/nat/}.}
 
-\item{urlTmax}{URL to the folder containing the AWAP daily maximum temperature grids. 
+\item{urlTmax}{URL to the folder containing the AWAP daily maximum temperature grids.
 The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/temperature/maxave/daily/grid/0.05/history/nat/}.}
 
-\item{urlVprp}{URL to the folder containing the AWAP daily vapour pressure grids. 
+\item{urlVprp}{URL to the folder containing the AWAP daily vapour pressure grids.
 The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/vprp/vprph15/daily/grid/0.05/history/nat/}.}
 
-\item{urlSolarrad}{URL to the folder containing the AWAP daily solar radiation grids. 
+\item{urlSolarrad}{URL to the folder containing the AWAP daily solar radiation grids.
 The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/solar/solarave/daily/grid/0.05/history/nat/}.}
 }
 \description{
@@ -52,34 +52,38 @@ The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/solar/solarave/dail
 }
 \details{
 This function creates two netCDF files of daily climate data. One file contains precipitation, minimum
-daily temperature, maximum daily temperature and vappour pressure. It should span from 1/1/1900 to today 
-and be ~90GB. The second file contains the solar radiation and started from 1/1/1990 and be ~10GB and 
+daily temperature, maximum daily temperature and vappour pressure. It should span from 1/1/1900 to today
+and be ~360GB. The second file contains the solar radiation and started from 1/1/1990 and be ~24GB and
 spatial gaps are infilled using a 3x3 moving average repeated 3 times. The climate data
 is sourced from the  Bureau of Meteorology Australian Water Availability Project
 (\url{http://www.bom.gov.au/jsp/awap/}.  For details see Jones et al. (2009).
- 
+
 The output from this function is required for all data extraction functions within this package and must
-be ran prior. 
- 
+be ran prior.
+
 The function can be used to build netCDF files from stratch or to update existng netCDF files previously
 derived from this function. To not build or update a variable, set its respective URL to \code{NA}.
 }
 \examples{
+# Load required packages.
+library(sp);library(raster);library(chron);library(ncdf4);
+library(maptools);library(Evapotranspiration);library(AWAPer)
+
 # Example 1. Build netCDF grids for all existing time points.
 makeNetCDF_file()
 
 # Example 2. Build netCDF grids for ONLY precipitation data at all existing time points.
 makeNetCDF_file(urlTmin = NA,urlTmax = NA, urlVprp = NA, urlSolarrad = NA)
 
-# Example 3. Build netCDF grids for all data but only over a defined time period. 
+# Example 3. Build netCDF grids for all data but only over a defined time period.
 # Note if the netCDFs have already been created, then the netCDF files will be updated.
 makeNetCDF_file(updateFrom='2000-1-1',updateTo='2002-12-31')
+
 }
 \references{
-David A. Jones, William Wang and Robert Fawcett, (2009), High-quality spatial climate data-sets for Australia, 
+David A. Jones, William Wang and Robert Fawcett, (2009), High-quality spatial climate data-sets for Australia,
 Australian Meteorological and Oceanographic Journal, 58 , p233-248.
 }
 \seealso{
-\code{\link{extractCatchmentData}} for extracting catchment daily average and variance data, and
-\code{\link{mortonsAET}} for details of the calculate of areal potential ET.
+\code{\link{extractCatchmentData}} for extracting catchment daily average and variance data.
 }

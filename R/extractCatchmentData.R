@@ -4,8 +4,10 @@
 #'
 #' This function extracts the AWAP climate data for each polygon and then calculates the daily spatial average and variance for
 #' each climate metric. The calculation of the mean uses the fraction of each AWAP grid cell within the polygon. The variance
-#' calculation does not use the fraction of the grid cell.  Prior to the catchment averaging and variance, Morton's poential ET
-#' is also calculated; average which the mean and variance are calculated.
+#' calculation does not use the fraction of the grid cell and returns NA id there are <2 grid cells in the catchment boundary.  Prior to the catchment averaging and variance, Morton's areal poential ET (PET)
+#' is also calculated; after which the mean and variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from
+#' the Evapotranspiration package at a monthly time-step and using the AWAP solar radiation. The monthly estimate is then interpolated using a spline
+#' to a daily time step (using zoo:na.spline()) and then constrained to >=0.
 #'
 #' Lastly, data is extracted for all time points and no temporal infilling is undertaken if the grid cells are blank.
 #'
@@ -21,23 +23,26 @@
 #' @param getMortonsPET logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T}, \code{getVprp=T} and \code{getSolarrad=T}. Default is \code{TRUE}.
 #' @param DEM is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used for the calculation
 #' of Morton's PET. The Australian 9 second DEM can be loaded using \code{data(DEM_9s)}. For details see
-#' url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}
+#' \url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}
 #' @param catchments is either the full file name to an ESRI shape file of polygons (assumed catchment boundaries) or a shape file
-#' already imported using readShapePoly(). Either way the dhape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.
+#' already imported using readShapePoly(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.
 #'
 #' @return
 #' A list variale containing two data frames of the catchment average daily climate metrics and the catchment variance daily climate metrics.
 #'
 #' @seealso
 #' \code{\link{makeNetCDF_file}} for building the NetCDF files of daily climate data.
-#' \code{\link{mortonsAET}} for details of the calculate of areal potential ET.
 #'
 #' @examples
-#' # Load the 9 second Australian DEM.
-#' data("DEM_9s")
+#' # Load required packages.
+#' library(sp);library(raster);library(chron);library(ncdf4);
+#' library(maptools);library(Evapotranspiration);library(AWAPer)
+#'
+#' # Download the 9 second Australian DEM.
+#' DEM_9s = getDEM()
 #'
 #' # Load example cacthment boundaries.
-#' data("catchmentBoundaries")
+#' data("catchments")
 #'
 #' # Extract all climate data and calculate Morton's PET.
 #' # Note, the input "catchments" can also be a file to a ESRI shape file.
@@ -48,6 +53,8 @@
 #'
 #' # Extract the daily catchment variance data.
 #' climateDataVar = climateData$catchmentVar
+#'
+#' @export
 extractCatchmentData <- function(
   ncdfFilename=file.path(getwd(),'AWAP.nc'),
   ncdfSolarFilename=file.path(getwd(),'AWAP_solar.nc'),
@@ -109,8 +116,18 @@ extractCatchmentData <- function(
 
     # Read in polygons
     catchments = readShapePoly(catchments, force_ring=TRUE)
+
   } else if (!is(catchments,"SpatialPolygonsDataFrame")) {
     stop('The input for the DEM is not a raster layer object.')
+  }
+
+  # Check projection of catchments
+  if (is.na(proj4string(catchments))) {
+    message('WARNING: The projection string of the catchment boundaries is NA. Setting to +proj=longlat +ellps=GRS80.')
+    proj4string(catchments) = '+proj=longlat +ellps=GRS80'
+  }
+  if (proj4string(catchments) != '+proj=longlat +ellps=GRS80') {
+    message('WARNING: The projection string of the catchment boundaries does not appear to be +proj=longlat +ellps=GRS80. Setting to +proj=longlat +ellps=GRS80')
   }
 
   # Get netCDF geometry
@@ -321,30 +338,63 @@ extractCatchmentData <- function(
     }
   }
 
-  # Calculate Morton's PET at each grid cell and time point. NOE, when using ET Package, divide va byt 10 to go from hPa to Kpa
+  # Calculate Morton's PET at each grid cell and time point. NOTE, va is divided by 10 to go from hPa to Kpa
   if (getMortonsPET) {
-    message('... Calculating Mortons areal PET.')
+    message('... Calculating Mortons areal PET unsing Evaportranspiration package CREA function.')
+
+    # load ET package constants
+    data("constants")
+
+    # Initialise outputa
     mortAPET = matrix(NA,length(timepoints2Extract),length(w.all))
-    mortRH = matrix(NA,length(timepoints2Extract),length(w.all))
-    for (j in 1:length(timepoints2Extract)) {
-      for (k in 1:length(w.all)) {
-        if (!is.na(tmin[j,k]) &&
-            !is.na(tmax[j,k]) &&
-            !is.na(solarrad_interp[j,k]) &&
-            !is.na(vprp[j,k]) &&
-            !is.na(longLat.all[k,2]) &&
-            !is.na(timepoints2Extract[j])) {
-          mort<-mortonsAET(tmin=tmin[j,k],tmax=tmax[j,k],radin=solarrad_interp[j,k],eact=vprp[j,k], lat=longLat.all[k,2], height=DEMpoints[k],date=timepoints2Extract[j])
-          mortAPET[j,k]<-mort[1]
-          mortRH[j,k]<-mort[2]
-        }
+
+    # Loop through each grid cell
+    for (j in 1:length(w.all)) {
+
+      if (j%%100 ==0 ) {
+        message(paste('    ... Calculating grid cell', j,' of ',length(w.all)));
       }
+
+      # Build data from of daily climate data
+      dataRAW = data.frame(Year =  as.integer(format.Date(timepoints2Extract,"%Y")), Month= as.integer(format.Date(timepoints2Extract,"%m")), Day= as.integer(format.Date(timepoints2Extract,"%d")), Tmin=tmin[,j], Tmax=tmax[,j], Rs=solarrad_interp[,j], va=vprp[,j]/10.0, Precip=precip[,j])
+
+      # Convert to required format for ET package
+      dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(10,10,10))
+
+      # Update constants for the site
+      constants$Elev = DEMpoints[j]
+      constants$lat = longLat.all[j,2]
+      constants$lat_rad = longLat.all[j,2]/180.0*pi
+
+      # Call  ET package
+      results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, message='no');
+
+      # Get the last day of each month
+      last.day.month = as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1)
+
+      # Calculate average ET per day of each month
+      days.per.month = as.integer(format.Date(as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1),'%d'))
+      monthly.ET.as.daily = zoo( as.numeric(results$ET.Monthly/days.per.month), last.day.month)
+
+      # Spline interpolate Monthly average ET
+      timepoints2Extract.as.zoo = zoo(NA,timepoints2Extract);
+      mortAPET.tmp = na.spline(merge(monthly.ET.as.daily, dates=timepoints2Extract.as.zoo)[, 1])
+      filt = time(mortAPET.tmp)>=start(timepoints2Extract.as.zoo) & time(mortAPET.tmp)<=end(timepoints2Extract.as.zoo)
+      mortAPET.tmp = pmax(0.0, as.numeric( mortAPET.tmp));
+      mortAPET.tmp = mortAPET.tmp[filt]
+      mortAPET[,j] = mortAPET.tmp;
+
     }
+
   }
 
   # Loop though each catchment and calculate the catchment averager and variance.
   message('... Calculating catchment weighted daily data.')
   for (i in 1:length(catchments)) {
+
+    if (j%%100 ==0 ) {
+      message(paste('    ... Calculating catchment ', i,' of ',length(catchments)));
+    }
 
     # Calculate catchment stats and add data to the data.frame for all catchments
     #----------------------------------------------------------------------------------------
@@ -355,35 +405,65 @@ extractCatchmentData <- function(
     ind = catchment.lookup[i,1]:catchment.lookup[i,2]
     w = w.all[ind]
 
+    # Check if there are enough grid cells to calculate the variance.
+    calcVariance =  F;
+    if (length(ind)>1)
+      calcVariance =  T;
+
     # Apply weights
     if (getPrecip) {
       catchmentAvgTmp$precip_mm = apply(t(t(precip[,ind]) * w),1,sum);
-      catchmentVarTmp$precip_mm = apply(precip[,ind],1,var);
+      if (calcVariance) {
+        catchmentVarTmp$precip_mm = apply(precip[,ind],1,var);
+      } else {
+        catchmentVarTmp$precip_mm = NA;
+      }
     }
     if (getTmin) {
       catchmentAvgTmp$Tmin = apply(t(t(tmin[,ind]) * w),1,sum);
-      catchmentVarTmp$Tmin = apply(tmin[,ind],1,var);
+      if (calcVariance) {
+        catchmentVarTmp$Tmin = apply(tmin[,ind],1,var);
+      } else {
+        catchmentVarTmp$Tmin = NA;
+      }
     }
     if (getTmax) {
       catchmentAvgTmp$Tmax = apply(t(t(tmax[,ind]) * w),1,sum);
-      catchmentVarTmp$Tmax = apply(tmax[,ind],1,var);
+      if (calcVariance) {
+        catchmentVarTmp$Tmax = apply(tmax[,ind],1,var);
+      } else {
+        catchmentVarTmp$Tmax = NA;
+      }
     }
     if (getVprp) {
       catchmentAvgTmp$vprp = apply(t(t(vprp[,ind]) * w),1,sum);
-      catchmentVarTmp$vprp = apply(vprp[,ind],1,var);
+      if (calcVariance) {
+        catchmentVarTmp$vprp = apply(vprp[,ind],1,var);
+      } else {
+        catchmentVarTmp$vprp = NA;
+      }
     }
     if (getSolarrad) {
       catchmentAvgTmp$solarrad = apply(t(t(solarrad[,ind]) * w),1,sum);
-      catchmentVarTmp$solarrad = apply(solarrad[,ind],1,var);
       catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp[,ind]) * w),1,sum);
-      catchmentVarTmp$solarrad_interp = apply(solarrad_interp[,ind],1,var);
+      if (calcVariance) {
+        catchmentVarTmp$solarrad = apply(solarrad[,ind],1,var);
+        catchmentVarTmp$solarrad_interp = apply(solarrad_interp[,ind],1,var);
+      } else {
+        catchmentVarTmp$solarrad = NA;
+        catchmentVarTmp$solarrad_interp = NA;
+      }
+
     }
     if (getMortonsPET) {
       catchmentAvgTmp$MortonsPET_mm = apply(t(t(mortAPET[,ind]) * w),1,sum);
-      catchmentVarTmp$MortonsPET_mm = apply(mortAPET[,ind],1,var);
-      catchmentAvgTmp$MortonsRH = apply(t(t(mortRH[,ind]) * w),1,sum);
-      catchmentVarTmp$MortonsRH = apply(mortRH[,ind],1,var);
+      if (calcVariance) {
+        catchmentVarTmp$MortonsPET_mm = apply(mortAPET[,ind],1,var);
+      } else {
+        catchmentVarTmp$MortonsPET_mm = NA;
+      }
     }
+
 
     if (i==1) {
       catchmentAvg = catchmentAvgTmp;

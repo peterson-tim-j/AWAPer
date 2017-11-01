@@ -34,10 +34,10 @@ extractCatchmentData(ncdfFilename = file.path(getwd(), "AWAP.nc"),
 
 \item{DEM}{is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used for the calculation
 of Morton's PET. The Australian 9 second DEM can be loaded using \code{data(DEM_9s)}. For details see
-url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}}
+\url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}}
 
 \item{catchments}{is either the full file name to an ESRI shape file of polygons (assumed catchment boundaries) or a shape file
-already imported using readShapePoly(). Either way the dhape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.}
+already imported using readShapePoly(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.}
 }
 \value{
 A list variale containing two data frames of the catchment average daily climate metrics and the catchment variance daily climate metrics.
@@ -48,17 +48,23 @@ A list variale containing two data frames of the catchment average daily climate
 \details{
 This function extracts the AWAP climate data for each polygon and then calculates the daily spatial average and variance for
 each climate metric. The calculation of the mean uses the fraction of each AWAP grid cell within the polygon. The variance
-calculation does not use the fraction of the grid cell.  Prior to the catchment averaging and variance, Morton's poential ET
-is also calculated; average which the mean and variance are calculated.
+calculation does not use the fraction of the grid cell and returns NA id there are <2 grid cells in the catchment boundary.  Prior to the catchment averaging and variance, Morton's areal poential ET (PET)
+is also calculated; after which the mean and variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from
+the Evapotranspiration package at a monthly time-step and using the AWAP solar radiation. The monthly estimate is then interpolated using a spline
+to a daily time step (using zoo:na.spline()) and then constrained to >=0.
 
 Lastly, data is extracted for all time points and no temporal infilling is undertaken if the grid cells are blank.
 }
 \examples{
-# Load the 9 second Australian DEM.
-data("DEM_9s")
+# Load required packages.
+library(sp);library(raster);library(chron);library(ncdf4);
+library(maptools);library(Evapotranspiration);library(AWAPer)
+
+# Download the 9 second Australian DEM.
+DEM_9s = getDEM()
 
 # Load example cacthment boundaries.
-data("catchmentBoundaries")
+data("catchments")
 
 # Extract all climate data and calculate Morton's PET.
 # Note, the input "catchments" can also be a file to a ESRI shape file.
@@ -69,8 +75,8 @@ climateDataAvg = climateData$catchmentAvg
 
 # Extract the daily catchment variance data.
 climateDataVar = climateData$catchmentVar
+
 }
 \seealso{
 \code{\link{makeNetCDF_file}} for building the NetCDF files of daily climate data.
-\code{\link{mortonsAET}} for details of the calculate of areal potential ET.
 }
