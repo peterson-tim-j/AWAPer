@@ -146,9 +146,10 @@ extractCatchmentData <- function(
   }
 
   # Write summary of Net CDF data.
-  message(paste('... NetCDF non-solar radiation climate data exists from ',format.Date(min(timePoints_R),'%Y-%m-%d'),' to ', format.Date(max(timePoints_R),'%Y-%m-%d')));
+  message('Extraction data summary:');
+  message(paste('    NetCDF non-solar radiation climate data exists from ',format.Date(min(timePoints_R),'%Y-%m-%d'),' to ', format.Date(max(timePoints_R),'%Y-%m-%d')));
   if (getSolarrad)
-    message(paste('... NetCDF solar radiation data exists from ',format.Date(min(timePoints_solar_R),'%Y-%m-%d'),' to ', format.Date(max(timePoints_solar_R),'%Y-%m-%d')));
+    message(paste('    NetCDF solar radiation data exists from ',format.Date(min(timePoints_solar_R),'%Y-%m-%d'),' to ', format.Date(max(timePoints_solar_R),'%Y-%m-%d')));
 
   # Limit the extraction time points to the data range
   extractFrom = max(c(extractFrom,min(timePoints_R)));
@@ -161,21 +162,23 @@ extractCatchmentData <- function(
   # Recalculate the time points to extract.
   timepoints2Extract = seq( as.Date(extractFrom,'%Y-%m-%d'), by="day", to=as.Date(extractTo,'%Y-%m-%d'))
 
-  message(paste('... Starting to extract data from ',format.Date(extractFrom,'%Y-%m-%d'),' to ', format.Date(extractTo,'%Y-%m-%d'),' at ',length(catchments),' catchments '));
+  message(paste('    Data will be extracted from ',format.Date(extractFrom,'%Y-%m-%d'),' to ', format.Date(extractTo,'%Y-%m-%d'),' at ',length(catchments),' catchments '));
+  message('Starting data extraction:')
 
   # Get one netCDF layer. This is used to
   precipGrd = raster(ncdfFilename, band=nTimePoints, varname='precip',lvar=3)
   solarGrd = raster(ncdfSolarFilename, band=nTimePoints_solar, varname='solarrad',lvar=3)
 
-  # Loop though each each polygon and egt the data for all time points
+  # Build a matrix of catchment weights, lat longs, and a loopup table for each catchment.
+  w.all = c();
+  longLat.all = matrix(NA,0,2)
+  catchment.lookup = matrix(NA,length(catchments),2);
+  message('... Building catchment weights:');
   for (i in 1:length(catchments)) {
-
-    message(paste('   ... Working on catchment ', i,' of ',length(catchments)));
-
-    # Extract the non-solar data across the catchment
-    #----------------------------------------------------------------------------------------
-
-    # Create a mask for each polygon of the fraction of grid cell within the polygon.
+    if (i%%10 ==0 ) {
+      message(paste('   ... Building weights for catchment ', i,' of ',length(catchments)));
+      removeTmpFiles(h=0)
+    }
     w = rasterize(catchments[i,], precipGrd,getCover=T)
 
     # Extract the mask values (i.e. fraction of each grid cell within the polygon.
@@ -187,191 +190,199 @@ extractCatchmentData <- function(
     # Normalise the weights
     w = w/sum(w);
 
-    # Initialise the outputs
-    precip = matrix(NA,length(timepoints2Extract),length(w))
-    tmin =  precip;
-    tmax =  precip;
-    vprp =  precip;
-    extractYear = c();
-    extractMonth = c();
-    extractDay = c();
-    # Get the AWAP data
-    # for (j in 1:length(w)) {
-    #   message(paste('   ... Working on catchment grid cell point ', j,' of ',length(w)));
-    #   startPoint = c(which.min(abs(awap$dim$Long$vals - wLongLat[j,1])), # look for closest long
-    #                  which.min(abs(awap$dim$Lat$vals - wLongLat[j,2])),  # look for closest lat
-    #                  1);
-    #   if (getPrecip)
-    #     precip[,j] <- ncvar_get(awap, varid = 'precip',start=startPoint,count = c(1,1,-1))
-    #   if (getTmin)
-    #     tmin[,j]  <- ncvar_get(awap, varid = 'tmin',start=startPoint,count = c(1,1,-1))
-    #   if (getTmax)
-    #     tmax[,j]  <- ncvar_get(awap, varid = 'tmax',start=startPoint,count = c(1,1,-1))
-    #   if (getVprp)
-    #     vprp[,j]  <- ncvar_get(awap, varid = 'vprp',start=startPoint,count = c(1,1,-1))
-    # }
-    message('   ... Starting to extract data.')
-    for (j in 1:length(timepoints2Extract)){
-
-      # Find index to the date to update within the net CDF grid
-      ind = as.integer(difftime(timepoints2Extract[j], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
-
-      if (j%%10000 ==0 ) {
-        message(paste('      ... Extracting data for time point ', j,' of ',length(timepoints2Extract)));
-      }
-      if (getPrecip)
-        precip[j,1:length(w)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='precip',lvar=3), wLongLat)
-      if (getTmin)
-        tmin[j,1:length(w)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmin',lvar=3), wLongLat)
-      if (getTmax)
-        tmax[j,1:length(w)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmax',lvar=3), wLongLat)
-      if (getVprp)
-        vprp[j,1:length(w)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='vprp',lvar=3), wLongLat)
-
-      # Get date of extracted grid.
-      extractDate = getZ(raster(ncdfFilename, band=ind,lvar=3));
-      extractYear[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%Y'));
-      extractMonth[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%m'));
-      extractDay[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%d'));
+    # Add to data set of all catchments
+    if (length(w.all)==0) {
+      catchment.lookup[i,] = c(1,length(w));
+      w.all = w;
+      longLat.all = wLongLat;
+    } else {
+        catchment.lookup[i,] = c(length(w.all)+1,length(w.all)+length(w));
+        w.all = c(w.all, w)
+        longLat.all = rbind(longLat.all, wLongLat);
     }
+  }
+  removeTmpFiles(h=0)
 
-    # Extract the non-solar data across the catchment
+  if (getSolarrad && getMortonsPET) {
+    message('... Extracted DEM elevations.')
+    DEMpoints <- raster::extract(DEM, longLat.all)
+    if (any(is.na(DEMpoints))) {
+      warning('NA DEM values were derived. Please check the projections of the DEM and shape file.')
+    }
+  }
+
+  # Initialise the outputs
+  precip = matrix(NA,length(timepoints2Extract),length(w.all))
+  tmin =  precip;
+  tmax =  precip;
+  vprp =  precip;
+  extractYear = c();
+  extractMonth = c();
+  extractDay = c();
+
+  # Initialise the outputs. NOTE: the matrix is initiliased to have the same
+  # number of rows as the non-solar data.
+  if (getSolarrad) {
+    solarrad = matrix(NA,length(timepoints2Extract),length(w.all))
+    extractYear_solar = c();
+    extractMonth_solar = c();
+    extractDay_solar = c();
+  }
+
+  message('... Starting to extract data across all catchments:')
+  for (j in 1:length(timepoints2Extract)){
+
+    # Find index to the date to update within the net CDF grid
+    ind = as.integer(difftime(timepoints2Extract[j], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
+
+    if (j%%10000 ==0 ) {
+      message(paste('    ... Extracting data for time point ', j,' of ',length(timepoints2Extract)));
+    }
+    if (getPrecip)
+      precip[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='precip',lvar=3), longLat.all)
+    if (getTmin)
+      tmin[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmin',lvar=3), longLat.all)
+    if (getTmax)
+      tmax[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmax',lvar=3), longLat.all)
+    if (getVprp)
+      vprp[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='vprp',lvar=3), longLat.all)
+
+    # Get date of extracted grid.
+    extractDate = getZ(raster(ncdfFilename, band=ind,lvar=3));
+    extractYear[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%Y'));
+    extractMonth[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%m'));
+    extractDay[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%d'));
+
+    # Extract the non-solar data
     #----------------------------------------------------------------------------------------
     if (getSolarrad) {
-      # Get the DEM values within the polygon.
-      if (getMortonsPET) {
-        message('      ... Extracted DEM elevations.')
-        DEMpoints <- raster::extract(DEM, wLongLat)
-        if (any(is.na(DEMpoints))) {
-          warning(paste('For the following catchment ID, NA DEM values were derived. Please check the projections of the DEM and shape file:', catchments[i,1]))
-        }
+      # Find index to the date to update within the net CDF grid
+      ind = as.integer(difftime(timepoints2Extract[j], as.Date("1990-1-1",'%Y-%m-%d'),units = "days" ))+1
+
+      if (ind>0) {
+        # Get ncdf grid
+        solarrad[j,1:length(w.all)]  <- raster::extract(raster(ncdfSolarFilename, band=ind, varname='solarrad',lvar=3), longLat.all)
+
+        # Get date of extracted grid.
+        extractDate = getZ(raster(ncdfSolarFilename, band=ind,lvar=3));
+        extractYear_solar[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%Y'));
+        extractMonth_solar[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%m'));
+        extractDay_solar[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%d'));
       }
+    }
+  }
 
-      # Initialise the outputs. NOTE: the matrix is initiliased to have the same
-      # number of rows as the non-solar data.
-      solarrad = matrix(NA,length(timepoints2Extract),length(w))
-      extractYear_solar = c();
-      extractMonth_solar = c();
-      extractDay_solar = c();
-      message('      ... Starting to extract solar radiation data.')
-      for (j in 1:length(timepoints2Extract)){
+  # Close netCDF connection
+  if (!getPrecip || !getTmin || !getTmax || !getVprp)
+    nc_close(awap)
+  if (getSolarrad)
+    nc_close(awap_solar)
 
-        if (j%%10000 ==0 ) {
-          message(paste('         ... Extracting solar radiation data for time point ', j,' of ',length(timepoints2Extract)));
-        }
 
-        # Find index to the date to update within the net CDF grid
-        ind = as.integer(difftime(timepoints2Extract[j], as.Date("1990-1-1",'%Y-%m-%d'),units = "days" ))+1
+  if (getSolarrad) {
+    # Set non-senible values to NA
+    solarrad[solarrad <0] = NA;
+    solarrad_interp = solarrad;
 
-        if (ind>0) {
-          # Get ncdf grid
-          solarrad[j,1:length(w)]  <- raster::extract(raster(ncdfSolarFilename, band=ind, varname='solarrad',lvar=3), wLongLat)
-
-          # Get date of extracted grid.
-          extractDate = getZ(raster(ncdfSolarFilename, band=ind,lvar=3));
-          extractYear_solar[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%Y'));
-          extractMonth_solar[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%m'));
-          extractDay_solar[j] = as.integer(format(as.Date(extractDate,'%Y-%m-%d'),'%d'));
-        }
-      }
-
-      # Set non-senible values to NA
-      solarrad[solarrad <0] = NA;
-      solarrad_interp = solarrad;
-
-      # Calculate the average dailysolar radiation for each day of the year.
-      message('      ... Calculating mean daily solar radiation <1990-1-1')
-      monthdayUnique = sort(unique(extractMonth*100+extractDay_solar));
-      day = as.integer(format(timepoints2Extract, "%d"));
-      month = as.integer(format(timepoints2Extract, "%m"));
-      monthdayAll = month*100+day;
-      solarrad_avg = matrix(NA, length(monthdayUnique), length(w));
-      for (j in 1:length(monthdayUnique)) {
-        ind = monthdayAll==monthdayUnique[j];
-        if (sum(ind)==1) {
-          solarrad_avg[j,] = solarrad[ind,];
-        } else {
-          solarrad_avg[j,] = apply(na.omit(solarrad[ind,]),2,mean)
-        }
-      }
-
-      # Assign the daily average solar radiation to each day prior to 1 Jan 1990
-      for (j in 1:length(timepoints2Extract)) {
-        if (timepoints2Extract[j]<as.Date('1990-1-1','%Y-%m-%d')) {
-          ind = monthdayUnique==monthdayAll[j];
-          solarrad_interp[j,] = solarrad_avg[ind,]
-        }
-      }
-
-      # Linearly interpolate time points without a solar radiation value.
-      message('      ... Linearly interpolating gaps in daily solar.')
-      for (j in 1:length(w)) {
-        filt = is.na(solarrad_interp[,j])
-        x = 1:length(timepoints2Extract);
-        xpred = x[filt];
-        x = x[!filt];
-        y = solarrad_interp[!filt,j];
-        ypred=approx(x,y,xpred,method='linear', rule=2);
-        solarrad_interp[filt,j] = ypred$y;
+    # Calculate the average dailysolar radiation for each day of the year.
+    message('... Calculating mean daily solar radiation <1990-1-1')
+    monthdayUnique = sort(unique(extractMonth*100+extractDay_solar));
+    day = as.integer(format(timepoints2Extract, "%d"));
+    month = as.integer(format(timepoints2Extract, "%m"));
+    monthdayAll = month*100+day;
+    solarrad_avg = matrix(NA, length(monthdayUnique), length(w.all));
+    for (j in 1:length(monthdayUnique)) {
+      ind = monthdayAll==monthdayUnique[j];
+      if (sum(ind)==1) {
+        solarrad_avg[j,] = solarrad[ind,];
+      } else {
+        solarrad_avg[j,] = apply(na.omit(solarrad[ind,]),2,mean)
       }
     }
 
+    # Assign the daily average solar radiation to each day prior to 1 Jan 1990
+    for (j in 1:length(timepoints2Extract)) {
+      if (timepoints2Extract[j]<as.Date('1990-1-1','%Y-%m-%d')) {
+        ind = monthdayUnique==monthdayAll[j];
+        solarrad_interp[j,] = solarrad_avg[ind,]
+      }
+    }
 
-    # Calculate the PET and the catchment statistics.
-    #----------------------------------------------------------------------------------------
-    # Calculate Morton's PET at each grid cell and time point.
-    if (getMortonsPET) {
-      message('      ... Calculating Mortons areal PET.')
-      mortAPET = matrix(NA,length(timepoints2Extract),length(w))
-      mortRH = matrix(NA,length(timepoints2Extract),length(w))
-      for (j in 1:length(timepoints2Extract)) {
-        for (k in 1:length(w)) {
-          if (!is.na(tmin[j,k]) &&
-              !is.na(tmax[j,k]) &&
-              !is.na(solarrad_interp[j,k]) &&
-              !is.na(vprp[j,k]) &&
-              !is.na(wLongLat[k,2]) &&
-              !is.na(timepoints2Extract[j])) {
-            mort<-mortonsAET(tmin=tmin[j,k],tmax=tmax[j,k],radin=solarrad_interp[j,k],eact=vprp[j,k], lat=wLongLat[k,2], height=DEMpoints[k],date=timepoints2Extract[j])
-            mortAPET[j,k]<-mort[1]
-            mortRH[j,k]<-mort[2]
-          }
+    # Linearly interpolate time points without a solar radiation value.
+    message('... Linearly interpolating gaps in daily solar.')
+    for (j in 1:length(w.all)) {
+      filt = is.na(solarrad_interp[,j])
+      x = 1:length(timepoints2Extract);
+      xpred = x[filt];
+      x = x[!filt];
+      y = solarrad_interp[!filt,j];
+      ypred=approx(x,y,xpred,method='linear', rule=2);
+      solarrad_interp[filt,j] = ypred$y;
+    }
+  }
+
+  # Calculate Morton's PET at each grid cell and time point. NOE, when using ET Package, divide va byt 10 to go from hPa to Kpa
+  if (getMortonsPET) {
+    message('... Calculating Mortons areal PET.')
+    mortAPET = matrix(NA,length(timepoints2Extract),length(w.all))
+    mortRH = matrix(NA,length(timepoints2Extract),length(w.all))
+    for (j in 1:length(timepoints2Extract)) {
+      for (k in 1:length(w.all)) {
+        if (!is.na(tmin[j,k]) &&
+            !is.na(tmax[j,k]) &&
+            !is.na(solarrad_interp[j,k]) &&
+            !is.na(vprp[j,k]) &&
+            !is.na(longLat.all[k,2]) &&
+            !is.na(timepoints2Extract[j])) {
+          mort<-mortonsAET(tmin=tmin[j,k],tmax=tmax[j,k],radin=solarrad_interp[j,k],eact=vprp[j,k], lat=longLat.all[k,2], height=DEMpoints[k],date=timepoints2Extract[j])
+          mortAPET[j,k]<-mort[1]
+          mortRH[j,k]<-mort[2]
         }
       }
     }
+  }
+
+  # Loop though each catchment and calculate the catchment averager and variance.
+  message('... Calculating catchment weighted daily data.')
+  for (i in 1:length(catchments)) {
 
     # Calculate catchment stats and add data to the data.frame for all catchments
     #----------------------------------------------------------------------------------------
     catchmentAvgTmp = data.frame(CatchmentID=catchments[i,1],year=extractYear,month=extractMonth,day=extractDay);
     catchmentVarTmp = data.frame(CatchmentID=catchments[i,1],year=extractYear,month=extractMonth,day=extractDay);
 
+    # Get the weights for the catchment
+    ind = catchment.lookup[i,1]:catchment.lookup[i,2]
+    w = w.all[ind]
+
+    # Apply weights
     if (getPrecip) {
-      catchmentAvgTmp$precip_mm = apply(t(t(precip) * w),1,sum);
-      catchmentVarTmp$precip_mm = apply(precip,1,var);
+      catchmentAvgTmp$precip_mm = apply(t(t(precip[,ind]) * w),1,sum);
+      catchmentVarTmp$precip_mm = apply(precip[,ind],1,var);
     }
     if (getTmin) {
-      catchmentAvgTmp$Tmin = apply(t(t(tmin) * w),1,sum);
-      catchmentVarTmp$Tmin = apply(tmin,1,var);
+      catchmentAvgTmp$Tmin = apply(t(t(tmin[,ind]) * w),1,sum);
+      catchmentVarTmp$Tmin = apply(tmin[,ind],1,var);
     }
     if (getTmax) {
-      catchmentAvgTmp$Tmax = apply(t(t(tmax) * w),1,sum);
-      catchmentVarTmp$Tmax = apply(tmax,1,var);
+      catchmentAvgTmp$Tmax = apply(t(t(tmax[,ind]) * w),1,sum);
+      catchmentVarTmp$Tmax = apply(tmax[,ind],1,var);
     }
     if (getVprp) {
-      catchmentAvgTmp$vprp = apply(t(t(vprp) * w),1,sum);
-      catchmentVarTmp$vprp = apply(vprp,1,var);
+      catchmentAvgTmp$vprp = apply(t(t(vprp[,ind]) * w),1,sum);
+      catchmentVarTmp$vprp = apply(vprp[,ind],1,var);
     }
     if (getSolarrad) {
-      catchmentAvgTmp$solarrad = apply(t(t(solarrad) * w),1,sum);
-      catchmentVarTmp$solarrad = apply(solarrad,1,var);
-      catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp) * w),1,sum);
-      catchmentVarTmp$solarrad_interp = apply(solarrad_interp,1,var);
+      catchmentAvgTmp$solarrad = apply(t(t(solarrad[,ind]) * w),1,sum);
+      catchmentVarTmp$solarrad = apply(solarrad[,ind],1,var);
+      catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp[,ind]) * w),1,sum);
+      catchmentVarTmp$solarrad_interp = apply(solarrad_interp[,ind],1,var);
     }
     if (getMortonsPET) {
-      catchmentAvgTmp$MortonsPET_mm = apply(t(t(mortAPET) * w),1,sum);
-      catchmentVarTmp$MortonsPET_mm = apply(mortAPET,1,var);
-      catchmentAvgTmp$MortonsRH = apply(t(t(mortRH) * w),1,sum);
-      catchmentVarTmp$MortonsRH = apply(mortRH,1,var);
+      catchmentAvgTmp$MortonsPET_mm = apply(t(t(mortAPET[,ind]) * w),1,sum);
+      catchmentVarTmp$MortonsPET_mm = apply(mortAPET[,ind],1,var);
+      catchmentAvgTmp$MortonsRH = apply(t(t(mortRH[,ind]) * w),1,sum);
+      catchmentVarTmp$MortonsRH = apply(mortRH[,ind],1,var);
     }
 
     if (i==1) {
@@ -383,11 +394,8 @@ extractCatchmentData <- function(
     }
   }
   # end for-loop
-  if (!getPrecip || !getTmin || !getTmax || !getVprp)
-    nc_close(awap)
-  if (getSolarrad)
-    nc_close(awap_solar)
 
   return(list(catchmentAvg=catchmentAvg, catchmentVar=catchmentVar))
 
+  message('Data extraction FINISHED..')
 }
