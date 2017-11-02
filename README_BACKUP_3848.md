@@ -1,9 +1,23 @@
 # AWAPer
+<<<<<<< HEAD
+This R package builds netCDF files of the Bureau of Meteorology Australian Water Avail-
+ability Project daily national climate grids and allows efficient extraction of daily catchment av-
+erage precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estima-
+tion of areal potential evaporation (Morton's). For package details see 'AWAPer.pdf'.
+=======
 This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of areal potential evaporation (Morton's). For package details see 'AWAPer.pdf'.
+>>>>>>> e7c504f6c0d1976993c570b468839547e93001f1
 
 # Getting Started
 To get started using the package, following these steps:
 
+<<<<<<< HEAD
+1. Download the .zip.
+2. Unzip the package on your local machine.
+3. Open R 
+4. Load the required packages with the following command
+
+=======
 1. Download the zipped package.
 1. Unzip the package on your local machine.
 1. Open R 
@@ -20,4 +34,4 @@ To get started using the package, following these steps:
 1. Extract daily climate data and calculate Morton's wet enviroment potential ET from 1990 onwards using the command `climateData = extractCatchmentData(extractFrom='1990-1-1',catchments=catchments,DEM=DEM_9s)`
 1. Extract the daily catchment average data from the results using the command `climateDataAvg = climateData$catchmentAvg`
 1. Extract the daily catchment variance data from the results using the command `climateDataVar = climateData$catchmentVar`
-
+>>>>>>> e7c504f6c0d1976993c570b468839547e93001f1

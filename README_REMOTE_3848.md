@@ -20,4 +20,3 @@ To get started using the package, following these steps:
 1. Extract daily climate data and calculate Morton's wet enviroment potential ET from 1990 onwards using the command `climateData = extractCatchmentData(extractFrom='1990-1-1',catchments=catchments,DEM=DEM_9s)`
 1. Extract the daily catchment average data from the results using the command `climateDataAvg = climateData$catchmentAvg`
 1. Extract the daily catchment variance data from the results using the command `climateDataVar = climateData$catchmentVar`
-
