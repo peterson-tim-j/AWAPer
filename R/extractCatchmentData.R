@@ -127,7 +127,8 @@ extractCatchmentData <- function(
     proj4string(catchments) = '+proj=longlat +ellps=GRS80'
   }
   if (proj4string(catchments) != '+proj=longlat +ellps=GRS80') {
-    message('WARNING: The projection string of the catchment boundaries does not appear to be +proj=longlat +ellps=GRS80. Setting to +proj=longlat +ellps=GRS80')
+    message('WARNING: The projection string of the catchment boundaries does not appear to be +proj=longlat +ellps=GRS80. Attempting to transform coordinates...')
+    catchments = spTransform(catchments,CRS('+proj=longlat +ellps=GRS80'))
   }
 
   # Get netCDF geometry
@@ -184,7 +185,9 @@ extractCatchmentData <- function(
 
   # Get one netCDF layer. This is used to
   precipGrd = raster(ncdfFilename, band=nTimePoints, varname='precip',lvar=3)
-  solarGrd = raster(ncdfSolarFilename, band=nTimePoints_solar, varname='solarrad',lvar=3)
+  if (getSolarrad) {
+    solarGrd = raster(ncdfSolarFilename, band=nTimePoints_solar, varname='solarrad',lvar=3)
+  }
 
   # Build a matrix of catchment weights, lat longs, and a loopup table for each catchment.
   w.all = c();
@@ -338,63 +341,19 @@ extractCatchmentData <- function(
     }
   }
 
-  # Calculate Morton's PET at each grid cell and time point. NOTE, va is divided by 10 to go from hPa to Kpa
+  # Loop though each catchment and calculate the catchment averager and variance.
   if (getMortonsPET) {
-    message('... Calculating Mortons areal PET unsing Evaportranspiration package CREA function.')
-
     # load ET package constants
     data("constants")
-
-    # Initialise outputa
-    mortAPET = matrix(NA,length(timepoints2Extract),length(w.all))
-
-    # Loop through each grid cell
-    for (j in 1:length(w.all)) {
-
-      if (j%%100 ==0 ) {
-        message(paste('    ... Calculating grid cell', j,' of ',length(w.all)));
-      }
-
-      # Build data from of daily climate data
-      dataRAW = data.frame(Year =  as.integer(format.Date(timepoints2Extract,"%Y")), Month= as.integer(format.Date(timepoints2Extract,"%m")), Day= as.integer(format.Date(timepoints2Extract,"%d")), Tmin=tmin[,j], Tmax=tmax[,j], Rs=solarrad_interp[,j], va=vprp[,j]/10.0, Precip=precip[,j])
-
-      # Convert to required format for ET package
-      dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(10,10,10))
-
-      # Update constants for the site
-      constants$Elev = DEMpoints[j]
-      constants$lat = longLat.all[j,2]
-      constants$lat_rad = longLat.all[j,2]/180.0*pi
-
-      # Call  ET package
-      results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, message='no');
-
-      # Get the last day of each month
-      last.day.month = as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1)
-
-      # Calculate average ET per day of each month
-      days.per.month = as.integer(format.Date(as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1),'%d'))
-      monthly.ET.as.daily = zoo( as.numeric(results$ET.Monthly/days.per.month), last.day.month)
-
-      # Spline interpolate Monthly average ET
-      timepoints2Extract.as.zoo = zoo(NA,timepoints2Extract);
-      mortAPET.tmp = na.spline(merge(monthly.ET.as.daily, dates=timepoints2Extract.as.zoo)[, 1])
-      filt = time(mortAPET.tmp)>=start(timepoints2Extract.as.zoo) & time(mortAPET.tmp)<=end(timepoints2Extract.as.zoo)
-      mortAPET.tmp = pmax(0.0, as.numeric( mortAPET.tmp));
-      mortAPET.tmp = mortAPET.tmp[filt]
-      mortAPET[,j] = mortAPET.tmp;
-
-    }
-
   }
-
-  # Loop though each catchment and calculate the catchment averager and variance.
   message('... Calculating catchment weighted daily data.')
   for (i in 1:length(catchments)) {
 
     if (j%%100 ==0 ) {
       message(paste('    ... Calculating catchment ', i,' of ',length(catchments)));
     }
+
+
 
     # Calculate catchment stats and add data to the data.frame for all catchments
     #----------------------------------------------------------------------------------------
@@ -405,6 +364,67 @@ extractCatchmentData <- function(
     ind = catchment.lookup[i,1]:catchment.lookup[i,2]
     w = w.all[ind]
 
+
+    # Calculate Morton's PET at each grid cell and time point. NOTE, va is divided by 10 to go from hPa to Kpa
+    if (getMortonsPET) {
+      message('        ... Calculating Mortons areal PET unsing Evaportranspiration package CREA function.')
+
+      # Initialise outputa
+      mortAPET = matrix(NA,length(timepoints2Extract),length(ind))
+
+      # Loop through each grid cell
+      k=0;
+      for (j in ind) {
+
+        k=k+1
+        if (k%%25 ==0 ) {
+          message(paste('           ... Calculating PET for grid cell', k,' of ',length(w)));
+        }
+
+        # Check lat, Elev and precip are finite scalers.
+        if (any(!is.finite(precip[,j])) || !is.finite(DEMpoints[j]) || !is.finite(longLat.all[j,2])) {
+          message(paste('WARNING: Non-finite input values detected for catchment',i,' at grid cell',j))
+          message(paste('   Elevation value:' ,DEMpoints[j]))
+          message(paste('   Latitude value:' ,longLat.all[j,2]))
+          mortAPET[,k] = NA;
+          next
+        }
+
+
+
+        # Build data from of daily climate data
+        dataRAW = data.frame(Year =  as.integer(format.Date(timepoints2Extract,"%Y")), Month= as.integer(format.Date(timepoints2Extract,"%m")), Day= as.integer(format.Date(timepoints2Extract,"%d")), Tmin=tmin[,j], Tmax=tmax[,j], Rs=solarrad_interp[,j], va=vprp[,j]/10.0, Precip=precip[,j])
+
+        # Convert to required format for ET package
+        dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(10,10,10))
+
+        # Update constants for the site
+        constants$Elev = DEMpoints[j]
+        constants$lat = longLat.all[j,2]
+        constants$lat_rad = longLat.all[j,2]/180.0*pi
+
+        # Call  ET package
+        results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, message='no');
+
+        # Get the last day of each month
+        last.day.month = as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1)
+
+        # Calculate average ET per day of each month
+        days.per.month = as.integer(format.Date(as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1),'%d'))
+        monthly.ET.as.daily = zoo( as.numeric(results$ET.Monthly/days.per.month), last.day.month)
+
+        # Spline interpolate Monthly average ET
+        timepoints2Extract.as.zoo = zoo(NA,timepoints2Extract);
+        mortAPET.tmp = na.spline(merge(monthly.ET.as.daily, dates=timepoints2Extract.as.zoo)[, 1])
+        filt = time(mortAPET.tmp)>=start(timepoints2Extract.as.zoo) & time(mortAPET.tmp)<=end(timepoints2Extract.as.zoo)
+        mortAPET.tmp = pmax(0.0, as.numeric( mortAPET.tmp));
+        mortAPET.tmp = mortAPET.tmp[filt]
+        mortAPET[,k] = mortAPET.tmp;
+
+      }
+
+    }
+
     # Check if there are enough grid cells to calculate the variance.
     calcVariance =  F;
     if (length(ind)>1)
@@ -412,43 +432,43 @@ extractCatchmentData <- function(
 
     # Apply weights
     if (getPrecip) {
-      catchmentAvgTmp$precip_mm = apply(t(t(precip[,ind]) * w),1,sum);
+      catchmentAvgTmp$precip_mm = apply(t(t(precip[,ind]) * w),1,sum,na.rm=TRUE);
       if (calcVariance) {
-        catchmentVarTmp$precip_mm = apply(precip[,ind],1,var);
+        catchmentVarTmp$precip_mm = apply(precip[,ind],1,var,na.rm=TRUE);
       } else {
         catchmentVarTmp$precip_mm = NA;
       }
     }
     if (getTmin) {
-      catchmentAvgTmp$Tmin = apply(t(t(tmin[,ind]) * w),1,sum);
+      catchmentAvgTmp$Tmin = apply(t(t(tmin[,ind]) * w),1,sum,na.rm=TRUE);
       if (calcVariance) {
-        catchmentVarTmp$Tmin = apply(tmin[,ind],1,var);
+        catchmentVarTmp$Tmin = apply(tmin[,ind],1,var,na.rm=TRUE);
       } else {
         catchmentVarTmp$Tmin = NA;
       }
     }
     if (getTmax) {
-      catchmentAvgTmp$Tmax = apply(t(t(tmax[,ind]) * w),1,sum);
+      catchmentAvgTmp$Tmax = apply(t(t(tmax[,ind]) * w),1,sum,na.rm=TRUE);
       if (calcVariance) {
-        catchmentVarTmp$Tmax = apply(tmax[,ind],1,var);
+        catchmentVarTmp$Tmax = apply(tmax[,ind],1,var,na.rm=TRUE);
       } else {
         catchmentVarTmp$Tmax = NA;
       }
     }
     if (getVprp) {
-      catchmentAvgTmp$vprp = apply(t(t(vprp[,ind]) * w),1,sum);
+      catchmentAvgTmp$vprp = apply(t(t(vprp[,ind]) * w),1,sum,na.rm=TRUE);
       if (calcVariance) {
-        catchmentVarTmp$vprp = apply(vprp[,ind],1,var);
+        catchmentVarTmp$vprp = apply(vprp[,ind],1,var,na.rm=TRUE);
       } else {
         catchmentVarTmp$vprp = NA;
       }
     }
     if (getSolarrad) {
-      catchmentAvgTmp$solarrad = apply(t(t(solarrad[,ind]) * w),1,sum);
-      catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp[,ind]) * w),1,sum);
+      catchmentAvgTmp$solarrad = apply(t(t(solarrad[,ind]) * w),1,sum,na.rm=TRUE);
+      catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp[,ind]) * w),1,sum,na.rm=TRUE);
       if (calcVariance) {
-        catchmentVarTmp$solarrad = apply(solarrad[,ind],1,var);
-        catchmentVarTmp$solarrad_interp = apply(solarrad_interp[,ind],1,var);
+        catchmentVarTmp$solarrad = apply(solarrad[,ind],1,var,na.rm=TRUE);
+        catchmentVarTmp$solarrad_interp = apply(solarrad_interp[,ind],1,var,na.rm=TRUE);
       } else {
         catchmentVarTmp$solarrad = NA;
         catchmentVarTmp$solarrad_interp = NA;
@@ -456,9 +476,9 @@ extractCatchmentData <- function(
 
     }
     if (getMortonsPET) {
-      catchmentAvgTmp$MortonsPET_mm = apply(t(t(mortAPET[,ind]) * w),1,sum);
+      catchmentAvgTmp$MortonsPET_mm = apply(t(t(mortAPET) * w),1,sum,na.rm=TRUE);
       if (calcVariance) {
-        catchmentVarTmp$MortonsPET_mm = apply(mortAPET[,ind],1,var);
+        catchmentVarTmp$MortonsPET_mm = apply(mortAPET,1,var,na.rm=TRUE);
       } else {
         catchmentVarTmp$MortonsPET_mm = NA;
       }
