@@ -19,7 +19,7 @@
 #' @param ncdfSolarFilename is the file path (as string) and name to the netCDF file. The default is \code{file.path(getwd(),'AWAP_solar.nc')}.
 #' @param updateFrom is a date string specifying the start date for the AWAP data. If
 #'  \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
-#'  updated with new data from \code{pdateFrom}. The default is \code{"1900-1-1"}.
+#'  updated with new data from \code{updateFrom}. To update the files from the end of the last day in the file set \code{updateFrom=NA}. The default is \code{"1900-1-1"}.
 #' @param updateTo is a date string specifying the end date for the AWAP data. If
 #'  \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
 #'  updated with new data to \code{updateFrom}. The default is today's date as YYYY-MM-DD.
@@ -56,6 +56,9 @@
 #' # Example 3. Build netCDF grids for all data but only over a defined time period.
 #' # Note if the netCDFs have already been created, then the netCDF files will be updated.
 #' makeNetCDF_file(updateFrom='2000-1-1',updateTo='2002-12-31')
+#'
+#' # Example 4. Update the netCDF grids (from example 3) from the end dates within the netCDF files to the current date.
+#' makeNetCDF_file(updateFrom=NA)
 #'
 #' @export
 makeNetCDF_file <- function(
@@ -247,25 +250,25 @@ makeNetCDF_file <- function(
     haveGridGeometry_solar = TRUE;
   }
 
-  # Build time points to update
-  if (is.character(updateFrom))
-    updateFrom = as.Date(updateFrom,'%Y-%m-%d');
-  if (is.character(updateTo))
-    updateTo = as.Date(updateTo,'%Y-%m-%d');
-  if (updateFrom >= updateTo)
-    stop('The update dates are invalid. updateFrom must be prior to updateTo')
-  timepoints2Update = seq( as.Date(updateFrom,'%Y-%m-%d'), by="day", to=as.Date(updateTo,'%Y-%m-%d'))
-  if (length(timepoints2Update)==0)
-    stop('The dates to update produce a zero vector of dates of zero length. Check the inputs dates are as YYYY-MM-DD')
-
   # Create net CDF files
   if (doMainCDF) {
-    # Set data time points
-    timepoints = seq( as.Date("1900-01-01","%Y-%m-%d"), by="day", to=as.Date(Sys.Date(),"%Y-%m-%d"))
 
     if (!doUpdate) {
 
       message('... Building AWAP netcdf file.')
+
+      # Convert and check input timedates
+      if (is.na(updateFrom) || nchar(updateFrom)==0) {
+        updateFrom = as.Date("1900-01-01","%Y-%m-%d")
+      } else if (is.character(updateFrom))
+        updateFrom = as.Date(updateFrom,'%Y-%m-%d');
+      if (is.character(updateTo))
+        updateTo = as.Date(updateTo,'%Y-%m-%d');
+      if (updateFrom >= updateTo)
+        stop('The update dates are invalid. updateFrom must be prior to updateTo')
+
+      # Set data time points
+      timepoints = seq( as.Date("1900-01-01","%Y-%m-%d"), by="day", to=as.Date(Sys.Date(),"%Y-%m-%d"))
 
       # Get x and y vectors (dimensions)
       Longvector = seq(SWLong, by=DPixel,length.out = nCols)
@@ -299,25 +302,75 @@ makeNetCDF_file <- function(
       ncatt_put(ncout,0,"title","BoM AWAP daily climate data")
       ncatt_put(ncout,0,"institution","Data: BoM, R Code: Uni. of Melbourne")
       history <- paste("R Code: T.J. Peterson", date(), sep=", ")
+
+      # Get netcdf time points
+      timePoints_netCDF <- ncvar_get(ncout, "time")
+
+      # Convert netCDF time points to date
+      tunits <- ncatt_get(ncout, "time", "units")
+      tustr <- strsplit(tunits$value, " ")
+      tdstr <- strsplit(unlist(tustr)[3], "-")
+      tmonth = as.integer(unlist(tdstr)[2])
+      tday = as.integer(unlist(tdstr)[3])
+      tyear = as.integer(unlist(tdstr)[1])
+      timePoints_R = chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
+
     } else {
       # open netcdf file
       ncout <- nc_open(ncdfFilename, write=T)
+
+      # Get netcdf time points
+      timePoints_netCDF <- ncvar_get(ncout, "time")
+
+      # Convert netCDF time points to date
+      tunits <- ncatt_get(ncout, "time", "units")
+      tustr <- strsplit(tunits$value, " ")
+      tdstr <- strsplit(unlist(tustr)[3], "-")
+      tmonth = as.integer(unlist(tdstr)[2])
+      tday = as.integer(unlist(tdstr)[3])
+      tyear = as.integer(unlist(tdstr)[1])
+      timePoints_R = chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
+
+      # Set updateFrom to the end of the netCDF file if updateFrom is NA or ''.
+      if (is.character(updateFrom)) {
+        if (nchar(updateFrom)>0) {
+          updateFrom = min(c(as.Date(max(timePoints_R)),as.Date(updateFrom,'%Y-%m-%d')));
+        } else {
+          updateFrom = as.Date(max(timePoints_R));
+        }
+      } else {
+        if (is.na(updateFrom)) {
+          updateFrom = as.Date(max(timePoints_R));
+        }
+      }
+
+      # Set updateTo to the min of the input data and now.
+      if (is.character(updateTo)) {
+        if (nchar(updateTo)>0) {
+          updateTo = min(c(as.Date(Sys.Date(),"%Y-%m-%d"),as.Date(updateTo,'%Y-%m-%d')));
+        } else {
+          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+        }
+      } else {
+        if (is.na(updateTo)) {
+          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+        }
+      }
     }
 
-    # Get netcdf time points
-    timePoints_netCDF <- ncvar_get(ncout, "time")
+    # Check input dates
+    if (updateFrom >= updateTo)
+      stop('The update dates are invalid. updateFrom must be prior to updateTo')
 
-    # Convert netCDF time points to date
-    tunits <- ncatt_get(ncout, "time", "units")
-    tustr <- strsplit(tunits$value, " ")
-    tdstr <- strsplit(unlist(tustr)[3], "-")
-    tmonth = as.integer(unlist(tdstr)[2])
-    tday = as.integer(unlist(tdstr)[3])
-    tyear = as.integer(unlist(tdstr)[1])
-    timePoints_R = chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
+    timepoints2Update = seq( as.Date(updateFrom,'%Y-%m-%d'), by="day", to=as.Date(updateTo,'%Y-%m-%d'))
+
+    if (length(timepoints2Update)==0)
+        stop('The dates to update produce a zero vector of dates of zero length. Check the inputs dates are as YYYY-MM-DD')
+
+    message(paste('... NetCDF data will be  extracted from ',format.Date(updateFrom,'%Y-%m-%d'),' to ', format.Date(updateTo,'%Y-%m-%d')));
 
     # Start Filling the netCDF grid.
-    message('... Adding data to AWAP netcdf file.')
+    message('... Starting to add data AWAP netcdf file.')
     for (date in 1:length(timepoints2Update)){
 
       # Get datestring for input filenames
@@ -475,23 +528,79 @@ makeNetCDF_file <- function(
       ncatt_put(ncout,0,"title","BoM AWAP daily solar data")
       ncatt_put(ncout,0,"institution","Data: BoM, R Code: Uni of. Melbourne")
       history <- paste("R Code: T.J. Peterson", date(), sep=", ")
+
+      # Get netcdf time points
+      timePoints_netCDF <- ncvar_get(ncout, "time")
+
+      # Convert netCDF time points to date
+      tunits <- ncatt_get(ncout, "time", "units")
+      tustr <- strsplit(tunits$value, " ")
+      tdstr <- strsplit(unlist(tustr)[3], "-")
+      tmonth = as.integer(unlist(tdstr)[2])
+      tday = as.integer(unlist(tdstr)[3])
+      tyear = as.integer(unlist(tdstr)[1])
+      timePoints_R = chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
+
+      timepoints2Update = seq( as.Date(updateFrom,'%Y-%m-%d'), by="day", to=as.Date(updateTo,'%Y-%m-%d'))
+
     } else {
 
       # open netcdf file
       ncout <- nc_open(ncdfSolarFilename, write=T)
+
+      # Get netcdf time points
+      timePoints_netCDF <- ncvar_get(ncout, "time")
+
+      # Convert netCDF time points to date
+      tunits <- ncatt_get(ncout, "time", "units")
+      tustr <- strsplit(tunits$value, " ")
+      tdstr <- strsplit(unlist(tustr)[3], "-")
+      tmonth = as.integer(unlist(tdstr)[2])
+      tday = as.integer(unlist(tdstr)[3])
+      tyear = as.integer(unlist(tdstr)[1])
+      timePoints_R = chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
+
+      # Set updateFrom to the min of the end of the netCDF file and updateFrom
+      if (is.character(updateFrom)) {
+        if (nchar(updateFrom)>0) {
+          updateFrom = min(c(as.Date(max(timePoints_R)), as.Date(updateFrom,'%Y-%m-%d')));
+        } else {
+          updateFrom = as.Date(max(timePoints_R));
+        }
+      } else {
+        if (is.na(updateFrom)) {
+          updateFrom = as.Date(max(timePoints_R));
+        }
+      }
+
+      # Set updateTo to the end of the netCDF file if updateTo is NA or ''.
+      if (is.character(updateTo)) {
+        if (nchar(updateTo)>0) {
+          updateTo = min(c(as.Date(Sys.Date(),"%Y-%m-%d"), as.Date(updateTo,'%Y-%m-%d')));
+        } else {
+          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+        }
+      } else {
+        if (is.na(updateTo)) {
+          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+        }
+      }
+
     }
 
-    # Get netcdf time points
-    timePoints_netCDF <- ncvar_get(ncout, "time")
+    # Check input dates
+    if (updateFrom >= updateTo)
+      stop('The update dates are invalid. updateFrom must be prior to updateTo')
 
-    # Convert netCDF time points to date
-    tunits <- ncatt_get(ncout, "time", "units")
-    tustr <- strsplit(tunits$value, " ")
-    tdstr <- strsplit(unlist(tustr)[3], "-")
-    tmonth = as.integer(unlist(tdstr)[2])
-    tday = as.integer(unlist(tdstr)[3])
-    tyear = as.integer(unlist(tdstr)[1])
-    timePoints_R = chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
+    timepoints2Update = seq( as.Date(updateFrom,'%Y-%m-%d'), by="day", to=as.Date(updateTo,'%Y-%m-%d'))
+
+    if (length(timepoints2Update)==0)
+      stop('The dates to update produce a zero vector of dates of zero length. Check the inputs dates are as YYYY-MM-DD')
+
+    message(paste('... NetCDF Solar data will be  extracted from ',format.Date(updateFrom,'%Y-%m-%d'),' to ', format.Date(updateTo,'%Y-%m-%d')));
+
+    # Start Filling the netCDF grid.
+    message('... Starting to add data AWAP Solar netcdf file.')
 
     # Start Filling the netCDF grid.
     for (date in 1:length(timepoints2Update)){

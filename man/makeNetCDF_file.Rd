@@ -22,7 +22,7 @@ makeNetCDF_file(ncdfFilename = file.path(getwd(), "AWAP.nc"),
 
 \item{updateFrom}{is a date string specifying the start date for the AWAP data. If
 \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
-updated with new data from \code{pdateFrom}. The default is \code{"1900-1-1"}.}
+updated with new data from \code{updateFrom}. To update the files from the end of the last day in the file set \code{updateFrom=NA}. The default is \code{"1900-1-1"}.}
 
 \item{updateTo}{is a date string specifying the end date for the AWAP data. If
 \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
@@ -78,6 +78,9 @@ makeNetCDF_file(urlTmin = NA,urlTmax = NA, urlVprp = NA, urlSolarrad = NA)
 # Example 3. Build netCDF grids for all data but only over a defined time period.
 # Note if the netCDFs have already been created, then the netCDF files will be updated.
 makeNetCDF_file(updateFrom='2000-1-1',updateTo='2002-12-31')
+
+# Example 4. Update the netCDF grids (from example 3) from the end dates within the netCDF files to the current date.
+makeNetCDF_file(updateFrom=NA)
 
 }
 \references{
