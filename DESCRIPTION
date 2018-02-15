@@ -1,9 +1,9 @@
 Package: AWAPer
 Type: Package
-Title: catchment average daily climate data derived from the Bureau of Meteorology Australian Water Availability Project.
+Title: Extract daily climate data derived from the Bureau of Meteorology Australian Water Availability Project.
 Version: 0.0.0.2000
 Authors: person("Tim", "Peterson", email = "timjp@unimelb.edu.au", role = c("aut", "cre"))
-Description: This package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of areal potential evaporation (Morton's). For details on the source climate data see http://www.bom.gov.au/jsp/awap/.
+Description: This package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily points and catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of areal potential evaporation (Morton's). For details on the source climate data see http://www.bom.gov.au/jsp/awap/.
 Depends: R (>= 3.2.3), Evapotranspiration (>= 1.12) 
 Imports: ncdf4, R.utils, raster, chron, maptools, sp
 BugReports: https://github.com/peterson-tim-j/AWAPer/issues
