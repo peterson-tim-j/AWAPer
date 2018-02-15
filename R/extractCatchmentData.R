@@ -2,12 +2,16 @@
 #'
 #' \code{extractCatchmentData} extracts catchment average climate data from netCDF files containing Australian climate data.
 #'
-#' This function extracts the AWAP climate data for each polygon and then calculates the daily spatial average and variance for
-#' each climate metric. The calculation of the mean uses the fraction of each AWAP grid cell within the polygon. The variance
-#' calculation does not use the fraction of the grid cell and returns NA id there are <2 grid cells in the catchment boundary.  Prior to the catchment averaging and variance, Morton's areal poential ET (PET)
-#' is also calculated; after which the mean and variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from
-#' the Evapotranspiration package at a monthly time-step and using the AWAP solar radiation. The monthly estimate is then interpolated using a spline
-#' to a daily time step (using zoo:na.spline()) and then constrained to >=0.
+#' This function extracts the AWAP climate data for each point or polygon, and for the latter the daily spatial mean and variance of
+#' each climate metric are calculated. The calculation of the spatial mean uses the fraction of each AWAP grid cell within the polygon.
+#' The variance calculation does not use the fraction of the grid cell and returns NA if there are <2 grid cells in the catchment boundary.
+#' Prior to the catchment averaging and variance, Morton's areal potential ET (PET) is also calculated; after which the mean and
+#' variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from the Evapotranspiration package at
+#' a monthly time-step and using the AWAP solar radiation. For both points and polygons, the monthly PET estimate is then interpolated
+#' using a spline to a daily time step (using zoo:na.spline()) and then constrained to >=0.
+#'
+#' Also, when "catchments" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
+#' the closest 4 grid cells.
 #'
 #' Lastly, data is extracted for all time points and no temporal infilling is undertaken if the grid cells are blank.
 #'
@@ -20,15 +24,19 @@
 #' @param getTmax logical variable for extracting Tmax. Default is \code{TRUE}.
 #' @param getVprp logical variable for extracting vapour pressure. Default is \code{TRUE}.
 #' @param getSolarrad logical variable for extracting solar radiation. Default is \code{TRUE}.
-#' @param getMortonsPET logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T}, \code{getVprp=T} and \code{getSolarrad=T}. Default is \code{TRUE}.
-#' @param DEM is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used for the calculation
-#' of Morton's PET. The Australian 9 second DEM can be loaded using \code{data(DEM_9s)}. For details see
+#' @param getMortonsPET logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T},
+#' \code{getVprp=T} and \code{getSolarrad=T}. Default is \code{TRUE}.
+#' @param DEM is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used
+#' for the calculation of Morton's PET. The Australian 9 second DEM can be loaded using \code{data(DEM_9s)}. For details see
 #' \url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}
-#' @param catchments is either the full file name to an ESRI shape file of polygons (assumed catchment boundaries) or a shape file
-#' already imported using readShapePoly(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.
+#' @param catchments is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
+#' already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.
 #'
 #' @return
-#' A list variale containing two data frames of the catchment average daily climate metrics and the catchment variance daily climate metrics.
+#' When "catchments" are polygons, the returned variable is list variables containing two data.frames, one of the catchment average daily climate
+#' metrics and another of the catchment variance daily climate metrics.
+#'
+#' When "catchments" are points, the returned variable is a data.frame containing daily climate data at each point.
 #'
 #' @seealso
 #' \code{\link{makeNetCDF_file}} for building the NetCDF files of daily climate data.
@@ -53,6 +61,10 @@
 #'
 #' # Extract the daily catchment variance data.
 #' climateDataVar = climateData$catchmentVar
+#'
+#' # Export data to .csv files
+#' write.csv(climateDataAvg,'warrionClimateAvg.csv')
+#' write.csv(climateDataVar,'warrionClimateVar.csv')
 #'
 #' @export
 extractCatchmentData <- function(
@@ -109,16 +121,15 @@ extractCatchmentData <- function(
   }
 
   # Open file with polygons
-
   if (is.character(catchments)) {
     if (!file.exists(catchments))
       stop(paste('The following input file for the catchments could not be found:',catchments))
 
     # Read in polygons
-    catchments = readShapePoly(catchments, force_ring=TRUE)
+    catchments = readShapeSpatial(catchments, force_ring=TRUE)
 
-  } else if (!is(catchments,"SpatialPolygonsDataFrame")) {
-    stop('The input for the DEM is not a raster layer object.')
+  } else if (!is(catchments,"SpatialPolygonsDataFrame") && !is(catchments,"SpatialPointsDataFrame")) {
+    stop('The input for "catchments" must be a file name to a shape file or a SpatialPolygonsDataFrame or a SpatialPointsDataFrame object.')
   }
 
   # Check projection of catchments
@@ -129,6 +140,12 @@ extractCatchmentData <- function(
   if (proj4string(catchments) != '+proj=longlat +ellps=GRS80') {
     message('WARNING: The projection string of the catchment boundaries does not appear to be +proj=longlat +ellps=GRS80. Attempting to transform coordinates...')
     catchments = spTransform(catchments,CRS('+proj=longlat +ellps=GRS80'))
+  }
+
+  # Check if catchments are points or a polygon.
+  isCatchmentsPolygon=TRUE;
+  if (is(catchments,"SpatialPointsDataFrame")) {
+    isCatchmentsPolygon=FALSE;
   }
 
   # Get netCDF geometry
@@ -183,44 +200,55 @@ extractCatchmentData <- function(
   message(paste('    Data will be extracted from ',format.Date(extractFrom,'%Y-%m-%d'),' to ', format.Date(extractTo,'%Y-%m-%d'),' at ',length(catchments),' catchments '));
   message('Starting data extraction:')
 
-  # Get one netCDF layer. This is used to
+  # Get one netCDF layer.
   precipGrd = raster(ncdfFilename, band=nTimePoints, varname='precip',lvar=3)
   if (getSolarrad) {
     solarGrd = raster(ncdfSolarFilename, band=nTimePoints_solar, varname='solarrad',lvar=3)
   }
 
   # Build a matrix of catchment weights, lat longs, and a loopup table for each catchment.
-  w.all = c();
-  longLat.all = matrix(NA,0,2)
-  catchment.lookup = matrix(NA,length(catchments),2);
   message('... Building catchment weights:');
-  for (i in 1:length(catchments)) {
-    if (i%%10 ==0 ) {
-      message(paste('   ... Building weights for catchment ', i,' of ',length(catchments)));
-      removeTmpFiles(h=0)
-    }
-    w = rasterize(catchments[i,], precipGrd,getCover=T)
+  if (isCatchmentsPolygon) {
 
-    # Extract the mask values (i.e. fraction of each grid cell within the polygon.
-    w2 = getValues(w);
-    filt = w2>0
-    wLongLat = coordinates(w)[filt,]
-    w=w[filt]
+    w.all = c();
+    longLat.all = matrix(NA,0,2)
+    catchment.lookup = matrix(NA,length(catchments),2);
 
-    # Normalise the weights
-    w = w/sum(w);
+    for (i in 1:length(catchments)) {
+      if (i%%10 ==0 ) {
+        message(paste('   ... Building weights for catchment ', i,' of ',length(catchments)));
+        removeTmpFiles(h=0)
+      }
+      w = rasterize(catchments[i,], precipGrd,getCover=T)
 
-    # Add to data set of all catchments
-    if (length(w.all)==0) {
-      catchment.lookup[i,] = c(1,length(w));
-      w.all = w;
-      longLat.all = wLongLat;
-    } else {
+      # Extract the mask values (i.e. fraction of each grid cell within the polygon.
+      w2 = getValues(w);
+      filt = w2>0
+      wLongLat = coordinates(w)[filt,]
+      w=w[filt]
+
+      # Normalise the weights
+      w = w/sum(w);
+
+      # Add to data set of all catchments
+      if (length(w.all)==0) {
+        catchment.lookup[i,] = c(1,length(w));
+        w.all = w;
+        longLat.all = wLongLat;
+      } else {
         catchment.lookup[i,] = c(length(w.all)+1,length(w.all)+length(w));
         w.all = c(w.all, w)
         longLat.all = rbind(longLat.all, wLongLat);
+      }
     }
+  } else {
+
+    # For point data, set weights to 1 and coordinates from point locations
+    w.all = rep(1,length(catchments))
+    longLat.all = cbind(as.numeric(coordinates(catchments)[,1]),as.numeric(coordinates(catchments)[,2]))
+    catchment.lookup = cbind(rep(1,length(catchments)),rep(1,length(catchments)));
   }
+
   removeTmpFiles(h=0)
 
   if (getSolarrad && getMortonsPET) {
@@ -249,6 +277,13 @@ extractCatchmentData <- function(
     extractDay_solar = c();
   }
 
+  # Set the interpolation method.
+  if (isCatchmentsPolygon) {
+    interpMethod='simple';
+  } else {
+    interpMethod='bilinear';
+  }
+
   message('... Starting to extract data across all catchments:')
   for (j in 1:length(timepoints2Extract)){
 
@@ -259,13 +294,13 @@ extractCatchmentData <- function(
       message(paste('    ... Extracting data for time point ', j,' of ',length(timepoints2Extract)));
     }
     if (getPrecip)
-      precip[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='precip',lvar=3), longLat.all)
+      precip[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='precip',lvar=3, method=interpMethod), longLat.all)
     if (getTmin)
-      tmin[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmin',lvar=3), longLat.all)
+      tmin[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmin',lvar=3, method=interpMethod), longLat.all)
     if (getTmax)
-      tmax[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmax',lvar=3), longLat.all)
+      tmax[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='tmax',lvar=3, method=interpMethod), longLat.all)
     if (getVprp)
-      vprp[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='vprp',lvar=3), longLat.all)
+      vprp[j,1:length(w.all)]  <- raster::extract(raster(ncdfFilename, band=ind, varname='vprp',lvar=3, method=interpMethod), longLat.all)
 
     # Get date of extracted grid.
     extractDate = getZ(raster(ncdfFilename, band=ind,lvar=3));
@@ -281,7 +316,7 @@ extractCatchmentData <- function(
 
       if (ind>0) {
         # Get ncdf grid
-        solarrad[j,1:length(w.all)]  <- raster::extract(raster(ncdfSolarFilename, band=ind, varname='solarrad',lvar=3), longLat.all)
+        solarrad[j,1:length(w.all)]  <- raster::extract(raster(ncdfSolarFilename, band=ind, varname='solarrad',lvar=3, method=interpMethod), longLat.all)
 
         # Get date of extracted grid.
         extractDate = getZ(raster(ncdfSolarFilename, band=ind,lvar=3));
@@ -495,7 +530,12 @@ extractCatchmentData <- function(
   }
   # end for-loop
 
-  return(list(catchmentAvg=catchmentAvg, catchmentVar=catchmentVar))
+  if (isCatchmentsPolygon) {
+    return(list(catchmentAvg=catchmentAvg, catchmentVar=catchmentVar))
+  } else {
+    return(catchmentAvg)
+  }
+
 
   message('Data extraction FINISHED..')
 }

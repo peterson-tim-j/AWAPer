@@ -334,13 +334,13 @@ makeNetCDF_file <- function(
       # Set updateFrom to the end of the netCDF file if updateFrom is NA or ''.
       if (is.character(updateFrom)) {
         if (nchar(updateFrom)>0) {
-          updateFrom = min(c(as.Date(max(timePoints_R)),as.Date(updateFrom,'%Y-%m-%d')));
+          updateFrom = min(c(max(as.Date(timePoints_R)),as.Date(updateFrom,'%Y-%m-%d')));
         } else {
-          updateFrom = as.Date(max(timePoints_R));
+          updateFrom = max(as.Date(timePoints_R));
         }
       } else {
         if (is.na(updateFrom)) {
-          updateFrom = as.Date(max(timePoints_R));
+          updateFrom = max(as.Date(timePoints_R));
         }
       }
 
@@ -379,6 +379,9 @@ makeNetCDF_file <- function(
 
       # Find index to the date to update within the net CDF grid
       ind = as.integer(difftime(timepoints2Update[date], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
+
+      # Update timePoints_netCDF time vector
+      timePoints_netCDF[ind] = ind-1;
 
       # Download data
       #----------------
@@ -428,51 +431,55 @@ makeNetCDF_file <- function(
       #----------------
 
       # Get precip grid and add to Net CDF grid
-      if (file.exists(destFile_precip) && didFail_precip==0) {
+      if (!is.na(urlPrecip) && file.exists(destFile_precip) && didFail_precip==0) {
         raw<-textConnection(readLines(a<-gzfile(destFile_precip)));
         AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
         close(raw);
         AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "precip", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
-      if (file.exists(destFile_precip) && !keepFiles)
+      if (!is.na(urlPrecip) && file.exists(destFile_precip) && !keepFiles)
         file.remove(destFile_precip)
 
       # Get tmin grid and add to Net CDF grid
-      if (file.exists(destFile_tmin) && didFail_tmin==0) {
+      if (!is.na(urlTmin) && file.exists(destFile_tmin) && didFail_tmin==0) {
         raw<-textConnection(readLines(a<-gzfile(destFile_tmin)));
         AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
         close(raw);
         AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "tmin", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
-      if (file.exists(destFile_tmin) && !keepFiles)
+      if (!is.na(urlTmin) && file.exists(destFile_tmin) && !keepFiles)
         file.remove(destFile_tmin)
 
       # Get tmax grid and add to Net CDF grid
-      if (file.exists(destFile_tmax) && didFail_tmax==0) {
+      if (!is.na(urlTmax) && file.exists(destFile_tmax) && didFail_tmax==0) {
         raw<-textConnection(readLines(a<-gzfile(destFile_tmax)));
         AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
         close(raw);
         AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "tmax", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
-      if (file.exists(destFile_tmax) && !keepFiles)
+      if (!is.na(urlTmax) && file.exists(destFile_tmax) && !keepFiles)
         file.remove(destFile_tmax)
 
       # Get vapour pr grid and add to Net CDF grid
-      if (file.exists(destFile_vprp) && didFail_vprp==0) {
+      if (!is.na(urlVprp) && file.exists(destFile_vprp) && didFail_vprp==0) {
         raw<-textConnection(readLines(a<-gzfile(destFile_vprp)));
         AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
         close(raw);
         AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "vprp", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
-      if (file.exists(destFile_vprp) && !keepFiles)
+      if (!is.na(urlVprp) && file.exists(destFile_vprp) && !keepFiles)
         file.remove(destFile_vprp)
 
 
     }
+
+    # Updtate netCDF time variable
+    ncvar_put(ncout, "time",timePoints_netCDF)
+
     # close the file, writing data to disk
     nc_close(ncout)
   }
@@ -563,13 +570,13 @@ makeNetCDF_file <- function(
       # Set updateFrom to the min of the end of the netCDF file and updateFrom
       if (is.character(updateFrom)) {
         if (nchar(updateFrom)>0) {
-          updateFrom = min(c(as.Date(max(timePoints_R)), as.Date(updateFrom,'%Y-%m-%d')));
+          updateFrom = min(c(max(as.Date(timePoints_R)), as.Date(updateFrom,'%Y-%m-%d')));
         } else {
-          updateFrom = as.Date(max(timePoints_R));
+          updateFrom = max(as.Date(timePoints_R));
         }
       } else {
         if (is.na(updateFrom)) {
-          updateFrom = as.Date(max(timePoints_R));
+          updateFrom = max(as.Date(timePoints_R));
         }
       }
 
@@ -612,6 +619,9 @@ makeNetCDF_file <- function(
       # Find index to the date to update within the net CDF grid
       ind = as.integer(difftime(timepoints2Update[date], as.Date("1990-1-1",'%Y-%m-%d'),units = "days" ))+1
 
+      # Update timePoints_netCDF time vector
+      timePoints_netCDF[ind] = ind-1;
+
       # Download the file
       didFail=1
       if (!is.na(urlSolarrad)) {
@@ -641,12 +651,16 @@ makeNetCDF_file <- function(
         AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
 
         # Add to ncdf
-        ncvar_put( ncout, "solarrad", AWAPgrid, start=c(1, 1, date), count=c(nCols_solar, nRows_solar, 1), verbose=F )
+        ncvar_put( ncout, "solarrad", AWAPgrid, start=c(1, 1, ind), count=c(nCols_solar, nRows_solar, 1), verbose=F )
       }
 
       if (file.exists(destFile_solarrad)  && !keepFiles)
         file.remove(destFile_solarrad)
     }
+
+    # Updtate netCDF time variable
+    ncvar_put(ncout, "time",timePoints_netCDF)
+
     # close the file, writing data to disk
     nc_close(ncout)
   }
