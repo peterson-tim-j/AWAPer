@@ -11,7 +11,7 @@ To get started using the package, following these steps:
 `install(c("sp", "raster", "chron", "ncdf4", "maptools", "Evapotranspiration","devtools"))`
 1. Load the required R packages using the following R commands: 
 `library(sp); library(raster); library(chron);library(ncdf4);library(maptools);library(Evapotranspiration);library(devtools)`
-1. Within R, navigate to where you unzipped the AWAPer package. 
+1. Within R, navigate to where you unzipped the AWAPer package. Rename the "AWAPer-master" folder to "AWAPer".
 1. Install the AWAPer package using the following command: `install("AWAPer")`
 1. Within R, set the working directory, using `setwd()`, to the folder in which you want to build the netCDF files. Note the files will have a total size of ~400GB.
 1. Build the netcdf files using the R command `makeNetCDF_file()`
