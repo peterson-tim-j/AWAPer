@@ -75,11 +75,19 @@ makeNetCDF_file <- function(
   urlSolarrad = 'http://www.bom.gov.au/web03/ncc/www/awap/solar/solarave/daily/grid/0.05/history/nat/')  {
 
 
-  # Load appropriate packages that are used
-  #library(R.utils)
-  #library(ncdf4)
-  #library(raster)
-
+  # Check the required packages exist
+  if (!require(sp))
+    error('The following package must be installed: sp')
+  if (!require(raster))
+    error('The following package must be installed: raster')
+  if (!require(ncdf4))
+    error('The following package must be installed: ncdf4')
+  if (!require(chron))
+    error('The following package must be installed: chron')
+  if (!require(maptools))
+    error('The following package must be installed: maptools')
+  if (!require(Evapotranspiration))
+    error('The following package must be installed: Evapotranspiration')
 
   # Check that the ncdf files
   doUpdate = F;
@@ -111,114 +119,83 @@ makeNetCDF_file <- function(
   if (doMainCDF) {
     if (!is.na(urlPrecip)) {
       message('... Testing downloading of AWAP precip. grid')
-      url = paste(urlPrecip,filedate_str, filedate_str,'.grid.Z',sep='')
-      destFile = file.path(workingFolder,paste('precip.',filedate_str,'.grid.Z',sep=''))
-      didFail = download.file(url,destFile, quiet = FALSE)
-      if (didFail)
-        error('Downloading the grid failed. Please check the URL and the internet connection.')
+      destFile <- download.ASCII.file(urlPrecip, 'precip.', workingFolder, filedate_str)
 
       # Get the grid geometry of the non solar data
       message('... Getting grid gemoetry from file.')
-      system(paste('znew -f ',destFile));
-      destFile = file.path(workingFolder,paste('precip.',filedate_str,'.grid.gz',sep=''))
-      raw<-textConnection(readLines(a<-gzfile(destFile)));
-      headerData = readLines(raw,n=6)
-      nCols =as.integer(sub('ncols', '', headerData[1]))
-      nRows = as.integer(sub('nrows', '', headerData[2]));
-      SWLong = as.numeric(sub('xllcenter', '', headerData[3]));
-      SWLat = as.numeric(sub('yllcenter', '', headerData[4]));
-      DPixel = as.numeric(sub('cellsize', '', headerData[5]));
-      nodata = as.numeric(sub('nodata_value', '', headerData[6]));
-      close(raw)
-      file.remove(destFile)
+      headerData <- get.ASCII.file.header(destFile$file.name, 'precip.', workingFolder, filedate_str, remove.file=T)
+      nCols  <- headerData$nCols
+      nRows  <- headerData$nRows
+      SWLong <- headerData$SWLong
+      SWLat  <- headerData$SWLat
+      DPixel <- headerData$DPixel
+      nodata <- headerData$nodata
       haveGridGeometry = TRUE;
     }
 
     # Test the AWAP downloading
     if (!is.na(urlTmin)) {
       message('... Testing downloading of AWAP tmin grid')
-      url = paste(urlTmin,filedate_str, filedate_str,'.grid.Z',sep='')
-      destFile = file.path(workingFolder,paste('tmin.',filedate_str,'.grid.Z',sep=''))
-      didFail = download.file(url,destFile, quiet = FALSE)
-      if (didFail)
-        error('Downloading the grid failed. Please check the URL and the internet connection.')
+      destFile <- download.ASCII.file(urlTmin, 'tmin.', workingFolder, filedate_str)
 
       # Get grid geometry if not available from precip
       if (is.na(urlPrecip)) {
         # Get the grid geometry of the non solar data
         message('... Getting grid gemoetry from file.')
-        system(paste('znew -f ',destFile));
-        destFile = file.path(workingFolder,paste('tmin.',filedate_str,'.grid.gz',sep=''))
-        raw<-textConnection(readLines(a<-gzfile(destFile)));
-        headerData = readLines(raw,n=6)
-        nCols =as.integer(sub('ncols', '', headerData[1]))
-        nRows = as.integer(sub('nrows', '', headerData[2]));
-        SWLong = as.numeric(sub('xllcenter', '', headerData[3]));
-        SWLat = as.numeric(sub('yllcenter', '', headerData[4]));
-        DPixel = as.numeric(sub('cellsize', '', headerData[5]));
-        nodata = as.numeric(sub('nodata_value', '', headerData[6]));
-        close(raw)
+        headerData <- get.ASCII.file.header(destFile$file.name,'tmin.', workingFolder, filedate_str, remove.file=F)
+        nCols  <- headerData$nCols
+        nRows  <- headerData$nRows
+        SWLong <- headerData$SWLong
+        SWLat  <- headerData$SWLat
+        DPixel <- headerData$DPixel
+        nodata <- headerData$nodata
+        haveGridGeometry = TRUE;
       }
-      file.remove(destFile)
-      haveGridGeometry = TRUE;
+      file.remove(destFile$file.name)
+
     }
 
     # Test the AWAP downloading
     if (!is.na(urlTmax)) {
       message('... Testing downloading of AWAP tmax grid')
-      url = paste(urlTmax,filedate_str, filedate_str,'.grid.Z',sep='')
-      destFile = file.path(workingFolder,paste('tmax.',filedate_str,'.grid.Z',sep=''))
-      didFail = download.file(url,destFile, quiet = FALSE)
-      if (didFail)
-        error('Downloading the grid failed. Please check the URL and the internet connection.')
+      destFile <- download.ASCII.file(urlTmax, 'tmax.', workingFolder, filedate_str)
 
       # Get grid geometry if not available from precip
       if (is.na(urlPrecip)) {
         # Get the grid geometry of the non solar data
         message('... Getting grid gemoetry from file.')
-        system(paste('znew -f ',destFile));
-        destFile = file.path(workingFolder,paste('tmax.',filedate_str,'.grid.gz',sep=''))
-        raw<-textConnection(readLines(a<-gzfile(destFile)));
-        headerData = readLines(raw,n=6)
-        nCols =as.integer(sub('ncols', '', headerData[1]))
-        nRows = as.integer(sub('nrows', '', headerData[2]));
-        SWLong = as.numeric(sub('xllcenter', '', headerData[3]));
-        SWLat = as.numeric(sub('yllcenter', '', headerData[4]));
-        DPixel = as.numeric(sub('cellsize', '', headerData[5]));
-        nodata = as.numeric(sub('nodata_value', '', headerData[6]));
-        close(raw)
+        headerData <- get.ASCII.file.header(destFile$file.name, 'tmax', workingFolder, filedate_str, remove.file=F)
+        nCols  <- headerData$nCols
+        nRows  <- headerData$nRows
+        SWLong <- headerData$SWLong
+        SWLat  <- headerData$SWLat
+        DPixel <- headerData$DPixel
+        nodata <- headerData$nodata
         haveGridGeometry = TRUE;
       }
-      file.remove(destFile)
+
+      file.remove(destFile$file.name)
     }
 
     # Test the AWAP downloading
     if (!is.na(urlVprp)) {
       message('... Testing downloading of AWAP vapour pressure grid')
-      url = paste(urlVprp,filedate_str, filedate_str,'.grid.Z',sep='')
-      destFile = file.path(workingFolder,paste('vprp.',filedate_str,'.grid.Z',sep=''))
-      didFail = download.file(url,destFile, quiet = FALSE)
-      if (didFail)
-        error('Downloading the grid failed. Please check the URL and the internet connection.')
+      destFile <- download.ASCII.file(urlVprp, 'vprp.', workingFolder, filedate_str)
 
       # Get grid geometry if not available from precip
       if (is.na(urlPrecip)) {
         # Get the grid geometry of the non solar data
         message('... Getting grid gemoetry from file.')
-        system(paste('znew -f ',destFile));
-        destFile = file.path(workingFolder,paste('vprp.',filedate_str,'.grid.gz',sep=''))
-        raw<-textConnection(readLines(a<-gzfile(destFile)));
-        headerData = readLines(raw,n=6)
-        nCols =as.integer(sub('ncols', '', headerData[1]))
-        nRows = as.integer(sub('nrows', '', headerData[2]));
-        SWLong = as.numeric(sub('xllcenter', '', headerData[3]));
-        SWLat = as.numeric(sub('yllcenter', '', headerData[4]));
-        DPixel = as.numeric(sub('cellsize', '', headerData[5]));
-        nodata = as.numeric(sub('nodata_value', '', headerData[6]));
-        close(raw)
+        headerData <- get.ASCII.file.header(destFile$file.name, 'vprp', workingFolder, filedate_str, remove.file=F)
+        nCols  <- headerData$nCols
+        nRows  <- headerData$nRows
+        SWLong <- headerData$SWLong
+        SWLat  <- headerData$SWLat
+        DPixel <- headerData$DPixel
+        nodata <- headerData$nodata
         haveGridGeometry = TRUE;
       }
-      file.remove(destFile)
+      file.remove(destFile$file.name)
 
     }
   }
@@ -227,26 +204,17 @@ makeNetCDF_file <- function(
   # Test the AWAP solar downloading
   if (!is.na(urlSolarrad)) {
     message('... Testing downloading of AWAP solar grid')
-    url = paste(urlSolarrad,filedate_str, filedate_str,'.grid.Z',sep='')
-    destFile = file.path(workingFolder,paste('solarrad.',filedate_str,'.grid.Z',sep=''))
-    didFail = download.file(url,destFile, quiet = FALSE)
-    if (didFail)
-      error('Downloading the grid failed. Please check the URL and the internet connection.')
+    destFile <- download.ASCII.file(urlSolarrad, 'solarrad.', workingFolder, filedate_str)
 
     # Get the grid geometry of the non solar data
-    message('... Getting grid gemoetry from file')
-    system(paste('znew -f ',destFile));
-    destFile = file.path(workingFolder,paste('solarrad.',filedate_str,'.grid.gz',sep=''))
-    raw<-textConnection(readLines(a<-gzfile(destFile)));
-    headerData = readLines(raw,n=6)
-    nCols_solar =as.integer(sub('ncols', '', headerData[1]))
-    nRows_solar = as.integer(sub('nrows', '', headerData[2]));
-    SWLong_solar = as.numeric(sub('xllcenter', '', headerData[3]));
-    SWLat_solar = as.numeric(sub('yllcenter', '', headerData[4]));
-    DPixel_solar = as.numeric(sub('cellsize', '', headerData[5]));
-    nodata_solar = as.numeric(sub('nodata_value', '', headerData[6]));
-    close(raw)
-    file.remove(destFile)
+    message('... Getting grid gemoetry from file.')
+    headerData <- get.ASCII.file.header(destFile$file.name, 'solarrad.', workingFolder, filedate_str, remove.file=T)
+    nCols_solar  <- headerData$nCols
+    nRows_solar  <- headerData$nRows
+    SWLong_solar <- headerData$SWLong
+    SWLat_solar  <- headerData$SWLat
+    DPixel_solar <- headerData$DPixel
+    nodata_solar <- headerData$nodata
     haveGridGeometry_solar = TRUE;
   }
 
@@ -387,55 +355,73 @@ makeNetCDF_file <- function(
       #----------------
       didFail_precip=1
       if (!is.na(urlPrecip)) {
-        url = paste(urlPrecip,datestring, datestring,'.grid.Z',sep='')
-        destFile_precip = file.path(workingFolder,paste('precip.',datestring,'.grid.Z',sep=''))
-        didFail_precip = download.file(url,destFile_precip, quiet = T)
-        if (didFail_precip==0) {
-          system(paste('znew -f ',destFile_precip));
-          destFile_precip = gsub('.Z', '.gz', destFile_precip)
-        }
+
+        destFile <- download.ASCII.file(urlPrecip, 'precip.', workingFolder, datestring)
+        destFile_precip <- destFile$file.name
+        didFail_precip <- destFile$didFail
+        # url = paste(urlPrecip,datestring, datestring,'.grid.Z',sep='')
+        # destFile_precip = file.path(workingFolder,paste('precip.',datestring,'.grid.Z',sep=''))
+        # didFail_precip = download.file(url,destFile_precip, quiet = T)
+        # if (didFail_precip==0) {
+        #   system(paste('znew -f ',destFile_precip));
+        #   destFile_precip = gsub('.Z', '.gz', destFile_precip)
+        # }
       }
 
       didFail_tmin=1
       if (!is.na(urlTmin)) {
-        url = paste(urlTmin,datestring, datestring,'.grid.Z',sep='')
-        destFile_tmin = file.path(workingFolder,paste('tmin.',datestring,'.grid.Z',sep=''))
-        didFail_tmin = download.file(url,destFile_tmin, quiet = T)
-        if (didFail_tmin==0) {
-          system(paste('znew -f ',destFile_tmin));
-          destFile_tmin = gsub('.Z', '.gz', destFile_tmin)
-        }
+        destFile <- download.ASCII.file(urlTmin, 'tmin.', workingFolder, datestring)
+        destFile_tmin <- destFile$file.name
+        didFail_tmin <- destFile$didFail
+
+        # url = paste(urlTmin,datestring, datestring,'.grid.Z',sep='')
+        # destFile_tmin = file.path(workingFolder,paste('tmin.',datestring,'.grid.Z',sep=''))
+        # didFail_tmin = download.file(url,destFile_tmin, quiet = T)
+        # if (didFail_tmin==0) {
+        #   system(paste('znew -f ',destFile_tmin));
+        #   destFile_tmin = gsub('.Z', '.gz', destFile_tmin)
+        # }
       }
 
       didFail_tmax=1
       if (!is.na(urlTmax)) {
-        url = paste(urlTmax,datestring, datestring,'.grid.Z',sep='')
-        destFile_tmax = file.path(workingFolder,paste('tmax.',datestring,'.grid.Z',sep=''))
-        didFail_tmax = download.file(url,destFile_tmax, quiet = T)
-        if (didFail_tmax==0) {
-          system(paste('znew -f ',destFile_tmax));
-          destFile_tmax = gsub('.Z', '.gz', destFile_tmax)
-        }
+        destFile <- download.ASCII.file(urlTmax, 'tmax.', workingFolder, datestring)
+        destFile_tmax <- destFile$file.name
+        didFail_tmax <- destFile$didFail
+
+        # url = paste(urlTmax,datestring, datestring,'.grid.Z',sep='')
+        # destFile_tmax = file.path(workingFolder,paste('tmax.',datestring,'.grid.Z',sep=''))
+        # didFail_tmax = download.file(url,destFile_tmax, quiet = T)
+        # if (didFail_tmax==0) {
+        #   system(paste('znew -f ',destFile_tmax));
+        #   destFile_tmax = gsub('.Z', '.gz', destFile_tmax)
+        # }
       }
 
       didFail_vprp=1
       if (!is.na(urlVprp)) {
-        url = paste(urlVprp,datestring, datestring,'.grid.Z',sep='')
-        destFile_vprp = file.path(workingFolder,paste('vprp.',datestring,'.grid.Z',sep=''))
-        didFail_vprp = download.file(url,destFile_vprp, quiet = T)
-        if (didFail_vprp==0) {
-          system(paste('znew -f ',destFile_vprp));
-          destFile_vprp = gsub('.Z', '.gz', destFile_vprp)
-        }
+        destFile <- download.ASCII.file(urlVprp, 'vprp.', workingFolder, datestring)
+        destFile_vprp <- destFile$file.name
+        didFail_vprp <- destFile$didFail
+
+        # url = paste(urlVprp,datestring, datestring,'.grid.Z',sep='')
+        # destFile_vprp = file.path(workingFolder,paste('vprp.',datestring,'.grid.Z',sep=''))
+        # didFail_vprp = download.file(url,destFile_vprp, quiet = T)
+        # if (didFail_vprp==0) {
+        #   system(paste('znew -f ',destFile_vprp));
+        #   destFile_vprp = gsub('.Z', '.gz', destFile_vprp)
+        # }
       }
       #----------------
 
       # Get precip grid and add to Net CDF grid
       if (!is.na(urlPrecip) && file.exists(destFile_precip) && didFail_precip==0) {
-        raw<-textConnection(readLines(a<-gzfile(destFile_precip)));
-        AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
-        close(raw);
-        AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
+
+        AWAPgrid <- readin.ASCII.file(destFile_precip, nRows)
+        # raw<-textConnection(readLines(a<-gzfile(destFile_precip)));
+        # AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
+        # close(raw);
+        # AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "precip", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlPrecip) && file.exists(destFile_precip) && !keepFiles)
@@ -443,10 +429,11 @@ makeNetCDF_file <- function(
 
       # Get tmin grid and add to Net CDF grid
       if (!is.na(urlTmin) && file.exists(destFile_tmin) && didFail_tmin==0) {
-        raw<-textConnection(readLines(a<-gzfile(destFile_tmin)));
-        AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
-        close(raw);
-        AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
+        AWAPgrid <- readin.ASCII.file(destFile_tmin, nRows)
+        # raw<-textConnection(readLines(a<-gzfile(destFile_tmin)));
+        # AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
+        # close(raw);
+        # AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "tmin", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlTmin) && file.exists(destFile_tmin) && !keepFiles)
@@ -454,10 +441,11 @@ makeNetCDF_file <- function(
 
       # Get tmax grid and add to Net CDF grid
       if (!is.na(urlTmax) && file.exists(destFile_tmax) && didFail_tmax==0) {
-        raw<-textConnection(readLines(a<-gzfile(destFile_tmax)));
-        AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
-        close(raw);
-        AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
+        AWAPgrid <- readin.ASCII.file(destFile_tmax, nRows)
+        # raw<-textConnection(readLines(a<-gzfile(destFile_tmax)));
+        # AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
+        # close(raw);
+        # AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "tmax", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlTmax) && file.exists(destFile_tmax) && !keepFiles)
@@ -465,10 +453,11 @@ makeNetCDF_file <- function(
 
       # Get vapour pr grid and add to Net CDF grid
       if (!is.na(urlVprp) && file.exists(destFile_vprp) && didFail_vprp==0) {
-        raw<-textConnection(readLines(a<-gzfile(destFile_vprp)));
-        AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
-        close(raw);
-        AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
+        AWAPgrid <- readin.ASCII.file(destFile_vprp, nRows)
+        # raw<-textConnection(readLines(a<-gzfile(destFile_vprp)));
+        # AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
+        # close(raw);
+        # AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
         ncvar_put( ncout, "vprp", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlVprp) && file.exists(destFile_vprp) && !keepFiles)
@@ -625,26 +614,32 @@ makeNetCDF_file <- function(
       # Download the file
       didFail=1
       if (!is.na(urlSolarrad)) {
-        url = paste(urlSolarrad,datestring, datestring,'.grid.Z',sep='')
-        destFile_solarrad = file.path(workingFolder,paste('solarrad',datestring,'.grid.Z',sep=''))
-        didFail = download.file(url,destFile_solarrad, quiet = T)
-        if (didFail==0) {
-          system(paste('znew -f ',destFile_solarrad));
-          destFile_solarrad = gsub('.Z', '.gz', destFile_solarrad)
-        }
+        destFile <- download.ASCII.file(urlSolarrad, 'solarrad', workingFolder, datestring)
+        destFile_solarrad <- destFile$file.name
+        didFail <- destFile$didFail
+        #
+        # url = paste(urlSolarrad,datestring, datestring,'.grid.Z',sep='')
+        # destFile_solarrad = file.path(workingFolder,paste('solarrad',datestring,'.grid.Z',sep=''))
+        # didFail = download.file(url,destFile_solarrad, quiet = T)
+        # if (didFail==0) {
+        #   system(paste('znew -f ',destFile_solarrad));
+        #   destFile_solarrad = gsub('.Z', '.gz', destFile_solarrad)
+        # }
       }
 
       # Get vapour pr grid and add to Net CDF grid
       if (file.exists(destFile_solarrad) && didFail==0) {
         # Import file
-        raw<-textConnection(readLines(a<-gzfile(destFile_solarrad)));
-        AWAPgrid<- raster(as.matrix(t(read.table(raw, skip=6, nrow=nRows_solar))))
-        close(raw);
+        AWAPgrid <- readin.ASCII.file(destFile_solarrad, nRows_solar)
+        # raw<-textConnection(readLines(a<-gzfile(destFile_solarrad)));
+        # AWAPgrid<- raster(as.matrix(t(read.table(raw, skip=6, nrow=nRows_solar))))
+        # close(raw);
 
         # Infill NA values of grid by taking the local average and convert back to matrix.
-        AWAPgrid = focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
-        AWAPgrid = focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
-        AWAPgrid = focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
+        AWAPgrid <- raster(AWAPgrid)
+        AWAPgrid <- focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
+        AWAPgrid <- focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
+        AWAPgrid <- focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
         #AWAPgrid = as.matrix(AWAPgrid);
 
         # Reorder grid for ncdf
@@ -670,4 +665,83 @@ makeNetCDF_file <- function(
   #long <- ncvar_get(ncout,"Long")
   #lat <- ncvar_get(ncout,"Lat")
   #image(long,lat,tmp_array,  col=rev(brewer.pal(10,"RdBu")))
+}
+
+
+get.ASCII.file.header <- function (des.file.name, data.type.label, workingFolder, datestring, remove.file=T) {
+
+  OS <- Sys.info()
+  OS <- OS[1]
+  if (OS=='Windows') {
+    system(paste('7z e -aoa -bso0 ',des.file.name))
+    des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid',sep=''))
+    raw<-textConnection(readLines(a<-file(des.file.name)))
+  } else {
+    system(paste('znew -f ',des.file.name))
+    des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.gz',sep=''))
+    raw<-textConnection(readLines(a<-gzfile(des.file.name)))
+  }
+
+  headerData = readLines(raw,n=6)
+  nCols =as.integer(sub('ncols', '', headerData[1]))
+  nRows = as.integer(sub('nrows', '', headerData[2]));
+  SWLong = as.numeric(sub('xllcenter', '', headerData[3]));
+  SWLat = as.numeric(sub('yllcenter', '', headerData[4]));
+  DPixel = as.numeric(sub('cellsize', '', headerData[5]));
+  nodata = as.numeric(sub('nodata_value', '', headerData[6]));
+
+  close(raw)
+  if (remove.file)
+    didRemoveFile = tryCatch({file.remove(des.file.name)},finally=TRUE)
+
+  header.data =  list(nCols=nCols,nRows=nRows,SWLong=SWLong,SWLat=SWLat,DPixel=DPixel,nodata=nodata)
+  return(header.data)
+}
+
+download.ASCII.file <- function (url.string, data.type.label,  workingFolder, datestring) {
+
+  didFail = 1
+  url = paste(url.string,datestring, datestring,'.grid.Z',sep='')
+
+  OS <- Sys.info()
+  OS <- OS[1]
+  if (OS=='Windows') {
+    des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
+    didFail = tryCatch({download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
+    if (didFail==0) {
+      system(paste('7z e -aoa -bso0 ',des.file.name));
+      des.file.name = gsub('.Z', '', des.file.name)
+    } else {
+      warning(paste('Downloading the following grid failed:',des.file.name,'. Please check the URL and the internet connection.'))
+    }
+  } else {
+
+    des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
+    didFail = download.file(url,des.file.name, quiet = T)
+    if (didFail==0) {
+      system(paste('znew -f ',des.file.name));
+      des.file.name = gsub('.Z', '.gz', des.file.name)
+    } else {
+      warning(paste('Downloading the following grid failed:',des.file.name,'. Please check the URL and the internet connection.'))
+    }
+  }
+
+  return(list(file.name=des.file.name,didFail=didFail))
+}
+
+readin.ASCII.file <- function(file.name, nRows) {
+  OS <- Sys.info()
+  OS <- OS[1]
+  if (OS=='Windows') {
+    #system(paste('7z e -aoa -bso0 ',des.file.name))
+    raw<-textConnection(readLines(a<-file(file.name)))
+  } else {
+    raw<-textConnection(readLines(a<-gzfile(file.name)));
+  }
+
+  AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
+  AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
+  close(raw)
+
+  return(AWAPgrid)
 }

@@ -81,6 +81,20 @@ extractCatchmentData <- function(
   DEM='',
   catchments='')  {
 
+  # Check the required packages exist
+  if (!require(sp))
+    error('The following package must be installed: sp')
+  if (!require(raster))
+    error('The following package must be installed: raster')
+  if (!require(ncdf4))
+    error('The following package must be installed: ncdf4')
+  if (!require(chron))
+    error('The following package must be installed: chron')
+  if (!require(maptools))
+    error('The following package must be installed: maptools')
+  if (!require(Evapotranspiration))
+    error('The following package must be installed: Evapotranspiration')
+
   # Build time points to update
   if (is.character(extractFrom))
     extractFrom = as.Date(extractFrom,'%Y-%m-%d');
@@ -290,7 +304,7 @@ extractCatchmentData <- function(
     # Find index to the date to update within the net CDF grid
     ind = as.integer(difftime(timepoints2Extract[j], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
 
-    if (j%%10000 ==0 ) {
+    if (j%%(365*5) ==0 ) {
       message(paste('    ... Extracting data for time point ', j,' of ',length(timepoints2Extract)));
     }
     if (getPrecip)
