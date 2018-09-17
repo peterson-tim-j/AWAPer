@@ -1,0 +1,5 @@
+Change log for AWAPer
+----------------------
+
+13-Sept-2018
+* Bug Issue #2 fixed (point extractions using only the first input coordinate). L263 of extractCatchmentData() edits.

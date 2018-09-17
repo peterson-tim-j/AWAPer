@@ -260,7 +260,7 @@ extractCatchmentData <- function(
     # For point data, set weights to 1 and coordinates from point locations
     w.all = rep(1,length(catchments))
     longLat.all = cbind(as.numeric(coordinates(catchments)[,1]),as.numeric(coordinates(catchments)[,2]))
-    catchment.lookup = cbind(rep(1,length(catchments)),rep(1,length(catchments)));
+    catchment.lookup = cbind(seq(1,length(catchments),by=1),seq(1,length(catchments),by=1));
   }
 
   removeTmpFiles(h=0)
