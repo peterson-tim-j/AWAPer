@@ -6,13 +6,13 @@ To get started using the package, following these steps:
 
 1. Download the zipped package.
 1. Unzip the package on your local machine.
-1. Open R 
+1. Rename the unzipped "AWAPer-master" folder to "AWAPer".
+1. Open R. 
 1. Install the required packages using the following R command:
 `install(c("sp", "raster", "chron", "ncdf4", "maptools", "Evapotranspiration","devtools"))`
 1. Load the required R packages using the following R commands: 
 `library(sp); library(raster); library(chron);library(ncdf4);library(maptools);library(Evapotranspiration);library(devtools)`
-1. Within R, navigate to where you unzipped the AWAPer package. Rename the "AWAPer-master" folder to "AWAPer".
-1. Install the AWAPer package using the following command: `install("AWAPer")`
+1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder): `install("c:\MY_FOLDER\AWAPer")`
 1. Within R, set the working directory, using `setwd()`, to the folder in which you want to build the netCDF files. Note the files will have a total size of ~400GB.
 1. Build the netcdf files using the R command `makeNetCDF_file()`
 1. Get the Australian 9 second DEM from Geoscience Australia using the command `DEM_9s = getDEM()`
