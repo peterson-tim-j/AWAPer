@@ -4,7 +4,7 @@ This R package builds netCDF files of the Bureau of Meteorology Australian Water
 # Getting Started
 To get started using the package, following these steps:
 
-1. Download the zipped package.
+1. Download the latest release of the package from https://github.com/peterson-tim-j/AWAPer/releases.
 1. Unzip the package on your local machine.
 1. Rename the unzipped "AWAPer-master" folder to "AWAPer".
 1. Open R. 
@@ -20,4 +20,3 @@ To get started using the package, following these steps:
 1. Extract daily climate data and calculate Morton's wet enviroment potential ET from 1990 onwards using the command `climateData = extractCatchmentData(extractFrom='1990-1-1',catchments=catchments,DEM=DEM_9s)`
 1. Extract the daily catchment average data from the results using the command `climateDataAvg = climateData$catchmentAvg`
 1. Extract the daily catchment variance data from the results using the command `climateDataVar = climateData$catchmentVar`
-
