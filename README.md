@@ -8,7 +8,7 @@ To get started using the package, following these steps:
 1. Unzip the package on your local machine.
 1. Rename the unzipped files, say "AWAPer-1.0.zip" folder to "AWAPer".
 1. Open R. 
-1. Install the netCDF package using the following command: `install.packages("ncdf4")` . *Importantly* this may require installation of netCDF software outside of R. Please read the output R console messages carefully.
+1. Install the netCDF package using the following command: `install.packages("ncdf4")` . **Importantly** this step may require installation of netCDF software outside of R. Please read the output R console messages carefully.
 1. Install the remaining required packages using the following R command:
 `install.packages(c("sp", "raster", "chron", "maptools", "Evapotranspiration","devtools"))`
 1. Load the required R packages using the following R commands: 
