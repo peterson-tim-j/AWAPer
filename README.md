@@ -6,10 +6,11 @@ To get started using the package, following these steps:
 
 1. Download the latest release of the package from https://github.com/peterson-tim-j/AWAPer/releases.
 1. Unzip the package on your local machine.
-1. Rename the unzipped "AWAPer-master" folder to "AWAPer".
+1. Rename the unzipped files, say "AWAPer-1.0.zip" folder to "AWAPer".
 1. Open R. 
-1. Install the required packages using the following R command:
-`install(c("sp", "raster", "chron", "ncdf4", "maptools", "Evapotranspiration","devtools"))`
+1. Install the netCDF package using the following command: `install.packages("ncdf4")` . *Importantly* this may require installation of netCDF software outside of R. Please read the output R console messages carefully.
+1. Install the remaining required packages using the following R command:
+`install.packages(c("sp", "raster", "chron", "maptools", "Evapotranspiration","devtools"))`
 1. Load the required R packages using the following R commands: 
 `library(sp); library(raster); library(chron);library(ncdf4);library(maptools);library(Evapotranspiration);library(devtools)`
 1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder): `install("c:\MY_FOLDER\AWAPer")`
