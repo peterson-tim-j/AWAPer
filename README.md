@@ -10,9 +10,9 @@ To get started using the package, following these steps:
 1. Open R. 
 1. Install the netCDF package using the following command: `install.packages("ncdf4")` . **Importantly** this step may require installation of netCDF software outside of R. Please read the output R console messages carefully.
 1. Install the remaining required packages using the following R command:
-`install.packages(c("sp", "raster", "chron", "maptools", "Evapotranspiration","devtools"))`
+`install.packages(c("R.utils", "sp", "raster", "chron", "maptools", "Evapotranspiration","devtools"))`
 1. Load the required R packages using the following R commands: 
-`library(sp); library(raster); library(chron);library(ncdf4);library(maptools);library(Evapotranspiration);library(devtools)`
+`library(R.utils); library(sp); library(raster); library(chron);library(ncdf4);library(maptools);library(Evapotranspiration);library(devtools)`
 1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder): `install("c:\MY_FOLDER\AWAPer")`
 1. Within R, set the working directory, using `setwd()`, to the folder in which you want to build the netCDF files. Note the files will have a total size of ~400GB.
 1. Build the netcdf files using the R command `makeNetCDF_file()`
