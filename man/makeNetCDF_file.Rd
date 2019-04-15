@@ -7,8 +7,8 @@
 makeNetCDF_file(ncdfFilename = file.path(getwd(), "AWAP.nc"),
   ncdfSolarFilename = file.path(getwd(), "AWAP_solar.nc"),
   updateFrom = as.Date("1900-01-01", "\%Y-\%m-\%d"),
-  updateTo = as.Date(Sys.Date(), "\%Y-\%m-\%d"), workingFolder = getwd(),
-  keepFiles = FALSE,
+  updateTo = as.Date(Sys.Date() - 1, "\%Y-\%m-\%d"),
+  workingFolder = getwd(), keepFiles = FALSE,
   urlPrecip = "http://www.bom.gov.au/web03/ncc/www/awap/rainfall/totals/daily/grid/0.05/history/nat/",
   urlTmin = "http://www.bom.gov.au/web03/ncc/www/awap/temperature/minave/daily/grid/0.05/history/nat/",
   urlTmax = "http://www.bom.gov.au/web03/ncc/www/awap/temperature/maxave/daily/grid/0.05/history/nat/",
@@ -26,7 +26,7 @@ updated with new data from \code{updateFrom}. To update the files from the end o
 
 \item{updateTo}{is a date string specifying the end date for the AWAP data. If
 \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
-updated with new data to \code{updateFrom}. The default is today's date as YYYY-MM-DD.}
+updated with new data to \code{updateFrom}. The default is yesterday's date as YYYY-MM-DD.}
 
 \item{workingFolder}{is the file path (as string) in which to download the AWAP grid files. The default is \code{getwd()}.}
 
@@ -53,9 +53,12 @@ The default is \url{http://www.bom.gov.au/web03/ncc/www/awap/solar/solarave/dail
 \details{
 This function creates two netCDF files of daily climate data. One file contains precipitation, minimum
 daily temperature, maximum daily temperature and vappour pressure. It should span from 1/1/1900 to today
-and be ~360GB. The second file contains the solar radiation and started from 1/1/1990 and be ~24GB and
-spatial gaps are infilled using a 3x3 moving average repeated 3 times. The climate data
-is sourced from the  Bureau of Meteorology Australian Water Availability Project
+and requires ~360GB of hard-drive space. The second file contains the solar radiation and started from 1/1/1990 and be ~24GB and
+spatial gaps are infilled using a 3x3 moving average repeated 3 times. To minimise the runtime
+in extracting data, both files should be stored locally and not on a network drive. Also, building
+the files requires installation of 7zip.
+
+The climate data is sourced from the  Bureau of Meteorology Australian Water Availability Project
 (\url{http://www.bom.gov.au/jsp/awap/}.  For details see Jones et al. (2009).
 
 The output from this function is required for all data extraction functions within this package and must

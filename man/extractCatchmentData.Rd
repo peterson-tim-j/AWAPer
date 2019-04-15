@@ -8,8 +8,10 @@ extractCatchmentData(ncdfFilename = file.path(getwd(), "AWAP.nc"),
   ncdfSolarFilename = file.path(getwd(), "AWAP_solar.nc"),
   extractFrom = as.Date("1900-01-01", "\%Y-\%m-\%d"),
   extractTo = as.Date(Sys.Date(), "\%Y-\%m-\%d"), getPrecip = TRUE,
-  getTmin = TRUE, getTmax = TRUE, getVprp = TRUE, getSolarrad = TRUE,
-  getMortonsPET = TRUE, DEM = "", catchments = "")
+  getTmin = TRUE, getTmax = TRUE, getVprp = TRUE,
+  getSolarrad = TRUE, getMortonsPET = TRUE, DEM = "",
+  catchments = "", interp_missing_days = T,
+  interp_missing_entries = T, interp_abnormal = T)
 }
 \arguments{
 \item{ncdfFilename}{is a full file name (as string) to the netCDF file.}
@@ -39,6 +41,12 @@ for the calculation of Morton's PET. The Australian 9 second DEM can be loaded u
 
 \item{catchments}{is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.}
+
+\item{interp_missing_days}{T or F, indicating if missing days should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}}
+
+\item{interp_missing_entries}{T or F, indicating if missing data entries should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}}
+
+\item{interp_abnormal}{T or F, indicating if abnormal valuses should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}}
 }
 \value{
 When "catchments" are polygons, the returned variable is list variables containing two data.frames, one of the catchment average daily climate
@@ -56,7 +64,13 @@ The variance calculation does not use the fraction of the grid cell and returns 
 Prior to the catchment averaging and variance, Morton's areal potential ET (PET) is also calculated; after which the mean and
 variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from the Evapotranspiration package at
 a monthly time-step and using the AWAP solar radiation. For both points and polygons, the monthly PET estimate is then interpolated
-using a spline to a daily time step (using zoo:na.spline()) and then constrained to >=0.
+using a spline to a daily time step (using zoo:na.spline()) and then constrained to >=0. In calculating PET, the input data
+is pre-processed using Evapotranspiration::ReadInputs() such that missing days, missing enteries and abnormal values are interpolated
+(by default) with the former two interpolated using the "DoY average", i.e. replacement with same day-of-the-year average. Additionally, AWAP solar
+radiation data is only available from 1/1/1990. To derive PET values <1990, the average solar radiation for each day of the year from
+1/1/990 to "extractTo" is derived (i.e. 365 values) and then applied to each day prior to 1990. Importantly, the estimates of PET <1990
+are dependent upon the end date extracted. Re-running the estimation of PET with a later extractTo data will change the estimates of PET
+prior to 1990.
 
 Also, when "catchments" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
 the closest 4 grid cells.

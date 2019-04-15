@@ -8,7 +8,13 @@
 #' Prior to the catchment averaging and variance, Morton's areal potential ET (PET) is also calculated; after which the mean and
 #' variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from the Evapotranspiration package at
 #' a monthly time-step and using the AWAP solar radiation. For both points and polygons, the monthly PET estimate is then interpolated
-#' using a spline to a daily time step (using zoo:na.spline()) and then constrained to >=0.
+#' using a spline to a daily time step (using zoo:na.spline()) and then constrained to >=0. In calculating PET, the input data
+#' is pre-processed using Evapotranspiration::ReadInputs() such that missing days, missing enteries and abnormal values are interpolated
+#' (by default) with the former two interpolated using the "DoY average", i.e. replacement with same day-of-the-year average. Additionally, AWAP solar
+#' radiation data is only available from 1/1/1990. To derive PET values <1990, the average solar radiation for each day of the year from
+#' 1/1/990 to "extractTo" is derived (i.e. 365 values) and then applied to each day prior to 1990. Importantly, the estimates of PET <1990
+#' are dependent upon the end date extracted. Re-running the estimation of PET with a later extractTo data will change the estimates of PET
+#' prior to 1990.
 #'
 #' Also, when "catchments" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
 #' the closest 4 grid cells.
@@ -31,6 +37,9 @@
 #' \url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}
 #' @param catchments is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 #' already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.
+#' @param interp_missing_days T or F, indicating if missing days should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}
+#' @param interp_missing_entries T or F, indicating if missing data entries should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}
+#' @param interp_abnormal T or F, indicating if abnormal valuses should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}
 #'
 #' @return
 #' When "catchments" are polygons, the returned variable is list variables containing two data.frames, one of the catchment average daily climate
@@ -79,7 +88,10 @@ extractCatchmentData <- function(
   getSolarrad = TRUE,
   getMortonsPET = TRUE,
   DEM='',
-  catchments='')  {
+  catchments='',
+  interp_missing_days=T,
+  interp_missing_entries=T,
+  interp_abnormal=T)  {
 
   # Check the required packages exist
   if (!require(sp))
@@ -206,6 +218,10 @@ extractCatchmentData <- function(
     extractTo = min(c(extractTo,max(timePoints_R),max(timePoints_solar_R)));
   } else {
     extractTo = min(c(extractTo,max(timePoints_R)));
+  }
+
+  if (extractTo < extractFrom) {
+    stop('extractTo date is less than the extractFrom date.')
   }
 
   # Recalculate the time points to extract.
@@ -383,10 +399,19 @@ extractCatchmentData <- function(
       filt = is.na(solarrad_interp[,j])
       x = 1:length(timepoints2Extract);
       xpred = x[filt];
-      x = x[!filt];
-      y = solarrad_interp[!filt,j];
-      ypred=approx(x,y,xpred,method='linear', rule=2);
-      solarrad_interp[filt,j] = ypred$y;
+
+      # Interpolate if any NAs
+      if (length(xpred)>0) {
+        x = x[!filt]
+        y = solarrad_interp[!filt,j]
+
+        # Interpolate if at least 2 non-NA obs.
+        if (length(y)>1) {
+          ypred=approx(x,y,xpred,method='linear', rule=2)
+          solarrad_interp[filt,j] = ypred$y
+        }
+      }
+
     }
   }
 
@@ -445,7 +470,9 @@ extractCatchmentData <- function(
         dataRAW = data.frame(Year =  as.integer(format.Date(timepoints2Extract,"%Y")), Month= as.integer(format.Date(timepoints2Extract,"%m")), Day= as.integer(format.Date(timepoints2Extract,"%d")), Tmin=tmin[,j], Tmax=tmax[,j], Rs=solarrad_interp[,j], va=vprp[,j]/10.0, Precip=precip[,j])
 
         # Convert to required format for ET package
-        dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(20,20,20))
+        dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(99,99,99),
+                          interp_missing_days=interp_missing_days, interp_missing_entries=interp_missing_entries, interp_abnormal=interp_abnormal,
+                          missing_method='DoY average', abnormal_method='DoY average')
 
         # Update constants for the site
         constants$Elev = DEMpoints[j]

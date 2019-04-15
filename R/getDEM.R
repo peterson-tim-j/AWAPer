@@ -9,7 +9,7 @@
 #' @param workingFolder is the file path (as string) in which to download the zip file. The default is \code{getwd()}.
 #' @param keepFiles is a logical scalar to keep the downloaded zip file and extracted DEM ASCII file. The default is \code{FALSE}.
 #' @param urlDEM URL to the folder containing the Geoscience Australia 9s DEM.
-#'  The default is \url{https://s3-ap-southeast-2.amazonaws.com/elvis.ga.gov.au/elevation/9secPackagedData/DEM-9S_ESRI.zip}.
+#'  The default is \url{https://datagovau.s3.amazonaws.com/bioregionalassessments/BA_ALL/ALL/DATA/Geography/Physiography/DEMGA_9second_v3/ebcf6ca2-513a-4ec7-9323-73508c5d7b93.zip}.
 #'
 #' @return
 #' A RasterLayer DEM for Asutralia.
@@ -32,7 +32,7 @@
 #'
 #' @export
 getDEM <- function(workingFolder=getwd(),
-                   urlDEM = 'https://s3-ap-southeast-2.amazonaws.com/elvis.ga.gov.au/elevation/9secPackagedData/DEM-9S_ESRI.zip',
+                   urlDEM = 'https://datagovau.s3.amazonaws.com/bioregionalassessments/BA_ALL/ALL/DATA/Geography/Physiography/DEMGA_9second_v3/ebcf6ca2-513a-4ec7-9323-73508c5d7b93.zip',
                    keepFiles=F) {
 
   # Download .zip

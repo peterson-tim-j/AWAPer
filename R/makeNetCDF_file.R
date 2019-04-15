@@ -4,9 +4,12 @@
 #'
 #' This function creates two netCDF files of daily climate data. One file contains precipitation, minimum
 #' daily temperature, maximum daily temperature and vappour pressure. It should span from 1/1/1900 to today
-#' and be ~360GB. The second file contains the solar radiation and started from 1/1/1990 and be ~24GB and
-#' spatial gaps are infilled using a 3x3 moving average repeated 3 times. The climate data
-#' is sourced from the  Bureau of Meteorology Australian Water Availability Project
+#' and requires ~360GB of hard-drive space. The second file contains the solar radiation and started from 1/1/1990 and be ~24GB and
+#' spatial gaps are infilled using a 3x3 moving average repeated 3 times. To minimise the runtime
+#' in extracting data, both files should be stored locally and not on a network drive. Also, building
+#' the files requires installation of 7zip.
+#'
+#' The climate data is sourced from the  Bureau of Meteorology Australian Water Availability Project
 #' (\url{http://www.bom.gov.au/jsp/awap/}.  For details see Jones et al. (2009).
 #'
 #' The output from this function is required for all data extraction functions within this package and must
@@ -22,7 +25,7 @@
 #'  updated with new data from \code{updateFrom}. To update the files from the end of the last day in the file set \code{updateFrom=NA}. The default is \code{"1900-1-1"}.
 #' @param updateTo is a date string specifying the end date for the AWAP data. If
 #'  \code{ncdfFilename} and \code{ncdfSolarFilename} are specified and exist, then the netCDF grids will be
-#'  updated with new data to \code{updateFrom}. The default is today's date as YYYY-MM-DD.
+#'  updated with new data to \code{updateFrom}. The default is yesterday's date as YYYY-MM-DD.
 #' @param workingFolder is the file path (as string) in which to download the AWAP grid files. The default is \code{getwd()}.
 #' @param keepFiles is a logical scalar to keep the downloaded AWAP grid files. The default is \code{FALSE}.
 #' @param urlPrecip URL to the folder containing the AWAP daily precipittaion grids.
@@ -65,7 +68,7 @@ makeNetCDF_file <- function(
   ncdfFilename=file.path(getwd(),'AWAP.nc'),
   ncdfSolarFilename=file.path(getwd(),'AWAP_solar.nc'),
   updateFrom = as.Date("1900-01-01","%Y-%m-%d"),
-  updateTo  = as.Date(Sys.Date(),"%Y-%m-%d"),
+  updateTo  = as.Date(Sys.Date()-1,"%Y-%m-%d"),
   workingFolder=getwd(),
   keepFiles=FALSE,
   urlPrecip = 'http://www.bom.gov.au/web03/ncc/www/awap/rainfall/totals/daily/grid/0.05/history/nat/',
@@ -74,6 +77,9 @@ makeNetCDF_file <- function(
   urlVprp = 'http://www.bom.gov.au/web03/ncc/www/awap/vprp/vprph15/daily/grid/0.05/history/nat/',
   urlSolarrad = 'http://www.bom.gov.au/web03/ncc/www/awap/solar/solarave/daily/grid/0.05/history/nat/')  {
 
+  # NOTE, to build pdf manual:
+  # path <- find.package("AWAPer")
+  # system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path)))
 
   # Check the required packages exist
   if (!require(sp))
@@ -386,7 +392,7 @@ makeNetCDF_file <- function(
       # Get precip grid and add to Net CDF grid
       if (!is.na(urlPrecip) && file.exists(destFile_precip) && didFail_precip==0) {
 
-        AWAPgrid <- readin.ASCII.file(destFile_precip, nRows)
+        AWAPgrid <- readin.ASCII.file(destFile_precip, nRows, noData=nodata)
         ncvar_put( ncout, "precip", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlPrecip) && file.exists(destFile_precip) && !keepFiles)
@@ -394,7 +400,7 @@ makeNetCDF_file <- function(
 
       # Get tmin grid and add to Net CDF grid
       if (!is.na(urlTmin) && file.exists(destFile_tmin) && didFail_tmin==0) {
-        AWAPgrid <- readin.ASCII.file(destFile_tmin, nRows)
+        AWAPgrid <- readin.ASCII.file(destFile_tmin, nRows, noData=nodata)
         ncvar_put( ncout, "tmin", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlTmin) && file.exists(destFile_tmin) && !keepFiles)
@@ -402,7 +408,7 @@ makeNetCDF_file <- function(
 
       # Get tmax grid and add to Net CDF grid
       if (!is.na(urlTmax) && file.exists(destFile_tmax) && didFail_tmax==0) {
-        AWAPgrid <- readin.ASCII.file(destFile_tmax, nRows)
+        AWAPgrid <- readin.ASCII.file(destFile_tmax, nRows, noData=nodata)
         ncvar_put( ncout, "tmax", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlTmax) && file.exists(destFile_tmax) && !keepFiles)
@@ -410,12 +416,18 @@ makeNetCDF_file <- function(
 
       # Get vapour pr grid and add to Net CDF grid
       if (!is.na(urlVprp) && file.exists(destFile_vprp) && didFail_vprp==0) {
-        AWAPgrid <- readin.ASCII.file(destFile_vprp, nRows)
+        AWAPgrid <- readin.ASCII.file(destFile_vprp, nRows, noData=nodata)
         ncvar_put( ncout, "vprp", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlVprp) && file.exists(destFile_vprp) && !keepFiles)
         file.remove(destFile_vprp)
 
+
+      # Flush data to the netcdf file to avoid losses if code crashed.
+      if (date %% 365 == 0) {
+        message(paste('Syncing 365 days of data to netCDF file. The time point to be synched is:', format(timepoints2Update[date], "%Y-%m-%d")))
+        nc_sync(ncout)
+      }
 
     }
 
@@ -569,17 +581,14 @@ makeNetCDF_file <- function(
       # Get vapour pr grid and add to Net CDF grid
       if (file.exists(destFile_solarrad) && didFail==0) {
         # Import file
-        AWAPgrid <- readin.ASCII.file(destFile_solarrad, nRows_solar)
+        AWAPgrid <- readin.ASCII.file(destFile_solarrad, nRows_solar, noData=nodata_solar)
 
         # Infill NA values of grid by taking the local average and convert back to matrix.
         AWAPgrid <- raster(AWAPgrid)
         AWAPgrid <- focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
         AWAPgrid <- focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
         AWAPgrid <- focal(AWAPgrid, w=matrix(1,3,3), fun=mean, na.rm=TRUE, NAonly=TRUE)
-        #AWAPgrid = as.matrix(AWAPgrid);
-
-        # Reorder grid for ncdf
-        AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
+        AWAPgrid = raster::as.matrix(AWAPgrid);
 
         # Add to ncdf
         ncvar_put( ncout, "solarrad", AWAPgrid, start=c(1, 1, ind), count=c(nCols_solar, nRows_solar, 1), verbose=F )
@@ -587,6 +596,13 @@ makeNetCDF_file <- function(
 
       if (file.exists(destFile_solarrad)  && !keepFiles)
         file.remove(destFile_solarrad)
+
+      # Flush data to the netcdf file to avoid losses if code crashed.
+      if (date %% 365 == 0) {
+        message(paste('Syncing 365 days of data to netCDF file. The time point to be synched is:', format(timepoints2Update[date], "%Y-%m-%d")))
+        nc_sync(ncout)
+      }
+
     }
 
     # Updtate netCDF time variable
@@ -642,27 +658,45 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch({download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
     if (didFail==0) {
-      system(paste('7z e -aoa -bso0 ',des.file.name));
+      didFail = tryCatch(
+        {system(paste('7z e -aoa -bso0 ',des.file.name))},
+        error = function(cond) {
+          message(paste(
+            'The program "7z" is either not installed or cannot be found. If not installed then',
+            'install it from https://www.7-zip.org/download.html .',
+            'Once installed, do the following step:'))
+          message('  1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.')
+          message('  2. In the "User variables" window, select the "Path", and click "Edit..."')
+          message('  3. In the "Edit environmental variable" window, click "New", paste the path to the 7zip application folder, and click OK.')
+          message('  4. Restart Windows.')
+          message('  5. Open the "Command Prompt", and enter the command "7z". If setup correctly, this should output details such as the version, descriptions of commands, etc.')
+          return(TRUE)
+          }
+      )
       des.file.name = gsub('.Z', '', des.file.name)
     } else {
-      warning(paste('Downloading the following grid failed:',des.file.name,'. Please check the URL and the internet connection.'))
+      message(paste('WARNING: Downloading the following grid failed:',des.file.name,'. Please check the URL, internet connection.'))
+
+
+
+
     }
   } else {
 
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
-    didFail = download.file(url,des.file.name, quiet = T)
+    didFail = tryCatch({download.file(url,des.file.name, quiet = T)},error = function(cond) {return(TRUE)})
     if (didFail==0) {
       system(paste('znew -f ',des.file.name));
       des.file.name = gsub('.Z', '.gz', des.file.name)
     } else {
-      warning(paste('Downloading the following grid failed:',des.file.name,'. Please check the URL and the internet connection.'))
+      message(paste('WARNING: Downloading the following grid failed:',des.file.name,'. Please check the URL and the internet connection.'))
     }
   }
 
   return(list(file.name=des.file.name,didFail=didFail))
 }
 
-readin.ASCII.file <- function(file.name, nRows) {
+readin.ASCII.file <- function(file.name, nRows, noData) {
   OS <- Sys.info()
   OS <- OS[1]
   if (OS=='Windows') {
@@ -672,7 +706,7 @@ readin.ASCII.file <- function(file.name, nRows) {
     raw<-textConnection(readLines(a<-gzfile(file.name)));
   }
 
-  AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows)))
+  AWAPgrid<- as.matrix(t(read.table(raw, skip=6, nrow=nRows, na.strings=noData)))
   AWAPgrid <- AWAPgrid[,ncol(AWAPgrid):1]
   close(a)
   close(raw)
