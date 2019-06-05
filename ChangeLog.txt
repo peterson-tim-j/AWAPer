@@ -4,7 +4,6 @@ Change log for AWAPer
 13-Sept-2018
 * Bug Issue #2 fixed (point extractions using only the first input coordinate). L263 of extractCatchmentData() edits.
 
-
 4-April-2019
 * netCDF syncing added every 365 days to makeNetCDF_file(). This was done to reduce the loss of data if the code crashed.
 * tryCatch() added to linux downloading of AWAP files.
@@ -13,3 +12,7 @@ Change log for AWAPer
 * For Windows users, a trycatch() was added for 7zip not being installed. If an error is thrown, user advice is output.
 * Bug fixed in the calculation of potential evapotranspiration which caused termination. The maximum acceptable data gaps
   was changed from c(20,20,20) to c(99,99,99) and the user was given the option to control which types of data gaps are interpolated.
+
+3-June-2019
+* Run-time for the extaction of ET data (using extractCatchmentData()) was significantly reduced by using Evapotranspiration package v1.14 or later. extractCatchmentData() was edited to suppress unnecessary messaging and post-processing by Evapotranspiration.
+* Major bug was fixed that caused the solar radiation grids to be flipped vertically.

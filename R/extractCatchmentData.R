@@ -470,9 +470,12 @@ extractCatchmentData <- function(
         dataRAW = data.frame(Year =  as.integer(format.Date(timepoints2Extract,"%Y")), Month= as.integer(format.Date(timepoints2Extract,"%m")), Day= as.integer(format.Date(timepoints2Extract,"%d")), Tmin=tmin[,j], Tmax=tmax[,j], Rs=solarrad_interp[,j], va=vprp[,j]/10.0, Precip=precip[,j])
 
         # Convert to required format for ET package
+        #start.time <- Sys.time()
         dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(99,99,99),
                           interp_missing_days=interp_missing_days, interp_missing_entries=interp_missing_entries, interp_abnormal=interp_abnormal,
-                          missing_method='DoY average', abnormal_method='DoY average')
+                          missing_method='DoY average', abnormal_method='DoY average', message = "no")
+        end.time <- Sys.time()
+        #message(paste('            ET ReadInputs():',end.time-start.time,'sec'))
 
         # Update constants for the site
         constants$Elev = DEMpoints[j]
@@ -480,7 +483,9 @@ extractCatchmentData <- function(
         constants$lat_rad = longLat.all[j,2]/180.0*pi
 
         # Call  ET package
-        results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, message='no');
+        #results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, AdditionalStats='no', message='no');
+        end.time <- Sys.time()
+        #message(paste('            ET.MortonCRAE():',end.time-start.time,'sec'))
 
         # Get the last day of each month
         last.day.month = as.Date(as.yearmon(time(results$ET.Monthly)), frac = 1)
