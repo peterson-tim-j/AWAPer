@@ -474,7 +474,7 @@ extractCatchmentData <- function(
         dataPP=ReadInputs(c("Tmin","Tmax","Rs","Precip","va"),dataRAW,stopmissing = c(99,99,99),
                           interp_missing_days=interp_missing_days, interp_missing_entries=interp_missing_entries, interp_abnormal=interp_abnormal,
                           missing_method='DoY average', abnormal_method='DoY average', message = "no")
-        end.time <- Sys.time()
+        #end.time <- Sys.time()
         #message(paste('            ET ReadInputs():',end.time-start.time,'sec'))
 
         # Update constants for the site
@@ -483,8 +483,9 @@ extractCatchmentData <- function(
         constants$lat_rad = longLat.all[j,2]/180.0*pi
 
         # Call  ET package
-        #results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, AdditionalStats='no', message='no');
-        end.time <- Sys.time()
+        #start.time <- Sys.time()
+        results <- ET.MortonCRAE(dataPP, constants,est="potential ET", ts="monthly",solar="data",Tdew=FALSE, AdditionalStats='no', message='no');
+        #end.time <- Sys.time()
         #message(paste('            ET.MortonCRAE():',end.time-start.time,'sec'))
 
         # Get the last day of each month
@@ -495,12 +496,15 @@ extractCatchmentData <- function(
         monthly.ET.as.daily = zoo( as.numeric(results$ET.Monthly/days.per.month), last.day.month)
 
         # Spline interpolate Monthly average ET
+        #start.time <- Sys.time()
         timepoints2Extract.as.zoo = zoo(NA,timepoints2Extract);
         mortAPET.tmp = na.spline(merge(monthly.ET.as.daily, dates=timepoints2Extract.as.zoo)[, 1])
         filt = time(mortAPET.tmp)>=start(timepoints2Extract.as.zoo) & time(mortAPET.tmp)<=end(timepoints2Extract.as.zoo)
         mortAPET.tmp = pmax(0.0, as.numeric( mortAPET.tmp));
         mortAPET.tmp = mortAPET.tmp[filt]
         mortAPET[,k] = mortAPET.tmp;
+        #end.time <- Sys.time()
+        #message(paste('            ET daily interp.:',end.time-start.time,'sec'))
 
       }
 
