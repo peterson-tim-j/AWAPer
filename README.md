@@ -43,7 +43,7 @@ data("catchments")
 data(constants)
 
 # Extract data and esitmate various types of ET and estimate the spatial variance 
-# using thw interquartile range.
+# using the interquartile range.
 #----------------------------------------------
 climateData.ET.HargreavesSamani = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
