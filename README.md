@@ -22,12 +22,15 @@ This example shows the steps required to build the two netCDF files, each contai
 setwd('~/')`
 
 # Make two netCDF files of AWAP data.
-makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.nc', updateFrom='2010-1-1',updateTo='2011-12-1')
+makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.nc', 
+                updateFrom='2010-1-1',updateTo='2011-12-1')
 ```
 
 # Example 2. Calculate evapotranspiration
 
-This example calculates and plot various estimates of evaportrnspiration using the netCDF data form the previous example. To do this, the Austrlia 9 second DEM is downloaded and two catchment boundaries are loaded from the package.
+This example calculates and plot various estimates of evaportrnspiration using the netCDF data form the previous example. To do this, the Austrlia 9 second DEM is downloaded and two catchment boundaries are loaded from the package. The figure below shows the output plot from the example. It shows 10 different esitmates of area weighted evapotranspiration from 1/1/2010 to 31/12/2010 at catchment 407214 (Victoria, Australia).
+
+![image](https://user-images.githubusercontent.com/8623994/64103416-8d9a8700-cdb5-11e9-977a-ea8fabdcfcf5.png)
 
 ```R
 # Download and import the DEM
@@ -111,43 +114,56 @@ climateData.ET.Turc = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
 # Plot the ET estimates for one of the catchmnts.
 #----------------------------------------
 filt = climateData.ET.HargreavesSamani$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.HargreavesSamani$catchmentAvg$year, climateData.ET.HargreavesSamani$catchmentAvg$month, climateData.ET.HargreavesSamani$catchmentAvg$day)
-plot(d[filt], climateData.ET.HargreavesSamani$catchmentAvg$ET_mm[filt], col='black',lty=1, xlim = c(ISOdate(2010,1,1), ISOdate(2010,12,1)), ylim=c(0, 30),type='l', ylab='ET [mm/d]',xlab='Date')
+d = ISOdate(climateData.ET.HargreavesSamani$catchmentAvg$year, 
+      climateData.ET.HargreavesSamani$catchmentAvg$month, 
+      climateData.ET.HargreavesSamani$catchmentAvg$day)
+plot(d[filt], climateData.ET.HargreavesSamani$catchmentAvg$ET_mm[filt], 
+      col='black',lty=1, xlim = c(ISOdate(2010,1,1), ISOdate(2010,12,1)), ylim=c(0, 30),type='l', ylab='ET [mm/d]',xlab='Date')
 
 filt = climateData.ET.JensenHaise$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.JensenHaise$catchmentAvg$year, climateData.ET.JensenHaise$catchmentAvg$month, climateData.ET.JensenHaise$catchmentAvg$day)
+d = ISOdate(climateData.ET.JensenHaise$catchmentAvg$year, 
+      climateData.ET.JensenHaise$catchmentAvg$month, climateData.ET.JensenHaise$catchmentAvg$day)
 lines(d[filt], climateData.ET.JensenHaise$catchmentAvg$ET_mm[filt], col='red',lty=1)
 
 filt = climateData.ET.Makkink$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.Makkink$catchmentAvg$year, climateData.ET.Makkink$catchmentAvg$month, climateData.ET.Makkink$catchmentAvg$day)
+d = ISOdate(climateData.ET.Makkink$catchmentAvg$year, climateData.ET.Makkink$catchmentAvg$month, 
+      climateData.ET.Makkink$catchmentAvg$day)
 lines(d[filt], climateData.ET.Makkink$catchmentAvg$ET_mm[filt], col='green',lty=1)
 
 filt = climateData.ET.McGuinnessBordne$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.McGuinnessBordne$catchmentAvg$year, climateData.ET.McGuinnessBordne$catchmentAvg$month, climateData.ET.McGuinnessBordne$catchmentAvg$day)
+d = ISOdate(climateData.ET.McGuinnessBordne$catchmentAvg$year, climateData.ET.McGuinnessBordne$catchmentAvg$month,      
+      climateData.ET.McGuinnessBordne$catchmentAvg$day)
 lines(d[filt], climateData.ET.McGuinnessBordne$catchmentAvg$ET_mm[filt], col='blue',lty=1)
 
 filt = climateData.ET.MortonCRAE.potentialET$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRAE.potentialET$catchmentAvg$year, climateData.ET.MortonCRAE.potentialET$catchmentAvg$month, climateData.ET.MortonCRAE.potentialET$catchmentAvg$day)
+d = ISOdate(climateData.ET.MortonCRAE.potentialET$catchmentAvg$year, 
+      climateData.ET.MortonCRAE.potentialET$catchmentAvg$month, climateData.ET.MortonCRAE.potentialET$catchmentAvg$day)
 lines(d[filt], climateData.ET.MortonCRAE.potentialET$catchmentAvg$ET_mm[filt], col='black',lty=2)
 
 filt = climateData.ET.MortonCRAE.wetarealET$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRAE.wetarealET$catchmentAvg$year, climateData.ET.MortonCRAE.wetarealET$catchmentAvg$month, climateData.ET.MortonCRAE.wetarealET$catchmentAvg$day)
+d = ISOdate(climateData.ET.MortonCRAE.wetarealET$catchmentAvg$year,     
+      climateData.ET.MortonCRAE.wetarealET$catchmentAvg$month, climateData.ET.MortonCRAE.wetarealET$catchmentAvg$day)
 lines(d[filt], climateData.ET.MortonCRAE.wetarealET$catchmentAvg$ET_mm[filt], col='red',lty=2)
 
 filt = climateData.ET.MortonCRAE.actualarealET$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRAE.actualarealET$catchmentAvg$year, climateData.ET.MortonCRAE.actualarealET$catchmentAvg$month, climateData.ET.MortonCRAE.actualarealET$catchmentAvg$day)
+d = ISOdate(climateData.ET.MortonCRAE.actualarealET$catchmentAvg$year, 
+      climateData.ET.MortonCRAE.actualarealET$catchmentAvg$month, 
+      climateData.ET.MortonCRAE.actualarealET$catchmentAvg$day)
 lines(d[filt], climateData.ET.MortonCRAE.actualarealET$catchmentAvg$ET_mm[filt], col='green',lty=2)
 
 filt = climateData.ET.MortonCRWE$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRWE$catchmentAvg$year, climateData.ET.MortonCRWE$catchmentAvg$month, climateData.ET.MortonCRWE$catchmentAvg$day)
+d = ISOdate(climateData.ET.MortonCRWE$catchmentAvg$year, climateData.ET.MortonCRWE$catchmentAvg$month, 
+      climateData.ET.MortonCRWE$catchmentAvg$day)
 lines(d[filt], climateData.ET.MortonCRWE$catchmentAvg$ET_mm[filt], col='blue',lty=2)
 
 filt = climateData.ET.MortonCRWE.shallowLake$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRWE.shallowLake$catchmentAvg$year, climateData.ET.MortonCRWE.shallowLake$catchmentAvg$month, climateData.ET.MortonCRWE.shallowLake$catchmentAvg$day)
+d = ISOdate(climateData.ET.MortonCRWE.shallowLake$catchmentAvg$year, 
+      climateData.ET.MortonCRWE.shallowLake$catchmentAvg$month, climateData.ET.MortonCRWE.shallowLake$catchmentAvg$day)
 lines(d[filt], climateData.ET.MortonCRWE.shallowLake$catchmentAvg$ET_mm[filt], col='black',lty=3)
 
 filt = climateData.ET.Turc$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.Turc$catchmentAvg$year, climateData.ET.Turc$catchmentAvg$month, climateData.ET.Turc$catchmentAvg$day)
+d = ISOdate(climateData.ET.Turc$catchmentAvg$year, climateData.ET.Turc$catchmentAvg$month, 
+      climateData.ET.Turc$catchmentAvg$day)
 lines(d[filt], climateData.ET.Turc$catchmentAvg$ET_mm[filt], col='red',lty=3)
 
 legend(x='topright', legend=c(
