@@ -4,15 +4,16 @@
 \alias{getDEM}
 \title{Downloads and imports Geoscience Australia 9s DEM.}
 \usage{
-getDEM(workingFolder = getwd(),
-  urlDEM = "https://datagovau.s3.amazonaws.com/bioregionalassessments/BA_ALL/ALL/DATA/Geography/Physiography/DEMGA_9second_v3/ebcf6ca2-513a-4ec7-9323-73508c5d7b93.zip",
-  keepFiles = F)
+getDEM(workingFolder = getwd(), urlDEM = getURLs()$DEM,
+  DEMfilename = "dem-9s.asc", keepFiles = F)
 }
 \arguments{
 \item{workingFolder}{is the file path (as string) in which to download the zip file. The default is \code{getwd()}.}
 
 \item{urlDEM}{URL to the folder containing the Geoscience Australia 9s DEM.
-The default is \url{https://datagovau.s3.amazonaws.com/bioregionalassessments/BA_ALL/ALL/DATA/Geography/Physiography/DEMGA_9second_v3/ebcf6ca2-513a-4ec7-9323-73508c5d7b93.zip}.}
+The default is taken from \code{getURLs()$DEM}.}
+
+\item{DEMfilename}{is the file name for the DEM (as string). The default is \code{'dem-9s.asc'}.}
 
 \item{keepFiles}{is a logical scalar to keep the downloaded zip file and extracted DEM ASCII file. The default is \code{FALSE}.}
 }
@@ -23,20 +24,15 @@ A RasterLayer DEM for Asutralia.
 \code{getDEM} get Australian 9s DEM.
 }
 \details{
-This function downlaod the Geoscience Australia 9 second DEM and then imports the grid.
+getDEM downloads the Geoscience Australia 9 second DEM and then imports the grid.
+
+
 The DEM is required for the calculation of evaportranspiration within \code{extractCatchmentData}. For details of the DEM see
 \url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}
 }
 \examples{
-# Load required packages.
-library(sp);library(raster);library(chron);library(ncdf4);
-library(maptools);library(Evapotranspiration);library(AWAPer)
-
 # Download the DEM.
 DEM_9s = getDEM()
-
-# Plot the DEM.
-image(DEM_9s, xlab='Long.',ylab='Lat.')
 
 # Save DEM for next time it is needed.
 save(DEM_9s,file="DEM.RData" )

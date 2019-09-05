@@ -2,16 +2,19 @@
 % Please edit documentation in R/extractCatchmentData.R
 \name{extractCatchmentData}
 \alias{extractCatchmentData}
-\title{Extracts daily catchment mean and variance from netCDF files of the Bureau of Meteorology (Australia) national gridded climate data.}
+\title{\code{extractCatchmentData} extracts catchment average climate data from netCDF files containing Australian climate data.}
 \usage{
 extractCatchmentData(ncdfFilename = file.path(getwd(), "AWAP.nc"),
   ncdfSolarFilename = file.path(getwd(), "AWAP_solar.nc"),
   extractFrom = as.Date("1900-01-01", "\%Y-\%m-\%d"),
   extractTo = as.Date(Sys.Date(), "\%Y-\%m-\%d"), getPrecip = TRUE,
   getTmin = TRUE, getTmax = TRUE, getVprp = TRUE,
-  getSolarrad = TRUE, getMortonsPET = TRUE, DEM = "",
-  catchments = "", interp_missing_days = T,
-  interp_missing_entries = T, interp_abnormal = T)
+  getSolarrad = TRUE, getET = TRUE, DEM = "", catchments = "",
+  spatial.function.name = "var", ET.function = "ET.MortonCRAE",
+  ET.Mortons.est = "potential ET", ET.Turc.humid = F,
+  ET.timestep = "monthly", ET.interp_missing_days = T,
+  ET.interp_missing_entries = T, ET.interp_abnormal = T,
+  ET.constants = list())
 }
 \arguments{
 \item{ncdfFilename}{is a full file name (as string) to the netCDF file.}
@@ -32,21 +35,35 @@ extractCatchmentData(ncdfFilename = file.path(getwd(), "AWAP.nc"),
 
 \item{getSolarrad}{logical variable for extracting solar radiation. Default is \code{TRUE}.}
 
-\item{getMortonsPET}{logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T},
+\item{getET}{logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T},
 \code{getVprp=T} and \code{getSolarrad=T}. Default is \code{TRUE}.}
 
 \item{DEM}{is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used
-for the calculation of Morton's PET. The Australian 9 second DEM can be loaded using \code{data(DEM_9s)}. For details see
-\url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}}
+for the calculation of Morton's PET. The Australian 9 second DEM can be loaded using \code{getDEM()}.}
 
 \item{catchments}{is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.}
 
-\item{interp_missing_days}{T or F, indicating if missing days should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}}
+\item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. The default is \code{var}.}
 
-\item{interp_missing_entries}{T or F, indicating if missing data entries should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}}
+\item{ET.function}{character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
+\code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
+\code{\link[Evapotranspiration]{ET.MortonCRWE}}, \code{\link[Evapotranspiration]{ET.Turc}}. Default is \code{\link[Evapotranspiration]{ET.MortonCRAE}}.}
 
-\item{interp_abnormal}{T or F, indicating if abnormal valuses should be interpolated for PET calculation. Default is \code{T}. See \code{\link{Evapotranspiration::ReadInputs}}}
+\item{ET.Mortons.est}{character string for the type of Mortons Et estimate. For \code{ET.MortonCRAE}, the options are \code{potential ET},\code{wet areal ET} or \code{actual areal ET}.
+For \code{ET.MortonCRWE}, the options are \code{potential ET} or \code{shallow lake ET}. The default is \code{potential ET}.}
+
+\item{ET.Turc.humid}{logical variable for the Turc function using the humid adjustment.See \code{\link[Evapotranspiration]{ET.Turc}}. For now this is fixed at \code{F}.}
+
+\item{ET.timestep}{character string for the evapotranpiration time step. Options are \code{daily},  \code{monthly}, \code{annual} but the options are dependent upon the chosen \code{ET.function}. The default is \code{monthly}.}
+
+\item{ET.interp_missing_days}{T or F, indicating if missing days should be interpolated for PET calculation. Default is \code{T}. See \code{\link[Evapotranspiration]{ReadInputs}}}
+
+\item{ET.interp_missing_entries}{T or F, indicating if missing data entries should be interpolated for PET calculation. Default is \code{T}. See \code{\link[Evapotranspiration]{ReadInputs}}}
+
+\item{ET.interp_abnormal}{T or F, indicating if abnormal valuses should be interpolated for PET calculation. Default is \code{T}. See \code{\link[Evapotranspiration]{ReadInputs}}}
+
+\item{ET.constants}{list of constants from Evapotranspiration package required for ET calculations. To get the data use the command \code{data(constants)}. Default is \code{list()}.}
 }
 \value{
 When "catchments" are polygons, the returned variable is list variables containing two data.frames, one of the catchment average daily climate
@@ -55,21 +72,26 @@ metrics and another of the catchment variance daily climate metrics.
 When "catchments" are points, the returned variable is a data.frame containing daily climate data at each point.
 }
 \description{
-\code{extractCatchmentData} extracts catchment average climate data from netCDF files containing Australian climate data.
+extractCatchmentData extracts the AWAP climate data for each point or polygon, and for the latter the daily spatial mean and variance (or user defined function) of
+each climate metric is calculated.
 }
 \details{
-This function extracts the AWAP climate data for each point or polygon, and for the latter the daily spatial mean and variance of
-each climate metric are calculated. The calculation of the spatial mean uses the fraction of each AWAP grid cell within the polygon.
-The variance calculation does not use the fraction of the grid cell and returns NA if there are <2 grid cells in the catchment boundary.
-Prior to the catchment averaging and variance, Morton's areal potential ET (PET) is also calculated; after which the mean and
-variance PET is calculated. Morton's PET is calculated using the ET.MortonCRAE() function from the Evapotranspiration package at
-a monthly time-step and using the AWAP solar radiation. For both points and polygons, the monthly PET estimate is then interpolated
-using a spline to a daily time step (using zoo:na.spline()) and then constrained to >=0. In calculating PET, the input data
+The calculation of the spatial mean uses the fraction of each AWAP grid cell within the polygon.
+The variance calculation (or user defined function) does not use the fraction of the grid cell and returns NA if there are <2 grid cells in the catchment boundary.
+Prior to the catchment averaging and variance, evapotranspiration (ET) can also calculated; after which the mean and
+variance PET is calculated.
+
+The data extraction will by default be undertaken from 1/1/1900 to yesterday, even if the netCDF grids were only
+built for a subset of this time period. If the latter situation applies, it is recommended that the extraction start
+and end dates are input by the user.
+
+The ET can be calculated using one of eight methods at a user defined time-step. When the time-step is monthly or annual then
+the ET estimate is linearly interpolated to a daily time step (using zoo:na.spline()) and then constrained to >=0. In calculating ET, the input data
 is pre-processed using Evapotranspiration::ReadInputs() such that missing days, missing enteries and abnormal values are interpolated
-(by default) with the former two interpolated using the "DoY average", i.e. replacement with same day-of-the-year average. Additionally, AWAP solar
-radiation data is only available from 1/1/1990. To derive PET values <1990, the average solar radiation for each day of the year from
-1/1/990 to "extractTo" is derived (i.e. 365 values) and then applied to each day prior to 1990. Importantly, the estimates of PET <1990
-are dependent upon the end date extracted. Re-running the estimation of PET with a later extractTo data will change the estimates of PET
+(by default) with the former two interpolated using the "DoY average", i.e. replacement with same day-of-the-year average. Additionally, when AWAP solar
+radiation is required for the ET function, data is only available from 1/1/1990. To derive ET values <1990, the average solar radiation for each day of the year from
+1/1/990 to "extractTo" is derived (i.e. 365 values) and then applied to each day prior to 1990. Importantly, the estimates of ET <1990
+are dependent upon the end date extracted. Re-running the estimation of ET with a later extractTo data will change the estimates of ET
 prior to 1990.
 
 Also, when "catchments" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
@@ -78,29 +100,54 @@ the closest 4 grid cells.
 Lastly, data is extracted for all time points and no temporal infilling is undertaken if the grid cells are blank.
 }
 \examples{
-# Load required packages.
-library(sp);library(raster);library(chron);library(ncdf4);
-library(maptools);library(Evapotranspiration);library(AWAPer)
+# The example below shows how to extract and save data.
+# For an additional example see \\url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
+#---------------------------------------
 
-# Download the 9 second Australian DEM.
-DEM_9s = getDEM()
+# Set dates for building netCDFs and extracting data.
+startDate = as.Date("2000-01-01","\%Y-\%m-\%d")
+endDate = as.Date("2000-02-28","\%Y-\%m-\%d")
+
+# Set names for netCDF files.
+ncdfFilename = 'AWAPer_demo.nc'
+ncdfSolarFilename = 'AWAPer_solar_demo.nc'
+
+# Remove any existing netCDF demo files.
+if (file.exists(ncdfFilename))
+   file.remove(ncdfFilename)
+if (file.exists(ncdfSolarFilename))
+   file.remove(ncdfSolarFilename)
+
+# Build netCDF grids and over a defined time period.
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename, 
+             ncdfSolarFilename=ncdfSolarFilename,
+             updateFrom=startDate, updateTo=endDate)
 
 # Load example cacthment boundaries.
 data("catchments")
 
-# Extract all climate data and calculate Morton's PET.
+# Get the constanrs required for ET estimation.
+data(constants,package='Evapotranspiration')
+
+# Download and import the Australian 9 second DEM.
+DEM_9s = getDEM()
+
+# Extract precip data.
 # Note, the input "catchments" can also be a file to a ESRI shape file.
-climateData = extractCatchmentData(catchments=catchments,DEM=DEM_9s)
+climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+              ncdfSolarFilename=file.names$ncdfSolarFilename,
+              extractFrom=startDate, extractTo=endDate,
+              catchments=catchments,DEM=DEM_9s, ET.constants=constants)
 
 # Extract the daily catchment average data.
 climateDataAvg = climateData$catchmentAvg
 
 # Extract the daily catchment variance data.
-climateDataVar = climateData$catchmentVar
+climateDataVar = climateData$catchmentvar
 
 # Export data to .csv files
-write.csv(climateDataAvg,'warrionClimateAvg.csv')
-write.csv(climateDataVar,'warrionClimateVar.csv')
+write.csv(climateDataAvg,'climateAvg.csv')
+write.csv(climateDataVar,'climateVar.csv')
 
 }
 \seealso{
