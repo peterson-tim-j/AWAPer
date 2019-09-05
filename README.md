@@ -1,6 +1,8 @@
 # AWAPer
 This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of areal potential evaporation (Morton's). For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf.
 
+Below are details of how to install AWAPer followed by three examples of how to use it.
+
 # Getting Started
 To get started using the package, do the following steps. Below this are two examples for building and extracting data:
 
@@ -26,7 +28,9 @@ makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.
                 updateFrom='2010-1-1',updateTo='2011-12-1')
 ```
 # Example 2. Calculate precip and evapotranspiration
-This example calculates the catchment weighted precipitation at Bet Bet Creek (Victoria, Australia), the spatial standard deviation in precipitation and two measures of potential evapotranspiration. The example was developed by Dr Conrad Wasko.
+This example calculates the catchment weighted precipitation at Bet Bet Creek (Victoria, Australia), the spatial standard deviation in precipitation and two measures of potential evapotranspiration. The example was developed by Dr Conrad Wasko. Below is a plot of the output.
+
+![Example 2. Calculate precip and evapotranspiration](https://user-images.githubusercontent.com/8623994/64318732-1a378600-cffe-11e9-909d-dd65b6add76a.png)
 
 ```R
 # Make the netCDF files of AWAP data
