@@ -30,7 +30,7 @@ makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.
 # Example 2. Calculate precip and evapotranspiration
 This example calculates the catchment weighted precipitation at Bet Bet Creek (Victoria, Australia), the spatial standard deviation in precipitation and two measures of potential evapotranspiration. The example was developed by Dr Conrad Wasko. Below is a plot of the output.
 
-![Example 2. Calculate precip and evapotranspiration](https://user-images.githubusercontent.com/8623994/64318732-1a378600-cffe-11e9-909d-dd65b6add76a.png)
+![Example 2. Calculate precip and evapotranspiration](https://user-images.githubusercontent.com/39328041/66539735-e14a7e00-eb74-11e9-9890-dc3bce4148f2.png)
 
 ```R
 # Make the netCDF files of AWAP data
@@ -107,11 +107,11 @@ for (i in 1:length(climateData.ET.JensenHaise.var.date[i1.s:i1.e])) {
   
 }
 
-# Plot evap .data.
+# Plot evap data.
 par(new = TRUE)
 plot(climateData.ET.JensenHaise.var.date[i1.s:i1.e], climateData.ET.JensenHaise.var$catchmentAvg$ET_mm[i1.s:i1.e], col = "#bc80bd", lwd = 2, ylab = "",
      ylim = c(0, 4), lty = 1, xlab = "", xaxs = "i", yaxt = "n", xaxt = "n", type = "l", bty = "n", yaxs = "i")
-axis(side = 2, line = 4.1, mgp = c(2, 0.5, 0), labels = c("0", "1", "2", "3", "4mm"), at = seq(from = 0, to = 4, by = 1), col = "#bc80bd", col.axis = "#bc80bd")
+axis(side = 2, line = 2.3, mgp = c(2, 0.5, 0), labels = c("0", "1", "2", "3", "4mm"), at = seq(from = 0, to = 4, by = 1), col = "#bc80bd", col.axis = "#bc80bd")
 lines(climateData.ET.MortonCRAE.var.date[i2.s:i2.e], climateData.ET.MortonCRAE.var$catchmentAvg$ET_mm[i2.s:i2.e], col = "#bc80bd", lwd = 2, lty = 2)
 
 # Legend
