@@ -20,7 +20,7 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
     if (didFail==0) {
       didFail = tryCatch(
-        {system(paste('7z e -aoa -bso0 ',des.file.name))},
+        {system(paste0('7z e -aoa -bso0 "',des.file.name, '"'))},
         error = function(cond) {
           message(paste(
             'The program "7z" is either not installed or cannot be found. If not installed then',
