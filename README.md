@@ -1,5 +1,7 @@
 # AWAPer
-This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of areal potential evaporation (Morton's). For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf.
+This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of areal potential evaporation (Morton's). 
+
+Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf.
 
 Below are details of how to install AWAPer followed by three examples of how to use it.
 
@@ -13,7 +15,7 @@ To get started using the package, do the following steps. Below this are two exa
 1. Install the netCDF package using the following command: `install.packages("ncdf4")` . **Importantly** this step may require installation of netCDF software outside of R. Please read the output R console messages carefully.
 1. Install the remaining required packages using the following R command:
 `install.packages(c("R.utils", "sp", "raster", "chron", "maptools", "Evapotranspiration","devtools"))`
-1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder): `install("C:\MY_FOLDER\AWAPer")` or `install.packages("C:\MY_FOLDER\AWAPer\", repos = NULL, type = "source")`
+1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder):For PC `install.packages("C:\MY_FOLDER\AWAPer\", repos = NULL, type = "source")` and for Mac `install.packages(“~/Users/MyFolder/AWAPer/", repos = NULL, type = "source")`
 
 # Example 1. Build netCDF files
 
