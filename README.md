@@ -58,7 +58,7 @@ if (!file.exists('DEM.RData')) {
   load('DEM.RData')
 }
 
-# Set coordinates to five high quality rainfall gauges.
+# Set coordinates to four bores locations and one rainfall gauge.
 coordinates.data = data.frame( ID =c('Bore-70015656','Bore-50038039','Bore-20057861','Bore-10084446','Rain-63005'),
                    Longitude = c(131.33588, 113.066933, 143.118263, 153.551875, 149.5559),
                    Latitude =  c(-12.660622, -25.860046, -38.668506,-28.517974,-33.4289))
