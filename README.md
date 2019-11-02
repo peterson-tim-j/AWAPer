@@ -29,10 +29,109 @@ setwd('~/')`
 makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.nc', 
                 updateFrom='2010-1-1',updateTo='2011-12-1')
 ```
-# Example 2. Calculate precip and evapotranspiration
+# Example 2. Extract point precip. data and check with osberved data.
+This example was developed by Ms Xinyang Fan (Uni. Melbourne) and shows how to extract point estimates of daily precipitation at four goundwater bore locations and at one rainfall gauge. The extracted data is then plotted. The rain gauge is also compared against the observed rain gauge. The latter shows that the results are unbiased, but minor differences do exist due to AWAP data having a 5x5 km grid-cell resolution. The plots below show (1) the locattions of the five sites (2) bar graphs of the daily precip. and (3) plots of the observed vs AWAPer estimated precip. at the rainfall gauge.
+
+Importantly, this example downloads the Australia 9-second DEM. This is ~3GB.
+
+![Example 2. Site locations](https://user-images.githubusercontent.com/8623994/68077541-ee782700-fe19-11e9-93fa-c0eae4606af1.png)
+
+![Example 2. Daily precip at sites](https://user-images.githubusercontent.com/8623994/68077652-9d693280-fe1b-11e9-9c2e-fbebce8013cd.png)
+
+![Example 3. Obs. vs Est Precip](https://user-images.githubusercontent.com/8623994/68077658-c7baf000-fe1b-11e9-9074-10d22b1bf8cd.png)
+
+```R
+# load all necessary packages
+library(AWAPer)
+
+# Make the netCDF files of only AWAP precipitation data.
+fnames = makeNetCDF_file(ncdfFilename ='AWAP_demo.nc',
+              updateFrom=as.Date("2010-08-01","%Y-%m-%d"),
+              updateTo=as.Date("2010-10-01","%Y-%m-%d"),
+              urlTmin=NA, urlTmax=NA, urlVprp=NA, urlSolarrad=NA)
+
+# Download and import the DEM if it's not in the working directory
+if (!file.exists('DEM.RData')) {
+  DEM_9s = getDEM()
+  save(DEM_9s,file="DEM.RData" )
+} else {
+  load('DEM.RData')
+}
+
+# Set coordinates to five high quality rainfall gauges.
+coordinates.data = data.frame( ID =c('Bore-70015656','Bore-50038039','Bore-20057861','Bore-10084446','Rain-63005'),
+                   Longitude = c(131.33588, 113.066933, 143.118263, 153.551875, 149.5559),
+                   Latitude =  c(-12.660622, -25.860046, -38.668506,-28.517974,-33.4289))
+
+# Convert the points to a spatial object
+sp::coordinates(coordinates.data) <- ~Longitude + Latitude
+
+# Set projection to GDA94
+sp::proj4string(coordinates.data) = '+proj=longlat +ellps=GRS80'
+
+# Plot coordinates on top of DEM 9s
+raster::plot(DEM_9s)
+sp::plot(coordinates.data, add =T)
+with(coordinates.data, text(sp::coordinates(coordinates.data)[,1],sp::coordinates(coordinates.data)[,2],
+                            labels = coordinates.data$ID, pos = 1))
+
+# Extract time-series of daily precip data at all five sites
+climateData.data = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
+                   extractFrom=as.Date("2010-08-01","%Y-%m-%d"),
+                   extractTo=as.Date("2010-10-01","%Y-%m-%d"),
+                   catchments=coordinates.data,
+                   getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F)
+
+
+# Plot the daily rainfall at each site
+par.default = par()
+par(mfrow=c(5,1), mar = c(4,5,3,0))
+for (i in 1:nrow(coordinates.data)){
+    filt = climateData.data$CatchmentID.ID == coordinates.data$ID[i]
+
+    data2plot = climateData.data$precip_mm[filt]
+    names(data2plot) = paste(climateData.data$day[filt],'/',climateData.data$month[filt],sep='')
+    barplot(data2plot, main=coordinates.data$ID[i], ylab='Precip [mm/d]', xlab='Date [day/month]')
+
+}
+
+# The following is hard-coded observed rainfall for gauge  63005
+obsPrecip <- data.frame(
+         year= c(2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010,
+                 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010,
+                 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010, 2010),
+         month = c(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9,
+                 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10),
+         day = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 1, 2, 3, 4, 5,
+                 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 1),
+         precip_mm = c(0.6, 5.2, 0.8, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 15.8, 15.6, 7.6, 0.7, 0.4, 1.4, 1.0, 0.0, 0.0, 30.4, 1.0, 0.0,
+                 0.0, 5.0, 2.2, 0.3, 0.8, 13.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 13.8, 15.2, 0.4, 0.2, 0.0, 0.0, 12.4, 0.9,
+                 0.0, 0.0, 0.1, 13.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0))
+
+# Plot the observed vs AWAPer rainfall at gauge ID 63005
+par(mfrow=c(1,2), mar = c(4,5,3,2))
+filt2 = climateData.data$CatchmentID.ID=='Rain-63005'
+plot(obsPrecip$precip_mm,climateData.data$precip_mm[filt2],
+     xlim = c(0,35),ylim = c(0,35),
+     main='Obs. vs. AWAPer precip. at 63005',
+     xlab='Obs. precip [mm/d]', ylab='AWAPer Precip [mm/d]')
+abline(0,1, col='grey', lty=2)
+
+# Plot the cumulative observed vs AWAPer rainfall at gauge ID 63005
+plot(cumsum(obsPrecip$precip_mm),cumsum(climateData.data$precip_mm[filt2]),
+     xlim = c(0,175),ylim = c(0,175),
+     main='Cumulative obs. vs. AWAPer precip. at 63005',
+     xlab='Obs. precip. [mm]', ylab='AWAPer precip. [mm]', type='l')
+abline(0,1, col='grey', lty=2)
+
+# Rest plotting parameters
+par(par.default)
+```
+
+# Example 3. Calculate precip and evapotranspiration
 This example calculates the catchment weighted precipitation at Bet Bet Creek (Victoria, Australia), the spatial standard deviation in precipitation and two measures of potential evapotranspiration. The example was developed by Dr Conrad Wasko. Below is a plot of the output.
 
-![Example 2. Calculate precip and evapotranspiration](https://user-images.githubusercontent.com/39328041/66539735-e14a7e00-eb74-11e9-9890-dc3bce4148f2.png)
+![Example 3. Calculate precip and evapotranspiration](https://user-images.githubusercontent.com/39328041/66539735-e14a7e00-eb74-11e9-9890-dc3bce4148f2.png)
 
 ```R
 # Make the netCDF files of AWAP data
@@ -123,11 +222,11 @@ legend("topleft", cex = 0.8, lwd = 2, bty = "n", inset = c(0.01, -0.01),
        legend = c("Precipitation (bars +/- one standard dev.)",  "Jensen-Haise PET", "Morton CRAE PET"), xpd = NA)
 ```
 
-# Example 3. Calculate evapotranspiration
+# Example 4. Calculate evapotranspiration
 
 This example calculates and plot various estimates of evaportrnspiration using the netCDF data form the previous example. To do this, the Austrlia 9 second DEM is downloaded and two catchment boundaries are loaded from the package. The figure below shows the output plot from the example. It shows 10 different esitmates of area weighted evapotranspiration from 1/1/2010 to 31/12/2010 at catchment 407214 (Victoria, Australia).
 
-![image](https://user-images.githubusercontent.com/8623994/64103416-8d9a8700-cdb5-11e9-977a-ea8fabdcfcf5.png)
+![Example 4. ET plot](https://user-images.githubusercontent.com/8623994/64103416-8d9a8700-cdb5-11e9-977a-ea8fabdcfcf5.png)
 
 ```R
 # Set working directory.
