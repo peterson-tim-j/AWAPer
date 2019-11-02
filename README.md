@@ -3,7 +3,7 @@ This R package builds netCDF files of the Bureau of Meteorology Australian Water
 
 Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf.
 
-Below are details of how to install AWAPer followed by three examples of how to use it.
+Below are details of how to install AWAPer followed by four examples of how to use it.
 
 # Getting Started
 To get started using the package, do the following steps. Below this are two examples for building and extracting data:
