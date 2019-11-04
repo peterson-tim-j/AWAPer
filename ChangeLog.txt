@@ -16,3 +16,7 @@ Change log for AWAPer
 3-June-2019
 * Run-time for the extaction of ET data (using extractCatchmentData()) was significantly reduced by using Evapotranspiration package v1.14 or later. extractCatchmentData() was edited to suppress unnecessary messaging and post-processing by Evapotranspiration.
 * Major bug was fixed that caused the solar radiation grids to be flipped vertically.
+
+4-November-2019
+* Documentation and code edited to pass "R CMD check --as-cran"  without errors or warnings.
+* User prompt added if updating netCDFs when the start date is 1/1/1900.
