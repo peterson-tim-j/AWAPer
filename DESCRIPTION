@@ -1,7 +1,7 @@
 Package: AWAPer
 Type: Package
 Title: Catchment Area Weighted Daily Climate Data from the Bureau of Meteorology Australian Water Availability Project
-Version: 0.1
+Version: 0.1.2
 Authors@R: c(
     person("Tim", "Peterson", email = "tim.peterson@monash.edu", role = c("aut", "cre")),
     person("Conrad", "Wasko", email = "conrad.wasko@unimelb.edu.au", role = "ctb"))
