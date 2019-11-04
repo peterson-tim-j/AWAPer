@@ -1,0 +1,9 @@
+citHeader("To cite AWAPer in publications, please use:")
+
+citEntry(entry = "article",
+  author  = "Peterson T. J., Wasko C., Saft M. and Peel M.",
+  title   = "AWAPer: An R package for area weighted catchment daily meteorological data anywhere within Australia",
+  journal = "Hydrological Processes",
+  year    = "in-press",
+  textVersion = "Peterson T. J., Wasko C., Saft M. and Peel M. (in-press), AWAPer: An R package for area weighted catchment daily meteorological data anywhere within Australia, Hydrological Processes. Accepted October 2019"
+)
