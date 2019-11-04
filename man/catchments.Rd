@@ -13,19 +13,8 @@ Two example catchment boundaries as a SpatialPolygonsDataFrame. The catchments a
 Bet Bet Creek (ID 407220, Vic., Australia, see http://www.bom.gov.au/water/hrs/#id=407220). The catchments can be used to extract catchment average climate data usng \code{extractCatchmentData}
 }
 \examples{
-# Load required packages.
-library(sp);library(raster);library(chron);library(AWAPer);library(ncdf4);
-library(maptools);library(Evapotranspiration)
-
 # Load example cacthment boundaries.
 data("catchments")
-
-# Load the 9 second Australian DEM.
-data("DEM_9s")
-
-# Plot the catchment boundaries.
-image(DEM_9s, xlab='Long.',ylab='Lat.')
-plot(catchments,add=T)
 
 }
 \seealso{

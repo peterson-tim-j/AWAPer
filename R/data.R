@@ -6,19 +6,8 @@
 #' \code{\link{extractCatchmentData}} for extracting catchment average climate data.
 #'
 #' @examples
-#' # Load required packages.
-#' library(sp);library(raster);library(chron);library(AWAPer);library(ncdf4);
-#' library(maptools);library(Evapotranspiration)
-#'
 #' # Load example cacthment boundaries.
 #' data("catchments")
-#'
-#' # Load the 9 second Australian DEM.
-#' data("DEM_9s")
-#'
-#' # Plot the catchment boundaries.
-#' image(DEM_9s, xlab='Long.',ylab='Lat.')
-#' plot(catchments,add=T)
 #'
 #' @export
 "catchments"
