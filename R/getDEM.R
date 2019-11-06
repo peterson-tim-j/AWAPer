@@ -23,9 +23,6 @@
 #' # Download the DEM.
 #' \donttest{
 #' DEM_9s = getDEM()
-#'
-#' # Save DEM for next time it is needed.
-#' save(DEM_9s,file="DEM.RData" )
 #' }
 #' @export
 getDEM <- function(workingFolder=getwd(),
@@ -67,8 +64,8 @@ getDEM <- function(workingFolder=getwd(),
     if (file.exists(destFile))
       file.remove(destFile)
 
-    if (file.exists(DEMfilename))
-      file.remove(DEMfilename)
+    if (file.exists(DEMfilename.2unzip))
+      file.remove(DEMfilename.2unzip)
 
   }
 

@@ -5,6 +5,17 @@ Using the default compression settings, each meteorlogical variable requires ~5G
 
 Below are details of how to install AWAPer followed by four examples of how to use it.
 
+# System Requiements
+On Windows OS only, the program "7z" is required to uzip the ".Z" compressed grid files. Follow the steps below to download and install 7z.
+
+1. Download and intall 7z from https://www.7-zip.org/download.html
+1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.
+1. In the "User variables" window, select the "Path", and click "Edit...".
+1. In the "Edit environmental variable" window, click "New".
+1. Paste the path to the 7zip application folder, and click OK.
+1. Restart Windows.
+1. Check the setup by opening the "Command Prompt" and enter the command "7z". If 7z is correctly setup, output details such as the version, descriptions of commands, etc should be shown.')
+
 # Getting Started
 To get started using the package, do the following steps. Below this are two examples for building and extracting data:
 

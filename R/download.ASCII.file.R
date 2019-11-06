@@ -19,28 +19,24 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
     if (didFail==0) {
-      didFail = tryCatch(
-        {system(paste('7z e -aoa -bso0 ',des.file.name))},
-        error = function(cond) {
-          message(paste(
-            'The program "7z" is either not installed or cannot be found. If not installed then',
-            'install it from https://www.7-zip.org/download.html .',
-            'Once installed, do the following step:'))
-          message('  1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.')
-          message('  2. In the "User variables" window, select the "Path", and click "Edit..."')
-          message('  3. In the "Edit environmental variable" window, click "New", paste the path to the 7zip application folder, and click OK.')
-          message('  4. Restart Windows.')
-          message('  5. Open the "Command Prompt", and enter the command "7z". If setup correctly, this should output details such as the version, descriptions of commands, etc.')
-          return(TRUE)
-        }
-      )
+      exitMessage = system(paste0('7z e -aoa -bso0 "',des.file.name, '"'),intern = T)
+      if (!is.null(attr(exitMessage,'status'))) {
+        message('------------------------------------------------------------------------------------')
+        message('The program "7z" is either not installed or cannot be found. If not installed then')
+        message('install it from https://www.7-zip.org/download.html .')
+        message('Once installed, do the following step:')
+        message('  1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.')
+        message('  2. In the "User variables" window, select the "Path", and click "Edit..."')
+        message('  3. In the "Edit environmental variable" window, click "New".')
+        message('  4. Paste the path to the 7zip application folder, and click OK.')
+        message('  5. Restart Windows.')
+        message('  6. Open the "Command Prompt" and enter the command "7z".')
+        message('     If setup correctly, this should output details such as the version, descriptions of commands, etc.')
+        message('------------------------------------------------------------------------------------')
+        stop()
+      }
+
       des.file.name = gsub('.Z', '', des.file.name)
-    } else {
-      message(paste('WARNING: Downloading the following grid failed:',des.file.name,'. Please check the URL, internet connection.'))
-
-
-
-
     }
   } else {
 
@@ -49,8 +45,6 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     if (didFail==0) {
       system(paste('znew -f ',des.file.name));
       des.file.name = gsub('.Z', '.gz', des.file.name)
-    } else {
-      message(paste('WARNING: Downloading the following grid failed:',des.file.name,'. Please check the URL and the internet connection.'))
     }
   }
 

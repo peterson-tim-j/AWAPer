@@ -34,9 +34,6 @@ The DEM is required for the calculation of evaportranspiration within \code{extr
 # Download the DEM.
 \donttest{
 DEM_9s = getDEM()
-
-# Save DEM for next time it is needed.
-save(DEM_9s,file="DEM.RData" )
 }
 }
 \seealso{

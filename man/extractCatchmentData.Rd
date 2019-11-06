@@ -145,10 +145,6 @@ climateDataAvg = climateData$catchmentAvg
 
 # Extract the daily catchment variance data.
 climateDataVar = climateData$catchmentvar
-
-# Export data to .csv files
-write.csv(climateDataAvg,'climateAvg.csv')
-write.csv(climateDataVar,'climateVar.csv')
 }
 }
 \seealso{
