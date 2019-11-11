@@ -10,7 +10,8 @@ extractCatchmentData(ncdfFilename = file.path(getwd(), "AWAP.nc"),
   extractTo = as.Date(Sys.Date(), "\%Y-\%m-\%d"), getPrecip = TRUE,
   getTmin = TRUE, getTmax = TRUE, getVprp = TRUE,
   getSolarrad = TRUE, getET = TRUE, DEM = "", catchments = "",
-  spatial.function.name = "var", ET.function = "ET.MortonCRAE",
+  spatial.function.name = "var", temporal.function.name = "sum",
+  temporal.timestep = "daily", ET.function = "ET.MortonCRAE",
   ET.Mortons.est = "potential ET", ET.Turc.humid = F,
   ET.timestep = "monthly", ET.interp_missing_days = T,
   ET.interp_missing_entries = T, ET.interp_abnormal = T,
@@ -106,7 +107,7 @@ Lastly, data is extracted for all time points and no temporal infilling is under
 
 # Set dates for building netCDFs and extracting data.
 startDate = as.Date("2000-01-01","\%Y-\%m-\%d")
-endDate = as.Date("2000-02-28","\%Y-\%m-\%d")
+endDate = as.Date("2000-03-31","\%Y-\%m-\%d")
 
 # Set names for netCDF files.
 ncdfFilename = 'AWAPer_demo.nc'
@@ -133,7 +134,7 @@ data(constants,package='Evapotranspiration')
 # Download and import the Australian 9 second DEM.
 DEM_9s = getDEM()
 
-# Extract precip data.
+# Extract daily precip data.
 # Note, the input "catchments" can also be a file to a ESRI shape file.
 climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
               ncdfSolarFilename=file.names$ncdfSolarFilename,
@@ -145,6 +146,20 @@ climateDataAvg = climateData$catchmentAvg
 
 # Extract the daily catchment variance data.
 climateDataVar = climateData$catchmentvar
+
+# Extract the monthly sum of precipitation and the monthly spaial variance.
+climateMonthlyData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+              ncdfSolarFilename=file.names$ncdfSolarFilename,
+              extractFrom=startDate, extractTo=endDate,
+              catchments=catchments,
+              getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F,
+              temporal.function.name='sum', temporal.timestep='daily')
+
+# Extract the daily catchment average data.
+climateMonthlyDataSum = climateMonthlyData$catchmentAvg
+
+# Extract the daily catchment variance data.
+climateMonthlyDataVar = climateMonthlyData$catchmentvar
 }
 }
 \seealso{

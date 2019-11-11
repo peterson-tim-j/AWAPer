@@ -73,7 +73,7 @@
 #'
 #' # Set dates for building netCDFs and extracting data.
 #' startDate = as.Date("2000-01-01","%Y-%m-%d")
-#' endDate = as.Date("2000-02-28","%Y-%m-%d")
+#' endDate = as.Date("2000-03-31","%Y-%m-%d")
 #'
 #' # Set names for netCDF files.
 #' ncdfFilename = 'AWAPer_demo.nc'
@@ -100,7 +100,7 @@
 #' # Download and import the Australian 9 second DEM.
 #' DEM_9s = getDEM()
 #'
-#' # Extract precip data.
+#' # Extract daily precip data.
 #' # Note, the input "catchments" can also be a file to a ESRI shape file.
 #' climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
 #'               ncdfSolarFilename=file.names$ncdfSolarFilename,
@@ -112,6 +112,20 @@
 #'
 #' # Extract the daily catchment variance data.
 #' climateDataVar = climateData$catchmentvar
+#'
+#' # Extract the monthly sum of precipitation and the monthly spatial variance.
+#' climateMonthlyData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+#'               ncdfSolarFilename=file.names$ncdfSolarFilename,
+#'               extractFrom=startDate, extractTo=endDate,
+#'               catchments=catchments,
+#'               getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F,
+#'               temporal.function.name='sum', temporal.timestep='monthly')
+#'
+#' # Extract the daily catchment average data.
+#' climateMonthlyDataSum = climateMonthlyData$catchmentAvg
+#'
+#' # Extract the daily catchment variance data.
+#' climateMonthlyDataVar = climateMonthlyData$catchmentvar
 #' }
 #' @export
 extractCatchmentData <- function(
@@ -128,6 +142,8 @@ extractCatchmentData <- function(
   DEM='',
   catchments='',
   spatial.function.name = 'var',
+  temporal.function.name = 'sum',
+  temporal.timestep = 'daily',
   ET.function = 'ET.MortonCRAE',
   ET.Mortons.est = 'potential ET',
   ET.Turc.humid=F,
@@ -136,6 +152,35 @@ extractCatchmentData <- function(
   ET.interp_missing_entries=T,
   ET.interp_abnormal=T,
   ET.constants=list())  {
+
+  # This function upscales the daily data at each grid cell to a user specified timestep
+  # (e.g. monthly or annual) using a user-defined functon (e.g summing the daily data)
+  temporal.aggregation <- function(extractYear, extractMonth, extractDay, daily.data, temporal.timestep, temporal.function.name) {
+
+    if (temporal.timestep=='daily') {
+      # do nothing
+    } else if (temporal.timestep=='monthly') {
+      daily.data = aggregate(daily.data, by=list(extractYear, extractMonth), FUN=temporal.function.name)
+      daily.data = daily.data[with(daily.data, order(daily.data[,1],daily.data[,2])),]
+
+      extraction.Dates = get.Date.as.endOfMonth(daily.data[,1],daily.data[,2])
+      daily.data = daily.data[,3:ncol(daily.data)]
+    } else if (temporal.timestep=='annual') {
+      daily.data = aggregate(daily.data, by=list(extractYear), FUN=temporal.function.name)
+      daily.data = daily.data[with(daily.data, order(daily.data[,1])),]
+
+      extraction.Dates = get.Date.as.endOfMonth(daily.data[,1],12)
+      daily.data = daily.data[,2:ncol(daily.data)]
+    } else {
+      stop(paste('The followng temporal.timestep is unknown:',temporal.timestep))
+    }
+    return(list(agg.data=as.matrix(daily.data),agg.dates=extraction.Dates))
+  }
+
+  # This function gets the end day of a month.
+  get.Date.as.endOfMonth <- function(extractYear, extractMonth) {
+    return(as.Date(zoo::as.yearmon(paste(extractYear,'-',extractMonth,sep='')),frac=1))
+  }
 
   # Open NetCDF grids
   awap <- ncdf4::nc_open(ncdfFilename)
@@ -446,7 +491,6 @@ extractCatchmentData <- function(
   if (getSolarrad)
     ncdf4::nc_close(awap_solar)
 
-
   if (getSolarrad) {
     # Set non-senible values to NA
     solarrad[solarrad <0] = NA;
@@ -509,18 +553,6 @@ extractCatchmentData <- function(
     if (j%%100 ==0 ) {
       message(paste('    ... Calculating catchment ', i,' of ',length(catchments)));
     }
-
-
-
-    # Calculate catchment stats and add data to the data.frame for all catchments
-    #----------------------------------------------------------------------------------------
-    catchmentAvgTmp = data.frame(CatchmentID=catchments[i,1],year=extractYear,month=extractMonth,day=extractDay);
-    catchmentVarTmp = data.frame(CatchmentID=catchments[i,1],year=extractYear,month=extractMonth,day=extractDay);
-
-    # Get the weights for the catchment
-    ind = catchment.lookup[i,1]:catchment.lookup[i,2]
-    w = w.all[ind]
-
 
     # Calculate Morton's PET at each grid cell and time point. NOTE, va is divided by 10 to go from hPa to Kpa
     if (getET) {
@@ -628,6 +660,57 @@ extractCatchmentData <- function(
 
     }
 
+    # Get the weights for the catchment
+    ind = catchment.lookup[i,1]:catchment.lookup[i,2]
+    w = w.all[ind]
+
+    # Aggregate daily ata to a suer defined timetsep
+    # TO DO: CHANGE AGGREGERATION TO ALSO ACCOUNT FOR SITE ID
+    # TO DO: dERVIE EXTRACTIONYEAR ETC AFTER AGREGATION
+    #-------------
+    if (getPrecip) {
+      data.aggregated <- temporal.aggregation(extractYear, extractMonth, extractDay, precip,
+                                              temporal.timestep, temporal.function.name)
+      precip = data.aggregated$agg.data
+      extractionDate = data.aggregated$agg.dates
+    }
+    if (getTmin) {
+      data.aggregated <- temporal.aggregation(extractYear, extractMonth, extractDay, tmin,
+                                              temporal.timestep, temporal.function.name)
+      tmin = data.aggregated$data
+      extractionDate = data.aggregated$dates
+    }
+    if (getTmax) {
+      data.aggregated <- temporal.aggregation(extractYear, extractMonth, extractDay, tmax,
+                                              temporal.timestep, temporal.function.name)
+      tmax = data.aggregated$data
+      extractionDate = data.aggregated$dates
+    }
+    if (getVprp) {
+      data.aggregated <- temporal.aggregation(extractYear, extractMonth, extractDay, vprp,
+                                              temporal.timestep, temporal.function.name)
+      vprp = data.aggregated$data
+      extractionDate = data.aggregated$dates
+    }
+    if (getSolarrad) {
+      data.aggregated <- temporal.aggregation(extractYear, extractMonth, extractDay, solarrad_interp,
+                                              temporal.timestep, temporal.function.name)
+      solarrad_interp = data.aggregated$data
+      extractionDate = data.aggregated$dates
+    }
+    if (getET) {
+      data.aggregated <- temporal.aggregation(extractYear, extractMonth, extractDay, mortAPET,
+                                              temporal.timestep, temporal.function.name)
+      mortAPET = data.aggregated$data
+      extractionDate = data.aggregated$dates
+    }
+    #-------------
+
+    # Calculate catchment stats and add data to the data.frame for all catchments
+    #----------------------------------------------------------------------------------------
+    catchmentAvgTmp = data.frame(CatchmentID=catchments[i,1],year=extractYear,month=extractMonth,day=extractDay);
+    catchmentVarTmp = data.frame(CatchmentID=catchments[i,1],year=extractYear,month=extractMonth,day=extractDay);
+
     # Check if there are enough grid cells to calculate the variance.
     calcVariance =  F;
     if (length(ind)>1)
@@ -705,4 +788,5 @@ extractCatchmentData <- function(
 
   message('Data extraction FINISHED..')
   return(catchmentAvg)
+
 }
