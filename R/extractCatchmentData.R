@@ -461,6 +461,7 @@ extractCatchmentData <- function(
     solarrad_avg = matrix(NA, length(monthdayUnique), length(w.all));
     for (j in 1:length(monthdayUnique)) {
       ind = monthdayAll==monthdayUnique[j];
+
       if (sum(ind)==1) {
         solarrad_avg[j,] = solarrad[ind,];
       } else {
@@ -471,8 +472,13 @@ extractCatchmentData <- function(
     # Assign the daily average solar radiation to each day prior to 1 Jan 1990
     for (j in 1:length(timepoints2Extract)) {
       if (timepoints2Extract[j]<as.Date('1990-1-1','%Y-%m-%d')) {
-        ind = monthdayUnique==monthdayAll[j];
-        solarrad_interp[j,] = solarrad_avg[ind,]
+        ind = monthdayUnique==monthdayAll[j]
+
+        # Only assign averages if available eg Feb 29 may not be available in average record if the post
+        # 1990 extraction period does not include a leap year.
+        if (sum(ind)>0) {
+          solarrad_interp[j,] = solarrad_avg[ind,]
+        }
       }
     }
 

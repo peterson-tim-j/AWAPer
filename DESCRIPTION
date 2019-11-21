@@ -11,7 +11,7 @@ Depends: R (>= 3.2.3)
 Imports: Evapotranspiration (>= 1.14), ncdf4, R.utils, raster, chron, maptools, sp, zoo, methods
 BugReports: https://github.com/peterson-tim-j/AWAPer/issues
 URL: https://github.com/peterson-tim-j/AWAPer
-License: GPL (>=3)
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
