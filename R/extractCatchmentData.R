@@ -75,15 +75,9 @@
 #' startDate = as.Date("2000-01-01","%Y-%m-%d")
 #' endDate = as.Date("2000-02-28","%Y-%m-%d")
 #'
-#' # Set names for netCDF files.
-#' ncdfFilename = 'AWAPer_demo.nc'
-#' ncdfSolarFilename = 'AWAPer_solar_demo.nc'
-#'
-#' # Remove any existing netCDF demo files.
-#' if (file.exists(ncdfFilename))
-#'    is.removed = file.remove(ncdfFilename)
-#' if (file.exists(ncdfSolarFilename))
-#'    is.removed = file.remove(ncdfSolarFilename)
+#' # Set names for netCDF files (in the system temp. directory).
+#' ncdfFilename = tempfile(fileext='.nc')
+#' ncdfSolarFilename = tempfile(fileext='.nc')
 #'
 #' # Build netCDF grids and over a defined time period.
 #' \donttest{
@@ -94,11 +88,15 @@
 #' # Load example cacthment boundaries.
 #' data("catchments")
 #'
-#' # Get the constanrs required for ET estimation.
+#' # Get the constants required for ET estimation.
 #' data(constants,package='Evapotranspiration')
 #'
+#' # Set file name for DEM file to the system temp. directory.
+#' DEM.file = tempfile(fileext='.asc')
+#'
 #' # Download and import the Australian 9 second DEM.
-#' DEM_9s = getDEM()
+#' DEM_9s = getDEM(workingFolder=dirname(DEM.file),
+#'          DEMfilename=basename(DEM.file))
 #'
 #' # Extract precip data.
 #' # Note, the input "catchments" can also be a file to a ESRI shape file.
@@ -464,7 +462,7 @@ extractCatchmentData <- function(
 
       if (sum(ind)==1) {
         solarrad_avg[j,] = solarrad[ind,];
-      } else {
+      } else if (length(stats::na.omit(solarrad[ind,]))>0) {
         solarrad_avg[j,] = apply(stats::na.omit(solarrad[ind,]),2,mean)
       }
     }
@@ -573,7 +571,7 @@ extractCatchmentData <- function(
         # Convert to required format for ET package
         dataPP=Evapotranspiration::ReadInputs(ET.var.names ,dataRAW,constants=NA,stopmissing = c(99,99,99),
                           interp_missing_days=ET.interp_missing_days, interp_missing_entries=ET.interp_missing_entries, interp_abnormal=ET.interp_abnormal,
-                          missing_method=NULL, abnormal_method='DoY average', message = "no")
+                          missing_method='DoY average', abnormal_method='DoY average', message = "no")
 
         # Update constants for the site
         constants$Elev = DEMpoints[j]

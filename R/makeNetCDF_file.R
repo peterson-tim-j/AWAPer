@@ -58,15 +58,9 @@
 #' startDate = as.Date("2000-01-01","%Y-%m-%d")
 #' endDate = as.Date("2000-02-28","%Y-%m-%d")
 #'
-#' # Set names for netCDF files.
-#' ncdfFilename = 'AWAPer_demo.nc'
-#' ncdfSolarFilename = 'AWAPer_solar_demo.nc'
-#'
-#' # Remove any existing netCDF demo files.
-#' if (file.exists(ncdfFilename))
-#'    is.removed = file.remove(ncdfFilename)
-#' if (file.exists(ncdfSolarFilename))
-#'    is.removed = file.remove(ncdfSolarFilename)
+#' # Set names for netCDF files (in the system temp. directory).
+#' ncdfFilename = tempfile(fileext='.nc')
+#' ncdfSolarFilename = tempfile(fileext='.nc')
 #'
 #' # Build netCDF grids for all data but only over a defined time period.
 #' \donttest{

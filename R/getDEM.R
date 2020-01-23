@@ -22,7 +22,12 @@
 #' @examples
 #' # Download the DEM.
 #' \donttest{
-#' DEM_9s = getDEM()
+#' # Set file name for DEM file to the system temp. directory.
+#' DEM.file = tempfile(fileext='.asc')
+#'
+#' # Download and import the Australian 9 second DEM.
+#' DEM_9s = getDEM(workingFolder=dirname(DEM.file),
+#'          DEMfilename=basename(DEM.file))
 #' }
 #' @export
 getDEM <- function(workingFolder=getwd(),
