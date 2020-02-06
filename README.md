@@ -6,7 +6,7 @@ Using the default compression settings, each meteorlogical variable requires ~5G
 Below are details of how to install AWAPer followed by four examples of how to use it.
 
 # System Requiements
-On Windows OS only, the program "7z" is required to uzip the ".Z" compressed grid files. Follow the steps below to download and install 7z.
+On Windows OS only the program "7z" is required to uzip the ".Z" compressed grid files. Follow the steps below to download and install 7z.
 
 1. Download and intall 7z from https://www.7-zip.org/download.html
 1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.
@@ -17,11 +17,17 @@ On Windows OS only, the program "7z" is required to uzip the ".Z" compressed gri
 1. Check the setup by opening the "Command Prompt" and enter the command "7z". If 7z is correctly setup, output details such as the version, descriptions of commands, etc should be shown.')
 
 # Getting Started
-To get started using the package, do the following steps. Below this are two examples for building and extracting data:
+The package is available from the R library (i.e. CRAN) at https://cran.r-project.org/web/packages/AWAPer/index.html. To install the package from CRAN use the R command:
 
-1. Download the latest release of the package from https://github.com/peterson-tim-j/AWAPer/releases.
+```R
+install.packages('AWAPer')
+```
+
+Alternatively, to install the development version:
+
+1. Download the latest version of the package from https://github.com/peterson-tim-j/AWAPer/archive/master.zip.
 1. Unzip the package on your local machine.
-1. Rename the unzipped files, say "AWAPer-1.0.zip" folder to "AWAPer".
+1. Rename the unzipped files, say, "AWAPer-1.0.zip" folder to "AWAPer".
 1. Open R. 
 1. Install the netCDF package using the following command: `install.packages("ncdf4")` . **Importantly** this step may require installation of netCDF software outside of R. Please read the output R console messages carefully.
 1. Install the remaining required packages using the following R command:
