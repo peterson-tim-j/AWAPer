@@ -4,18 +4,31 @@
 \alias{extractCatchmentData}
 \title{\code{extractCatchmentData} extracts catchment average climate data from netCDF files containing Australian climate data.}
 \usage{
-extractCatchmentData(ncdfFilename = file.path(getwd(), "AWAP.nc"),
+extractCatchmentData(
+  ncdfFilename = file.path(getwd(), "AWAP.nc"),
   ncdfSolarFilename = file.path(getwd(), "AWAP_solar.nc"),
   extractFrom = as.Date("1900-01-01", "\%Y-\%m-\%d"),
-  extractTo = as.Date(Sys.Date(), "\%Y-\%m-\%d"), getPrecip = TRUE,
-  getTmin = TRUE, getTmax = TRUE, getVprp = TRUE,
-  getSolarrad = TRUE, getET = TRUE, DEM = "", catchments = "",
-  spatial.function.name = "var", temporal.function.name = "sum",
-  temporal.timestep = "daily", ET.function = "ET.MortonCRAE",
-  ET.Mortons.est = "potential ET", ET.Turc.humid = F,
-  ET.timestep = "monthly", ET.interp_missing_days = T,
-  ET.interp_missing_entries = T, ET.interp_abnormal = T,
-  ET.constants = list())
+  extractTo = as.Date(Sys.Date(), "\%Y-\%m-\%d"),
+  getPrecip = TRUE,
+  getTmin = TRUE,
+  getTmax = TRUE,
+  getVprp = TRUE,
+  getSolarrad = TRUE,
+  getET = TRUE,
+  DEM = "",
+  catchments = "",
+  temporal.timestep = "daily",
+  temporal.function.name = "mean",
+  spatial.function.name = "var",
+  ET.function = "ET.MortonCRAE",
+  ET.Mortons.est = "potential ET",
+  ET.Turc.humid = F,
+  ET.timestep = "monthly",
+  ET.interp_missing_days = T,
+  ET.interp_missing_entries = T,
+  ET.interp_abnormal = T,
+  ET.constants = list()
+)
 }
 \arguments{
 \item{ncdfFilename}{is a full file name (as string) to the netCDF file.}
@@ -45,7 +58,13 @@ for the calculation of Morton's PET. The Australian 9 second DEM can be loaded u
 \item{catchments}{is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected) use the ellipsoid GRS 80.}
 
-\item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. The default is \code{var}.}
+\item{temporal.timestep}{character string for the time step of the output data. The options are \code{daily}, \code{weekly}, \code{monthly}, \code{quarterly},
+\code{annual}  or a user-defined index for, say, water-years (see \code{\link{xts::apply.period}}). The default is \code{daily}.}
+
+\item{temporal.function.name}{character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
+Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.}
+
+\item{spatial.function.name}{character string for the function name applied to estimate the spatial spread in each variable. The default is \code{var}.}
 
 \item{ET.function}{character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
@@ -77,6 +96,10 @@ extractCatchmentData extracts the AWAP climate data for each point or polygon, a
 each climate metric is calculated.
 }
 \details{
+Daily data is extracted and can be aggregated to a weekly, monthly, quarterly, annual or a usre defined timestep using a user-defined funcion
+(e.g. sum, mean, min, max as defined by \code{temporal.function.name}). The temporally aggreated data at each grid cell is then used to derive the spatial
+mean or the spatial variance (or user defined function).
+
 The calculation of the spatial mean uses the fraction of each AWAP grid cell within the polygon.
 The variance calculation (or user defined function) does not use the fraction of the grid cell and returns NA if there are <2 grid cells in the catchment boundary.
 Prior to the catchment averaging and variance, evapotranspiration (ET) can also calculated; after which the mean and
@@ -102,22 +125,16 @@ Lastly, data is extracted for all time points and no temporal infilling is under
 }
 \examples{
 # The example shows how to extract and save data.
-# For an additional example see \\url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
+# For an additional example see \url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
 #---------------------------------------
 
 # Set dates for building netCDFs and extracting data.
 startDate = as.Date("2000-01-01","\%Y-\%m-\%d")
-endDate = as.Date("2000-03-31","\%Y-\%m-\%d")
+endDate = as.Date("2000-04-30","\%Y-\%m-\%d")
 
-# Set names for netCDF files.
-ncdfFilename = 'AWAPer_demo.nc'
-ncdfSolarFilename = 'AWAPer_solar_demo.nc'
-
-# Remove any existing netCDF demo files.
-if (file.exists(ncdfFilename))
-   is.removed = file.remove(ncdfFilename)
-if (file.exists(ncdfSolarFilename))
-   is.removed = file.remove(ncdfSolarFilename)
+# Set names for netCDF files (in the system temp. directory).
+ncdfFilename = tempfile(fileext='.nc')
+ncdfSolarFilename = tempfile(fileext='.nc')
 
 # Build netCDF grids and over a defined time period.
 \donttest{
@@ -128,38 +145,56 @@ file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 # Load example cacthment boundaries.
 data("catchments")
 
-# Get the constanrs required for ET estimation.
+# Get the constants required for ET estimation.
 data(constants,package='Evapotranspiration')
 
+# Set file name for DEM file to the system temp. directory.
+DEM.file = tempfile(fileext='.asc')
+
 # Download and import the Australian 9 second DEM.
-DEM_9s = getDEM()
+DEM_9s = getDEM(workingFolder=dirname(DEM.file))
 
 # Extract daily precip data.
 # Note, the input "catchments" can also be a file to a ESRI shape file.
-climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+climateData.daily = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
               ncdfSolarFilename=file.names$ncdfSolarFilename,
               extractFrom=startDate, extractTo=endDate,
               catchments=catchments,DEM=DEM_9s, ET.constants=constants)
 
 # Extract the daily catchment average data.
-climateDataAvg = climateData$catchmentAvg
+climateDataAvg.daily = climateData.daily$catchmentAvg
 
-# Extract the daily catchment variance data.
-climateDataVar = climateData$catchmentvar
+# Get the daily catchment weighted result from the list variable.
+climateDataVar.daily = climateData.daily$catchmentvar
 
-# Extract the monthly sum of precipitation and the monthly spaial variance.
-climateMonthlyData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+# Extract montly mean precip data.
+climateData.monthlyMean = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
               ncdfSolarFilename=file.names$ncdfSolarFilename,
               extractFrom=startDate, extractTo=endDate,
-              catchments=catchments,
               getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F,
-              temporal.function.name='sum', temporal.timestep='daily')
+              catchments=catchments,
+              temporal.timestep = "monthly", temporal.function.name = "mean")
 
-# Extract the daily catchment average data.
-climateMonthlyDataSum = climateMonthlyData$catchmentAvg
+# Get the monthly catchment weighted result from the list variable.
+climateDataAvg.monthly = climateData.monthlyMean$catchmentAvg
 
-# Extract the daily catchment variance data.
-climateMonthlyDataVar = climateMonthlyData$catchmentvar
+# Get the monthly spatial variance from the list variable.
+climateDataAvgVar.monthly = climateData.monthlyMean$catchmentvar
+
+# Extract montly maximum precip data.
+climateData.monthlyMax = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+              ncdfSolarFilename=file.names$ncdfSolarFilename,
+              extractFrom=startDate, extractTo=endDate,
+              getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F,
+              catchments=catchments,
+              temporal.timestep = "monthly", temporal.function.name = "max")
+
+# Get the monthly catchment weighted result from the list variable.
+climateDataMax.monthly = climateData.monthlyMax$catchmentAvg
+
+# Get the monthly spatial variance from the list variable.
+climateDataMaxVar.monthly = climateData.monthlyMax$catchmentvar
+
 }
 }
 \seealso{

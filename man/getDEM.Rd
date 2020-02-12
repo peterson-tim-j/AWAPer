@@ -4,8 +4,12 @@
 \alias{getDEM}
 \title{Downloads and imports Geoscience Australia 9s DEM.}
 \usage{
-getDEM(workingFolder = getwd(), urlDEM = getURLs()$DEM,
-  DEMfilename = "dem-9s.asc", keepFiles = F)
+getDEM(
+  workingFolder = getwd(),
+  urlDEM = getURLs()$DEM,
+  DEMfilename = "dem-9s.asc",
+  keepFiles = F
+)
 }
 \arguments{
 \item{workingFolder}{is the file path (as string) in which to download the zip file. The default is \code{getwd()}.}
