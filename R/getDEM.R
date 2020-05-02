@@ -59,7 +59,7 @@ getDEM <- function(workingFolder=getwd(),
   utils::unzip(destFile, files=DEMfilename.2unzip,junkpaths=T)
 
   message('... Reading in DEM file')
-  DEM <- sp::read.asciigrid(DEMfilename.2unzip,colname='DEM',  proj4string = sp::CRS("+proj=longlat +ellps=GRS80"))
+  DEM <- sp::read.asciigrid(basename(DEMfilename.2unzip), colname='DEM', proj4string = sp::CRS("+proj=longlat +ellps=GRS80"))
 
   message('... Converting grid to a raster data type.')
   DEM = raster::raster(DEM)
