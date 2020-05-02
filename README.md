@@ -392,3 +392,80 @@ legend(x='topright', legend=c(
   lty = c(1,1,1,1,2,2,2,2,3,3), col=c('black','red','green','blue','black','red','green','blue','black','red')
   )
   ```
+# Example 5. Map of Australia
+This example helps to illustrate how the netcdf file created can be interrogated to produce a map for daily maximum tempeature. 
+
+![Example 5. Map of Australia](https://user-images.githubusercontent.com/39328041/80854309-6d8bd200-8c7a-11ea-8cac-96d14f4927c6.png)
+
+```R
+# Load the package
+library(AWAPer)
+library(ncdf4)
+library(maps)
+library(mapdata)
+
+# Download the AWAP data to an NC file
+makeNetCDF_file(ncdfFilename = "AWAP_demo.nc", ncdfSolarFilename="AWAP_solar_demo.nc", 
+                updateFrom = as.Date("2017-12-14","%Y-%m-%d"),updateTo = as.Date("2017-12-15","%Y-%m-%d"))
+
+# Connect to the NC file and list what is inside
+ncfile = nc_open("AWAP_demo.nc")
+names(ncfile$dim)  #  "Long" "Lat"  "time"
+names(ncfile$var)  #  "tmin" "tmax" "vprp" "precip"
+
+# Get netcdf geometry
+lon = ncvar_get(ncfile, "Long")
+lat = ncvar_get(ncfile, "Lat")
+
+# Get times
+print(ncfile$dim$time$units)
+time = ncvar_get(ncfile, "time")
+date = as.Date("1900-01-01") + time
+
+# Time point to extract
+tar.date = as.Date("2017-12-15")
+tar.indx = match(tar.date, date)
+
+# Extract an image/slice
+im.tmax = ncvar_get(ncfile, varid = "tmax",   start = c(1, 1, tar.indx), count = c(-1, -1, 1)) # matrix
+
+# Close the connection
+nc_close(ncfile)
+
+# Plot Tmax
+col.vec = rev(heat.colors(10))
+plot(NULL, xlim = c(110, 160), ylim = c(-45, -5), xlab = expression(degree*Longitude), ylab = expression(degree*Latitude),
+     xaxs = "i", yaxs = "i", mgp = c(2, 0.6, 0))
+image(lon, lat, im.tmax, zlim = c(0, 50), col = col.vec, add = TRUE)
+
+# Remove data outisde coastal boundaries
+outline = map("worldHires", regions = c("Australia"), exact = TRUE, plot = FALSE) # returns a list of x/y coords
+xbox    = c(111, 156.2)
+ybox    = c(-39.5, -9)
+subset  = !is.na(outline$x)
+polypath(c(outline$x[subset], NA, c(xbox, rev(xbox))),
+         c(outline$y[subset], NA, rep(ybox, each = 2)),
+         col = "white", rule = "evenodd", border = "white")
+
+outline = map("worldHires", regions = c("Australia:Tasmania"), exact = TRUE, plot = FALSE) # returns a list of x/y coords
+xbox    = c(111, 156.2)
+ybox    = c(-44.9, -39.5)
+subset  = !is.na(outline$x)
+polypath(c(outline$x[subset], NA, c(xbox, rev(xbox))),
+         c(outline$y[subset], NA, rep(ybox, each = 2)),
+         col = "white", rule = "evenodd", border = "white")
+
+# Add legend
+for (i in 1:length(col.vec)) {
+  rect(115+(i-1)*2, -42, 117+(i-1)*2, -42+1.4, col = col.vec[i], border = NULL)
+}
+
+text(118.0, -38.5, expression("Tmax ("*degree*"C)"), pos = 1, cex = 0.7)
+text(115, -41.3, "0", pos = 1, cex = 0.7)
+text(125, -41.3, "25", pos = 1, cex = 0.7)
+text(135, -41.3, "50", pos = 1, cex = 0.7)
+
+# Add bounding boxes to show AWAP data boundary
+rect(min(lon), min(lat), max(lon), max(lat))
+text(118.5, -7.5, "AWAP boundary", pos = 1, cex = 0.8)
+  ```
