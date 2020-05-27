@@ -4,14 +4,20 @@
 \alias{makeNetCDF_file}
 \title{Build netCDF files of the Bureau of Meteorology (Australia) national gridded climate data.}
 \usage{
-makeNetCDF_file(ncdfFilename = file.path(getwd(), "AWAP.nc"),
+makeNetCDF_file(
+  ncdfFilename = file.path(getwd(), "AWAP.nc"),
   ncdfSolarFilename = file.path(getwd(), "AWAP_solar.nc"),
   updateFrom = as.Date("1900-01-01", "\%Y-\%m-\%d"),
   updateTo = as.Date(Sys.Date() - 1, "\%Y-\%m-\%d"),
-  workingFolder = getwd(), keepFiles = FALSE, compressionLevel = 5,
-  urlPrecip = getURLs()$precip, urlTmin = getURLs()$Tmin,
-  urlTmax = getURLs()$Tmax, urlVprp = getURLs()$vprp,
-  urlSolarrad = getURLs()$solarrad)
+  workingFolder = getwd(),
+  keepFiles = FALSE,
+  compressionLevel = 5,
+  urlPrecip = getURLs()$precip,
+  urlTmin = getURLs()$Tmin,
+  urlTmax = getURLs()$Tmax,
+  urlVprp = getURLs()$vprp,
+  urlSolarrad = getURLs()$solarrad
+)
 }
 \arguments{
 \item{ncdfFilename}{is a file path (as string) and name to the netCDF file. The default file name and path is \code{file.path(getwd(),'AWAP.nc')}.}
@@ -72,22 +78,16 @@ derived from this function. To not build or update a variable, set its respectiv
 }
 \examples{
 # The example shows how to build the netCDF data cubes.
-# For an additional example see \\url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
+# For an additional example see \url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
 #---------------------------------------
 
 # Set dates for building netCDFs and extracting data.
 startDate = as.Date("2000-01-01","\%Y-\%m-\%d")
 endDate = as.Date("2000-02-28","\%Y-\%m-\%d")
 
-# Set names for netCDF files.
-ncdfFilename = 'AWAPer_demo.nc'
-ncdfSolarFilename = 'AWAPer_solar_demo.nc'
-
-# Remove any existing netCDF demo files.
-if (file.exists(ncdfFilename))
-   is.removed = file.remove(ncdfFilename)
-if (file.exists(ncdfSolarFilename))
-   is.removed = file.remove(ncdfSolarFilename)
+# Set names for netCDF files (in the system temp. directory).
+ncdfFilename = tempfile(fileext='.nc')
+ncdfSolarFilename = tempfile(fileext='.nc')
 
 # Build netCDF grids for all data but only over a defined time period.
 \donttest{

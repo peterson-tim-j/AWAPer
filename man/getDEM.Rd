@@ -4,8 +4,12 @@
 \alias{getDEM}
 \title{Downloads and imports Geoscience Australia 9s DEM.}
 \usage{
-getDEM(workingFolder = getwd(), urlDEM = getURLs()$DEM,
-  DEMfilename = "dem-9s.asc", keepFiles = F)
+getDEM(
+  workingFolder = getwd(),
+  urlDEM = getURLs()$DEM,
+  DEMfilename = "dem-9s.asc",
+  keepFiles = F
+)
 }
 \arguments{
 \item{workingFolder}{is the file path (as string) in which to download the zip file. The default is \code{getwd()}.}
@@ -33,7 +37,12 @@ The DEM is required for the calculation of evaportranspiration within \code{extr
 \examples{
 # Download the DEM.
 \donttest{
-DEM_9s = getDEM()
+# Set file name for DEM file to the system temp. directory.
+DEM.file = tempfile(fileext='.asc')
+
+# Download and import the Australian 9 second DEM.
+DEM_9s = getDEM(workingFolder=dirname(DEM.file),
+         DEMfilename=basename(DEM.file))
 }
 }
 \seealso{

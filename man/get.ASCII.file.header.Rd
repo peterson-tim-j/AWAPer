@@ -4,8 +4,13 @@
 \alias{get.ASCII.file.header}
 \title{\code{get.ASCII.file.header} get header information.}
 \usage{
-get.ASCII.file.header(des.file.name, data.type.label, workingFolder,
-  datestring, remove.file = T)
+get.ASCII.file.header(
+  des.file.name,
+  data.type.label,
+  workingFolder,
+  datestring,
+  remove.file = T
+)
 }
 \value{
 A list variable of header information.
