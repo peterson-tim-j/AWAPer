@@ -4,7 +4,9 @@
 \name{catchments}
 \alias{catchments}
 \title{Example catchment boundary polygons.}
-\format{An object of class \code{SpatialPolygonsDataFrame} with 2 rows and 1 columns.}
+\format{
+An object of class \code{SpatialPolygonsDataFrame} with 2 rows and 1 columns.
+}
 \usage{
 catchments
 }
