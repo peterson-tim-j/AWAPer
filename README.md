@@ -473,3 +473,11 @@ text(135, -41.3, "50", pos = 1, cex = 0.7)
 rect(min(lon), min(lat), max(lon), max(lat))
 text(118.5, -7.5, "AWAP boundary", pos = 1, cex = 0.8)
   ```
+# Example 6. Extract monthly  precipitation
+This example illustrates how to extract data at a monthly time step. Note, extracting data other than at a daily time step required version 0.1.4 of AWAPer, which is available from https://github.com/peterson-tim-j/AWAPer/releases/tag/1.4.
+
+```R
+
+
+```
+
