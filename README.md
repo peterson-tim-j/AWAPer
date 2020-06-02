@@ -3,7 +3,12 @@ This R package builds netCDF files of the Bureau of Meteorology Australian Water
 
 Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf.
 
-Below are details of how to install AWAPer followed by four examples of how to use it.
+Below are details of the system requirements, how to install AWAPer and the followed examples:
+1. Building the required netCDF files (![see here](https://github.com/peterson-tim-j/AWAPer#example-1-build-netcdf-files))
+1. Extract and check daily point precipitation data against rain gauge observations (![see here](https://github.com/peterson-tim-j/AWAPer#example-2-extract-point-precip-data-and-check-with-osberved-data))
+1. Extract daily areal weighted precipitation and calculate two measures of ET (![see here](https://github.com/peterson-tim-j/AWAPer#example-3-calculate-precip-and-evapotranspiration))
+1. Calculate all measures of ET possible with AWAPer (![see here](https://github.com/peterson-tim-j/AWAPer#example-4-calculate-evapotranspiration))
+1. Extract and map maximum daily temperature for all of Australia (![see here](https://github.com/peterson-tim-j/AWAPer#example-5-map-of-australia))
 
 # System Requiements
 On Windows OS only the program "7z" is required to uzip the ".Z" compressed grid files. Follow the steps below to download and install 7z.
@@ -23,16 +28,15 @@ The package is available from the R library (i.e. CRAN) at https://cran.r-projec
 install.packages('AWAPer')
 ```
 
-Alternatively, to install the development version:
+Alternatively, to install the latest version:
 
-1. Download the latest version of the package from https://github.com/peterson-tim-j/AWAPer/archive/master.zip.
-1. Unzip the package on your local machine.
-1. Rename the unzipped files, say, "AWAPer-1.0.zip" folder to "AWAPer".
+1. Download the latest "tar.gz" (e.g. AWAPer_0.1.4.tar.gz) file from https://github.com/peterson-tim-j/AWAPer/releases.
 1. Open R. 
 1. Install the netCDF package using the following command: `install.packages("ncdf4")` . **Importantly** this step may require installation of netCDF software outside of R. Please read the output R console messages carefully.
-1. Install the remaining required packages using the following R command:
-`install.packages(c("R.utils", "sp", "raster", "chron", "maptools", "Evapotranspiration","devtools"))`
-1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder):For PC `install.packages("C:\MY_FOLDER\AWAPer\", repos = NULL, type = "source")` and for Mac `install.packages(“~/Users/MyFolder/AWAPer/", repos = NULL, type = "source")`
+1. Install the remaining required packages using the R command:
+`install.packages(c("R.utils", "sp", "raster", "chron", "maptools", "Evapotranspiration","devtools","zoo", "methods", "xts"))`
+1. Load the required packages using the R command: `library(c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
+1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder). For example on a PC `install.packages("C:\MY_FOLDER\AWAPer\AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")` and for Mac `install.packages(“~/Users/MyFolder/AWAPer/AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")`
 
 # Example 1. Build netCDF files
 
