@@ -474,10 +474,57 @@ rect(min(lon), min(lat), max(lon), max(lat))
 text(118.5, -7.5, "AWAP boundary", pos = 1, cex = 0.8)
   ```
 # Example 6. Extract monthly  precipitation
-This example illustrates how to extract data at a monthly time step. Note, extracting data other than at a daily time step required version 0.1.4 of AWAPer, which is available from https://github.com/peterson-tim-j/AWAPer/releases/tag/1.4.
+This example illustrates how to extract data at a monthly time step. Note, extracting data other than at a daily time step required version 0.1.4 of AWAPer, which is available from https://github.com/peterson-tim-j/AWAPer/releases/tag/1.4. The image below shows the derived monththly total precipitation and the monthly spatial variance.
+
+![example6](https://user-images.githubusercontent.com/8623994/83482391-87bc0880-a4e3-11ea-97a2-d174cd68446c.png)
 
 ```R
+# Load required librraies
+library(c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
+        
+# Set dates for building netCDFs and extracting data.
+startDate = as.Date("2000-01-01","%Y-%m-%d")
+endDate = as.Date("2000-12-31","%Y-%m-%d")
 
+# Set names for netCDF files.
+ncdfFilename = 'AWAPer_demo.nc'
+
+# Build netCDF grid of ONLY precipitation and over a defined time period.
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+                             updateFrom=startDate, updateTo=endDate,
+                             urlTmin=NA, urlTmax=NA, urlVprp = NA, urlSolarrad = NA)
+
+# Load the two example cacthment boundaries.
+data("catchments")
+
+# Extract the monthly total areal average precipitation for the two catchments..
+monthlySumPrecip = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
+                                         ncdfSolarFilename=file.names$ncdfSolarFilename,
+                                         extractFrom=startDate, extractTo=endDate,
+                                         catchments=catchments,
+                                         getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
+                                         temporal.timestep = 'monthly', temporal.function.name = 'sum',
+                                         spatial.function.name='var')
+
+
+# Extract the monthly precip. sum data and spatial variance for each of the catchments.
+filt = monthlySumPrecip$catchmentTemporal.sum$CatchID == 407214
+monthlySumPrecip.sum.407214 = monthlySumPrecip$catchmentTemporal.sum[filt,]
+monthlySumPrecip.var.407214 = monthlySumPrecip$catchmentSpatial[filt,]
+filt = monthlySumPrecip$catchmentTemporal.sum$CatchID == 407220
+monthlySumPrecip.sum.407220 = monthlySumPrecip$catchmentTemporal.sum[filt,]
+monthlySumPrecip.var.407220 = monthlySumPrecip$catchmentSpatial[filt,]
+
+# Create data time series
+dates2plot = ISOdate(monthlySumPrecip.sum.407220$year, monthlySumPrecip.sum.407220$month, monthlySumPrecip.sum.407220$day)
+
+# Plot monthly sum and spatial variance in the monthly sum.
+par(mfrow=c(1,2))
+plot(dates2plot, monthlySumPrecip.sum.407214$precip_mm, type='l', col='red', xlab='Month', ylab='Monthly precip. [mm/month]')
+lines(dates2plot, monthlySumPrecip.sum.407220$precip_mm, col='blue')
+legend('topleft',legend=c('Cathcment 407214','Cathcment 407220'),col=c('red','blue'), lty=c(1,1))
+plot(dates2plot, sqrt(monthlySumPrecip.var.407214$precip_mm), type='l', col='red', xlab='Month', ylab='Monthly precip. spatial standard deviation [mm/month]')
+lines(dates2plot, sqrt(monthlySumPrecip.var.407220$precip_mm), col='blue')
 
 ```
 
