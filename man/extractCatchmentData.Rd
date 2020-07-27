@@ -64,7 +64,8 @@ already imported using readShapeSpatial(). Either way the shape file must be in 
 \item{temporal.function.name}{character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
 Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.}
 
-\item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. The default is \code{var}.}
+\item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
+the spatial data is returned. The default is \code{var}.}
 
 \item{ET.function}{character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
@@ -86,15 +87,18 @@ For \code{ET.MortonCRWE}, the options are \code{potential ET} or \code{shallow l
 \item{ET.constants}{list of constants from Evapotranspiration package required for ET calculations. To get the data use the command \code{data(constants)}. Default is \code{list()}.}
 }
 \value{
-When "catchments" are polygons, the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
-metrics named "catchmentTemporal." with a suffix as defined by \code{temporal.function.name}). The second is the measure of spatial variability
-named "catchmentSpatial." with a suffix as defined by \code{spatial.function.name}).
+When \code{catchments} are polygons and \code{spatial.function.name} is not \code{NA} or \code{""}, then the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
+metrics named \code{catchmentTemporal.} with a suffix as defined by \code{temporal.function.name}). The second is the measure of spatial variability
+named \code{catchmentSpatial.} with a suffix as defined by \code{spatial.function.name}).
 
-When "catchments" are points, the returned variable is a data.frame containing daily climate data at each point.
+When \code{catchments} are polygons and \code{spatial.function.name} does equal \code{NA} or \code{""}, then the returned variable is a \code{sp::SpatialPixelsDataFrame} where the first colum is the catchment IDs
+and the latter columns are the results for each variable at each time point as defined by \code{temporal.timestep}.
+
+When \code{catchments} are points, the returned variable is a data.frame containing daily climate data at each point.
 }
 \description{
-extractCatchmentData extracts the AWAP climate data for each point or polygon, and for the latter the daily spatial mean and variance (or user defined function) of
-each climate metric is calculated.
+extractCatchmentData extracts the AWAP climate data for each point or polygon. For the latter, either the daily spatial mean and variance (or user defined function) of
+each climate metric is calculated or the spatial data is returned.
 }
 \details{
 Daily data is extracted and can be aggregated to a weekly, monthly, quarterly, annual or a user-defined timestep using a user-defined funcion

@@ -2,8 +2,8 @@
 #' \code{extractCatchmentData} extracts catchment average climate data from netCDF files containing Australian climate data.
 #'
 #' @description
-#' extractCatchmentData extracts the AWAP climate data for each point or polygon, and for the latter the daily spatial mean and variance (or user defined function) of
-#' each climate metric is calculated.
+#' extractCatchmentData extracts the AWAP climate data for each point or polygon. For the latter, either the daily spatial mean and variance (or user defined function) of
+#' each climate metric is calculated or the spatial data is returned.
 #'
 #' @details
 #' Daily data is extracted and can be aggregated to a weekly, monthly, quarterly, annual or a user-defined timestep using a user-defined funcion
@@ -53,7 +53,8 @@
 #' \code{annual}  or a user-defined index for, say, water-years (see \code{\link{xts::apply.period}}). The default is \code{daily}.
 #' @param temporal.function.name character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
 #' Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.
-#' @param spatial.function.name character string for the function name applied to estimate the daily spatial spread in each variable. The default is \code{var}.
+#' @param spatial.function.name character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
+#' the spatial data is returned. The default is \code{var}.
 #' @param ET.function character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 #' \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
 #' \code{\link[Evapotranspiration]{ET.MortonCRWE}}, \code{\link[Evapotranspiration]{ET.Turc}}. Default is \code{\link[Evapotranspiration]{ET.MortonCRAE}}.
@@ -67,11 +68,14 @@
 #' @param ET.constants list of constants from Evapotranspiration package required for ET calculations. To get the data use the command \code{data(constants)}. Default is \code{list()}.
 #'
 #' @return
-#' When "catchments" are polygons, the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
-#' metrics named "catchmentTemporal." with a suffix as defined by \code{temporal.function.name}). The second is the measure of spatial variability
-#' named "catchmentSpatial." with a suffix as defined by \code{spatial.function.name}).
+#' When \code{catchments} are polygons and \code{spatial.function.name} is not \code{NA} or \code{""}, then the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
+#' metrics named \code{catchmentTemporal.} with a suffix as defined by \code{temporal.function.name}). The second is the measure of spatial variability
+#' named \code{catchmentSpatial.} with a suffix as defined by \code{spatial.function.name}).
 #'
-#' When "catchments" are points, the returned variable is a data.frame containing daily climate data at each point.
+#' When \code{catchments} are polygons and \code{spatial.function.name} does equal \code{NA} or \code{""}, then the returned variable is a \code{sp::SpatialPixelsDataFrame} where the first colum is the catchment IDs
+#' and the latter columns are the results for each variable at each time point as defined by \code{temporal.timestep}.
+#'
+#' When \code{catchments} are points, the returned variable is a data.frame containing daily climate data at each point.
 #'
 #' @seealso
 #' \code{\link{makeNetCDF_file}} for building the NetCDF files of daily climate data.
@@ -218,20 +222,6 @@ extractCatchmentData <- function(
   }
   )
 
-  # Check spatial analysis funcion is valid.
-  data.junk = t(as.matrix(runif(100, 0.0, 1.0)*100))
-  result = tryCatch({
-    apply(data.junk, 1,FUN=spatial.function.name)
-  }, warning = function(w) {
-    message(paste("Warning spatial.function.name produced the following",w))
-  }, error = function(e) {
-    stop(paste('spatial.function.name produced an error when applied using test data:',e))
-  }, finally = {
-    rm(data.junk)
-  }
-  )
-
-
   # Check ET inputs
   if (getET) {
     if (length(ET.constants)==0)
@@ -325,6 +315,27 @@ extractCatchmentData <- function(
     isCatchmentsPolygon=FALSE;
   }
 
+  # Check if the spatial data should be returned or analysed.
+  do.spatial.analysis=T
+  if (isCatchmentsPolygon && is.na(spatial.function.name) || (is.character(spatial.function.name) && spatial.function.name=='')) {
+    do.spatial.analysis=F
+  }
+
+  if (do.spatial.analysis) {
+    # Check spatial analysis funcion is valid.
+    data.junk = t(as.matrix(runif(100, 0.0, 1.0)*100))
+    result = tryCatch({
+      apply(data.junk, 1,FUN=spatial.function.name)
+    }, warning = function(w) {
+      message(paste("Warning spatial.function.name produced the following",w))
+    }, error = function(e) {
+      stop(paste('spatial.function.name produced an error when applied using test data:',e))
+    }, finally = {
+      rm(data.junk)
+    }
+    )
+  }
+
   # Get netCDF geometry
   timePoints <- ncdf4::ncvar_get(awap, "time")
   nTimePoints = length(timePoints);
@@ -402,7 +413,7 @@ extractCatchmentData <- function(
         message(paste('   ... Building weights for catchment ', i,' of ',length(catchments)));
         raster::removeTmpFiles(h=0)
       }
-      w = raster::rasterize(catchments[i,], precipGrd,getCover=T)
+      w = raster::rasterize(x=catchments[i,], y=precipGrd,fun='last',getCover=T)
 
       # Extract the mask values (i.e. fraction of each grid cell within the polygon.
       w2 = raster::getValues(w);
@@ -580,6 +591,10 @@ extractCatchmentData <- function(
       message(paste('    ... Calculating catchment ', i,' of ',length(catchments)));
     }
 
+    # Get the weights for the catchment
+    ind = catchment.lookup[i,1]:catchment.lookup[i,2]
+    w = w.all[ind]
+
     # Calculate Morton's PET at each grid cell and time point. NOTE, va is divided by 10 to go from hPa to Kpa
     if (getET) {
       # Initialise outputa
@@ -690,9 +705,6 @@ extractCatchmentData <- function(
     #----------------------------------------------------------------------------------------
     extractDate = ISOdate(year=extractYear,month=extractMonth,day=extractDay)
 
-    # Get the weights for the catchment
-    ind = catchment.lookup[i,1]:catchment.lookup[i,2]
-    w = w.all[ind]
 
     # Do the temporal aggregation
     #-----------------------------
@@ -786,7 +798,7 @@ extractCatchmentData <- function(
     }
 
     if (getET) {
-      ET.xts = xts::as.xts(mortAPET[,ind], order.by=extractDate)
+      ET.xts = xts::as.xts(mortAPET, order.by=extractDate)
       ET.xts <-
         switch(
           which(temporal.timestep.options == temporal.timestep),
@@ -801,99 +813,160 @@ extractCatchmentData <- function(
     #-----------------------------
 
     # Determine the number of time steps (for creation of the output)
-    if (is.xts(precip.xts)) {
-      timesteps=index(precip.xts)
-    } else if (tmin.xts) {
-      timesteps=index(tmin.xts)
-    } else if (tmax.xts) {
-      timesteps=index(tmax.xts)
-    } else if (vprp.xts) {
-      timesteps=index(vprp.xts)
-    } else if (solarrad.xts) {
-      timesteps=index(solarrad.xts)
-    } else if (ET.xts) {
-      timesteps=index(ET.xts)
+    if (xts::is.xts(precip.xts)) {
+      timesteps=zoo::index(zoo::as.zoo(precip.xts))
+    } else if (xts::is.xts(tmin.xts)) {
+      timesteps=zoo::index(zoo::as.zoo(tmin.xts))
+    } else if (xts::is.xts(tmax.xts)) {
+      timesteps=zoo::index(zoo::as.zoo(tmax.xts))
+    } else if (xts::is.xts(vprp.xts)) {
+      timesteps=zoo::index(zoo::as.zoo(vprp.xts))
+    } else if (xts::is.xts(solarrad.xts)) {
+      timesteps=zoo::index(zoo::as.zoo(solarrad.xts))
+    } else if (xts::is.xts(ET.xts)) {
+      timesteps=zoo::index(zoo::as.zoo(ET.xts))
     }
     nTimeSteps = length(timesteps)
 
-    # Create data frame for final results
-    catchmentAvgTmp = data.frame(CatchmentID=catchments[i,1],year=as.integer(format(timesteps,"%Y")) ,month=as.integer(format(timesteps,"%m")),day=as.integer(format(timesteps,"%d")),row.names = NULL);
-    catchmentVarTmp = catchmentAvgTmp
-
-    # Check if there are enough grid cells to calculate the variance.
-    calcVariance =  F;
-    if (length(ind)>1)
-      calcVariance =  T;
-
-    # Do spatial aggregation using grid cell weights
+    # Do spatial aggregation if a spatial function is provided. If spatial aggregation
+    # is not required, then build up a data.frame (each time step and data type as one column)
+    # for latter conversion to a spatial object.
     #-----------------------------
-    if (getPrecip) {
-      catchmentAvgTmp$precip_mm = apply(t(t(precip.xts) * w),1,sum,na.rm=TRUE)
-      if (calcVariance) {
-        catchmentVarTmp$precip_mm = apply(precip.xts,1,spatial.function.name,na.rm=TRUE);
-      } else {
-        catchmentVarTmp$precip_mm = NA;
+    if (do.spatial.analysis) {
+      # Create data frame for final results
+      catchmentAvgTmp = data.frame(CatchmentID=catchments[i,1],year=as.integer(format(timesteps,"%Y")) ,month=as.integer(format(timesteps,"%m")),day=as.integer(format(timesteps,"%d")),row.names = NULL);
+      catchmentVarTmp = catchmentAvgTmp
+
+      # Check if there are enough grid cells to calculate the variance.
+      calcVariance =  F;
+      if (length(ind)>1)
+        calcVariance =  T;
+
+      # Do spatial aggregation using grid cell weights
+      #-----------------------------
+      if (getPrecip) {
+        catchmentAvgTmp$precip_mm = apply(t(t(precip.xts) * w),1,sum,na.rm=TRUE)
+        if (calcVariance) {
+          catchmentVarTmp$precip_mm = apply(precip.xts,1,spatial.function.name,na.rm=TRUE);
+        } else {
+          catchmentVarTmp$precip_mm = NA;
+        }
       }
-    }
-    if (getTmin) {
-      catchmentAvgTmp$Tmin = apply(t(t(tmin.xts) * w),1,sum,na.rm=TRUE);
-      if (calcVariance) {
-        catchmentVarTmp$Tmin = apply(tmin.xts,1,spatial.function.name,na.rm=TRUE);
-      } else {
-        catchmentVarTmp$Tmin = NA;
+      if (getTmin) {
+        catchmentAvgTmp$Tmin = apply(t(t(tmin.xts) * w),1,sum,na.rm=TRUE);
+        if (calcVariance) {
+          catchmentVarTmp$Tmin = apply(tmin.xts,1,spatial.function.name,na.rm=TRUE);
+        } else {
+          catchmentVarTmp$Tmin = NA;
+        }
       }
-    }
-    if (getTmax) {
-      catchmentAvgTmp$Tmax = apply(t(t(tmax.xts) * w),1,sum,na.rm=TRUE);
-      if (calcVariance) {
-        catchmentVarTmp$Tmax = apply(tmax.xts,1,spatial.function.name,na.rm=TRUE);
-      } else {
-        catchmentVarTmp$Tmax = NA;
+      if (getTmax) {
+        catchmentAvgTmp$Tmax = apply(t(t(tmax.xts) * w),1,sum,na.rm=TRUE);
+        if (calcVariance) {
+          catchmentVarTmp$Tmax = apply(tmax.xts,1,spatial.function.name,na.rm=TRUE);
+        } else {
+          catchmentVarTmp$Tmax = NA;
+        }
       }
-    }
-    if (getVprp) {
-      catchmentAvgTmp$vprp = apply(t(t(vprp.xts) * w),1,sum,na.rm=TRUE);
-      if (calcVariance) {
-        catchmentVarTmp$vprp = apply(vprp.xts,1,spatial.function.name,na.rm=TRUE);
-      } else {
-        catchmentVarTmp$vprp = NA;
+      if (getVprp) {
+        catchmentAvgTmp$vprp = apply(t(t(vprp.xts) * w),1,sum,na.rm=TRUE);
+        if (calcVariance) {
+          catchmentVarTmp$vprp = apply(vprp.xts,1,spatial.function.name,na.rm=TRUE);
+        } else {
+          catchmentVarTmp$vprp = NA;
+        }
       }
-    }
-    if (getSolarrad) {
-      catchmentAvgTmp$solarrad = apply(t(t(solarrad.xts) * w),1,sum,na.rm=TRUE);
-      catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp.xts) * w),1,sum,na.rm=TRUE);
-      if (calcVariance) {
-        catchmentVarTmp$solarrad = apply(solarrad.xts,1,spatial.function.name,na.rm=TRUE);
-        catchmentVarTmp$solarrad_interp = apply(solarrad_interp.xts,1,spatial.function.name,na.rm=TRUE);
-      } else {
-        catchmentVarTmp$solarrad = NA;
-        catchmentVarTmp$solarrad_interp = NA;
+      if (getSolarrad) {
+        catchmentAvgTmp$solarrad = apply(t(t(solarrad.xts) * w),1,sum,na.rm=TRUE);
+        catchmentAvgTmp$solarrad_interp = apply(t(t(solarrad_interp.xts) * w),1,sum,na.rm=TRUE);
+        if (calcVariance) {
+          catchmentVarTmp$solarrad = apply(solarrad.xts,1,spatial.function.name,na.rm=TRUE);
+          catchmentVarTmp$solarrad_interp = apply(solarrad_interp.xts,1,spatial.function.name,na.rm=TRUE);
+        } else {
+          catchmentVarTmp$solarrad = NA;
+          catchmentVarTmp$solarrad_interp = NA;
+        }
+
+      }
+      if (getET) {
+        catchmentAvgTmp$ET_mm = apply(t(t(ET.xts) * w),1,sum,na.rm=TRUE);
+        if (calcVariance) {
+          catchmentVarTmp$ET_mm = apply(ET.xts,1,spatial.function.name,na.rm=TRUE);
+        } else {
+          catchmentVarTmp$ET_mm = NA;
+        }
+      }
+
+    } else {
+      # Do not undertake spatial aggregation. Instead collate
+      # results for each grid cell.
+
+      nGridCells = catchment.lookup[i,2] - catchment.lookup[i,1] +1
+      catchmentAvgTmp = data.frame(CatchmentID=rep(catchments$CatchID[i],nGridCells))
+      catchmentVar = NA
+      if (getPrecip) {
+        newDataCol = as.data.frame(t(precip.xts))
+        colnames(newDataCol) = paste('Precip',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind.data.frame(catchmentAvgTmp, newDataCol)
+      }
+      if (getTmin) {
+        newDataCol = as.data.frame(t(tmin.xts))
+        colnames(newDataCol) = paste('Tmin',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind.data.frame(catchmentAvgTmp, newDataCol)
+      }
+      if (getTmax) {
+        newDataCol = as.data.frame(t(tmax.xts))
+        colnames(newDataCol) = paste('Tmax',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind.data.frame(catchmentAvgTmp, newDataCol)
+      }
+      if (getVprp) {
+        newDataCol = as.data.frame(t(vprp.xts))
+        colnames(newDataCol) = paste('vprp',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind.data.frame(catchmentAvgTmp, newDataCol)
+      }
+      if (getSolarrad) {
+        newDataCol = as.data.frame(t(solarrad.xts))
+        colnames(newDataCol) = paste('solarrad',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind.data.frame(catchmentAvgTmp, newDataCol)
+
+        newDataCol = as.data.frame(t(solarrad_interp.xts))
+        colnames(newDataCol) = paste('solarrad_interp',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind.data.frame(catchmentAvgTmp, newDataCol)
+      }
+      if (getET) {
+        newDataCol = as.data.frame(t(ET.xts))
+        colnames(newDataCol) = paste('ET_mm',format.Date(colnames(newDataCol),'%Y_%m_%d'),sep='_')
+        catchmentAvgTmp = cbind(catchmentAvgTmp, newDataCol)
       }
 
     }
-    if (getET) {
-      catchmentAvgTmp$ET_mm = apply(t(t(ET.xts) * w),1,sum,na.rm=TRUE);
-      if (calcVariance) {
-        catchmentVarTmp$ET_mm = apply(ET.xts,1,spatial.function.name,na.rm=TRUE);
-      } else {
-        catchmentVarTmp$ET_mm = NA;
-      }
-    }
-    #-----------------------------
+
 
     if (i==1) {
       catchmentAvg = catchmentAvgTmp;
-      catchmentVar = catchmentVarTmp;
+      if (do.spatial.analysis) {
+        catchmentVar = catchmentVarTmp;
+      }
     } else {
       catchmentAvg = rbind(catchmentAvg,catchmentAvgTmp)
-      catchmentVar = rbind(catchmentVar,catchmentVarTmp)
+      if (do.spatial.analysis) {
+        catchmentVar = rbind(catchmentVar,catchmentVarTmp)
+      }
     }
   }
   # end for-loop
 
   if (isCatchmentsPolygon) {
-    catchmentAvg = list(catchmentAvg, catchmentVar)
-    names(catchmentAvg) = c(paste('catchmentTemporal.',temporal.function.name,sep=''), paste('catchmentSpatial.',spatial.function.name,sep=''))
+    if (do.spatial.analysis) {
+      catchmentAvg = list(catchmentAvg, catchmentVar)
+      names(catchmentAvg) = c(paste('catchmentTemporal.',temporal.function.name,sep=''), paste('catchmentSpatial.',spatial.function.name,sep=''))
+    } else {
+      # Convert data to  a spatial grid (SpatialPixelsDataFrame)
+      gridCoords = data.frame(Long=longLat.all[,1], Lat=longLat.all[,2])
+      catchmentAvg = cbind.data.frame(gridCoords, catchmentAvg)
+      sp::coordinates(catchmentAvg) <- ~Long+Lat
+      gridded(catchmentAvg) <- T
+    }
   }
 
   message('Data extraction FINISHED..')

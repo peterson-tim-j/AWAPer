@@ -20,3 +20,8 @@ Change log for AWAPer
 4-November-2019
 * Documentation and code edited to pass "R CMD check --as-cran"  without errors or warnings.
 * User prompt added if updating netCDFs when the start date is 1/1/1900.
+
+26-July-2020
+* Userdefined time steps added
+* Spatial can data returned at a user defined time step
+* Bugs fixed in calling xts::index.
