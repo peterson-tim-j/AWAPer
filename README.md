@@ -531,6 +531,8 @@ lines(dates2plot, sqrt(monthlySumPrecip.var.407220$precip_mm), col='blue')
 # Example 7: Map monthly precipitation
 This example illustrates how to map the monthly total precipitation across two catchments. Note, mapping data other than at a daily time step requires version 0.1.41 of AWAPer, which is available from https://github.com/peterson-tim-j/AWAPer/releases/tag/1.41. The image below shows maps of the monthly total precipitation..
 
+![Monthly total precip.](https://user-images.githubusercontent.com/8623994/88503595-8dcaf300-d015-11ea-9d4a-0af5da2cba17.png)
+
 ```R
 # Set dates for building netCDFs and extracting data.
 startDate = as.Date("2000-01-01","%Y-%m-%d")
