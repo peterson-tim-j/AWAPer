@@ -10,7 +10,7 @@ Below are details of the system requirements, how to install AWAPer and the foll
 1. Calculate all measures of ET possible with AWAPer (![see here](https://github.com/peterson-tim-j/AWAPer#example-4-calculate-evapotranspiration))
 1. Extract and map maximum daily temperature for all of Australia (![see here](https://github.com/peterson-tim-j/AWAPer#example-5-map-of-australia))
 1. Extract monthly areal weighted total precipitation at two catchments and plot the totals and the spatial variability (![see here](https://github.com/peterson-tim-j/AWAPer/blob/master/README.md#example-6-extract-monthly--precipitation))
-1. Extract and map the monthly total precipitation at two catchments (![see here](https://github.com/peterson-tim-j/AWAPer/blob/master/README.md#example-7-map-monthly--precipitation))
+1. Extract and map the monthly total precipitation at two catchments (![see here](https://github.com/peterson-tim-j/AWAPer/blob/master/README.md#example-7-map-monthly-precipitation))
 
 # System Requiements
 On Windows OS only the program "7z" is required to uzip the ".Z" compressed grid files. Follow the steps below to download and install 7z.
