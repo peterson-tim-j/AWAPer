@@ -1,5 +1,5 @@
 # AWAPer
-This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily, weekly, monthly, quarterly or annual catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of various measures of potential evaporation. 
+This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily, weekly, monthly, quarterly or annual catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of various measures of potential evaporation. For details of the appraoch see: Peterson, Tim J, Wasko, C, Saft, M, Peel, MC. AWAPer: An R package for area weighted catchment daily meteorological data anywhere within Australia. _Hydrological Processes_. 2020; 34: 1301– 1306. https://doi.org/10.1002/hyp.13637 
 
 Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf.
 
@@ -10,6 +10,7 @@ Below are details of the system requirements, how to install AWAPer and the foll
 1. Calculate all measures of ET possible with AWAPer (![see here](https://github.com/peterson-tim-j/AWAPer#example-4-calculate-evapotranspiration))
 1. Extract and map maximum daily temperature for all of Australia (![see here](https://github.com/peterson-tim-j/AWAPer#example-5-map-of-australia))
 1. Extract monthly areal weighted total precipitation at two catchments and plot the totals and the spatial variability (![see here](https://github.com/peterson-tim-j/AWAPer/blob/master/README.md#example-6-extract-monthly--precipitation))
+1. Extract and map the monthly total precipitation at two catchments (![see here](https://github.com/peterson-tim-j/AWAPer/blob/master/README.md#example-7-map-monthly--precipitation))
 
 # System Requiements
 On Windows OS only the program "7z" is required to uzip the ".Z" compressed grid files. Follow the steps below to download and install 7z.
@@ -474,7 +475,7 @@ text(135, -41.3, "50", pos = 1, cex = 0.7)
 rect(min(lon), min(lat), max(lon), max(lat))
 text(118.5, -7.5, "AWAP boundary", pos = 1, cex = 0.8)
   ```
-# Example 6. Extract monthly  precipitation
+# Example 6. Extract monthly precipitation
 This example illustrates how to extract data at a monthly time step. Note, extracting data other than at a daily time step requires version 0.1.4 of AWAPer, which is available from https://github.com/peterson-tim-j/AWAPer/releases/tag/1.4. The image below shows the derived monthly total precipitation and the monthly spatial standard deviation.
 
 ![example6](https://user-images.githubusercontent.com/8623994/83482391-87bc0880-a4e3-11ea-97a2-d174cd68446c.png)
@@ -526,6 +527,42 @@ lines(dates2plot, monthlySumPrecip.sum.407220$precip_mm, col='blue')
 legend('topleft',legend=c('Cathcment 407214','Cathcment 407220'),col=c('red','blue'), lty=c(1,1))
 plot(dates2plot, sqrt(monthlySumPrecip.var.407214$precip_mm), type='l', col='red', xlab='Month', ylab='Monthly precip. spatial standard deviation [mm/month]')
 lines(dates2plot, sqrt(monthlySumPrecip.var.407220$precip_mm), col='blue')
-
 ```
+# Example 7: Map monthly precipitation
+This example illustrates how to map the monthly total precipitation across two catchments. Note, mapping data other than at a daily time step requires version 0.1.41 of AWAPer, which is available from https://github.com/peterson-tim-j/AWAPer/releases/tag/1.41. The image below shows maps of the monthly total precipitation..
 
+```R
+# Set dates for building netCDFs and extracting data.
+startDate = as.Date("2000-01-01","%Y-%m-%d")
+endDate = as.Date("2000-02-28","%Y-%m-%d")
+
+# Set names for netCDF files.
+ncdfFilename = 'AWAPer_demo.nc'
+ncdfSolarFilename = 'AWAPer_solar_demo.nc'
+
+# Remove any existing netCDF demo files.
+if (file.exists(ncdfFilename))
+ is.removed = file.remove(ncdfFilename)
+if (file.exists(ncdfSolarFilename))
+ is.removed = file.remove(ncdfSolarFilename)
+
+# Build netCDF grids and over a defined time period.
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+                            ncdfSolarFilename=ncdfSolarFilename,
+                            updateFrom=startDate, updateTo=endDate)
+
+# Load example cacthment boundaries.
+data("catchments")
+
+# Extract the monthly total precipitation.
+monthlyPrecipData = extractCatchmentData(ncdfFilename=ncdfFilename,
+                                         ncdfSolarFilename=ncdfSolarFilename,
+                                         extractFrom=startDate, extractTo=endDate,
+                                         catchments=catchments,
+                                         getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,spatial.function.name = '',
+                                         temporal.timestep = 'monthly', temporal.function.name = 'sum')
+
+# Map the monthly total repcip and overlay the catchment boundary.
+v = list("sp.polygons", catchments, col = "red",first=FALSE)
+spplot(monthlyPrecipData,2:ncol(monthlyPrecipData), sp.layout = list(v))
+```
