@@ -168,7 +168,7 @@ DEM_9s = getDEM()
 data("catchments")
 
 # Load the ET constants
-data(constants)
+data(constants,package='Evapotranspiration')
 
 # Extract catchment average data for Bet Bet Creek with 
 # the Jensen Haise estimate of potential ET.
@@ -266,7 +266,7 @@ DEM_9s = getDEM()
 data("catchments")
 
 # get ET constants
-data(constants)
+data(constants,package='Evapotranspiration')
 
 # Extract data and esitmate various types of ET and estimate the spatial variance 
 # using the interquartile range.
