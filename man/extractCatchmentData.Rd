@@ -20,6 +20,7 @@ extractCatchmentData(
   temporal.timestep = "daily",
   temporal.function.name = "mean",
   spatial.function.name = "var",
+  interpMethod = "",
   ET.function = "ET.MortonCRAE",
   ET.Mortons.est = "potential ET",
   ET.Turc.humid = F,
@@ -66,6 +67,9 @@ Note, NA values are not removed from the aggregation calculation. If this is req
 
 \item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
 the spatial data is returned. The default is \code{var}.}
+
+\item{interpMethod}{character string defining the method for interpolating the gridded data (see \code{raster::extract}). The options are: \code{'simple'}, \code{'bilinear'} and \code{''}. The default
+is \code{''}. This will set the interpolation to \code{'simple'} when \code{catchments} is a polygon(s) and to \code{'bilinear'} when \code{catchments} are points.}
 
 \item{ET.function}{character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,

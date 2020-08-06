@@ -55,6 +55,8 @@
 #' Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.
 #' @param spatial.function.name character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
 #' the spatial data is returned. The default is \code{var}.
+#' @param interpMethod character string defining the method for interpolating the gridded data (see \code{raster::extract}). The options are: \code{'simple'}, \code{'bilinear'} and \code{''}. The default
+#' is \code{''}. This will set the interpolation to \code{'simple'} when \code{catchments} is a polygon(s) and to \code{'bilinear'} when \code{catchments} are points.
 #' @param ET.function character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 #' \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
 #' \code{\link[Evapotranspiration]{ET.MortonCRWE}}, \code{\link[Evapotranspiration]{ET.Turc}}. Default is \code{\link[Evapotranspiration]{ET.MortonCRAE}}.
@@ -156,6 +158,7 @@ extractCatchmentData <- function(
   temporal.timestep = 'daily',
   temporal.function.name = 'mean',
   spatial.function.name = 'var',
+  interpMethod = '',
   ET.function = 'ET.MortonCRAE',
   ET.Mortons.est = 'potential ET',
   ET.Turc.humid=F,
@@ -315,6 +318,18 @@ extractCatchmentData <- function(
     isCatchmentsPolygon=FALSE;
   }
 
+  # Check the interpolation method.
+  if (interpMethod!='' && interpMethod!='simple' && interpMethod!='bilinear') {
+    stop('The input for "interpMethod" must either "simple" or "bilinear".')
+  }
+  if (interpMethod=='') {
+    if (isCatchmentsPolygon) {
+      interpMethod='simple';
+    } else {
+      interpMethod='bilinear';
+    }
+  }
+
   # Check if the spatial data should be returned or analysed.
   do.spatial.analysis=T
   if (isCatchmentsPolygon && is.na(spatial.function.name) || (is.character(spatial.function.name) && spatial.function.name=='')) {
@@ -471,13 +486,6 @@ extractCatchmentData <- function(
     extractDay_solar = c();
   }
 
-  # Set the interpolation method.
-  if (isCatchmentsPolygon) {
-    interpMethod='simple';
-  } else {
-    interpMethod='bilinear';
-  }
-
   message('... Starting to extract data across all catchments:')
   for (j in 1:length(timepoints2Extract)){
 
@@ -488,13 +496,13 @@ extractCatchmentData <- function(
       message(paste('    ... Extracting data for time point ', j,' of ',length(timepoints2Extract)));
     }
     if (getPrecip)
-      precip[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='precip',lvar=3, method=interpMethod), longLat.all)
+      precip[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='precip',lvar=3), longLat.all, method=interpMethod)
     if (getTmin)
-      tmin[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmin',lvar=3, method=interpMethod), longLat.all)
+      tmin[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmin',lvar=3), longLat.all, method=interpMethod)
     if (getTmax)
-      tmax[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmax',lvar=3, method=interpMethod), longLat.all)
+      tmax[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmax',lvar=3,lvar=3), longLat.all, method=interpMethod)
     if (getVprp)
-      vprp[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='vprp',lvar=3, method=interpMethod), longLat.all)
+      vprp[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='vprp',lvar=3,lvar=3), longLat.all, method=interpMethod)
 
     # Get date of extracted grid.
     extractDate = raster::getZ(raster::raster(ncdfFilename, band=ind,lvar=3));
@@ -510,7 +518,7 @@ extractCatchmentData <- function(
 
       if (ind>0) {
         # Get ncdf grid
-        solarrad[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfSolarFilename, band=ind, varname='solarrad',lvar=3, method=interpMethod), longLat.all)
+        solarrad[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfSolarFilename, band=ind, varname='solarrad',lvar=3), longLat.all, method=interpMethod)
 
         # Get date of extracted grid.
         extractDate = raster::getZ(raster::raster(ncdfSolarFilename, band=ind,lvar=3));

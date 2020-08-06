@@ -25,3 +25,7 @@ Change log for AWAPer
 * Userdefined time steps added
 * Spatial can data returned at a user defined time step
 * Bugs fixed in calling xts::index.
+
+6-Aug-2020
+* Input for interpolation method rearranged in the calling of raster::extract()
+* Input 'interpMethod' added to extractCatchmentData(). This addresses isse request #17 https://github.com/peterson-tim-j/AWAPer/issues/17
