@@ -500,9 +500,9 @@ extractCatchmentData <- function(
     if (getTmin)
       tmin[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmin',lvar=3), longLat.all, method=interpMethod)
     if (getTmax)
-      tmax[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmax',lvar=3,lvar=3), longLat.all, method=interpMethod)
+      tmax[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='tmax',lvar=3), longLat.all, method=interpMethod)
     if (getVprp)
-      vprp[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='vprp',lvar=3,lvar=3), longLat.all, method=interpMethod)
+      vprp[j,1:length(w.all)]  <- raster::extract(raster::raster(ncdfFilename, band=ind, varname='vprp',lvar=3), longLat.all, method=interpMethod)
 
     # Get date of extracted grid.
     extractDate = raster::getZ(raster::raster(ncdfFilename, band=ind,lvar=3));
