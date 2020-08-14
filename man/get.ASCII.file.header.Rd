@@ -5,7 +5,6 @@
 \title{\code{get.ASCII.file.header} get header information.}
 \usage{
 get.ASCII.file.header(
-  des.file.name,
   data.type.label,
   workingFolder,
   datestring,
