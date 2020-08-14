@@ -482,7 +482,8 @@ This example illustrates how to extract data at a monthly time step. Note, extra
 
 ```R
 # Load required librraies
-library(c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
+x = c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
+lapply(x, library, character.only = TRUE)
         
 # Set dates for building netCDFs and extracting data.
 startDate = as.Date("2000-01-01","%Y-%m-%d")
