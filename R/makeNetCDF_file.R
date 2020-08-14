@@ -131,7 +131,7 @@ makeNetCDF_file <- function(
 
       # Get the grid geometry of the non solar data
       message('... Getting grid gemoetry from file.')
-      headerData <- AWAPer::get.ASCII.file.header(destFile$file.name, 'precip.', workingFolder, filedate_str, remove.file=T)
+      headerData <- AWAPer::get.ASCII.file.header('precip.', workingFolder, filedate_str, remove.file=T)
       nCols  <- headerData$nCols
       nRows  <- headerData$nRows
       SWLong <- headerData$SWLong
@@ -150,7 +150,7 @@ makeNetCDF_file <- function(
       if (is.na(urlPrecip)) {
         # Get the grid geometry of the non solar data
         message('... Getting grid gemoetry from file.')
-        headerData <- AWAPer::get.ASCII.file.header(destFile$file.name,'tmin.', workingFolder, filedate_str, remove.file=F)
+        headerData <- AWAPer::get.ASCII.file.header('tmin.', workingFolder, filedate_str, remove.file=F)
         nCols  <- headerData$nCols
         nRows  <- headerData$nRows
         SWLong <- headerData$SWLong
@@ -172,7 +172,7 @@ makeNetCDF_file <- function(
       if (is.na(urlPrecip)) {
         # Get the grid geometry of the non solar data
         message('... Getting grid gemoetry from file.')
-        headerData <- AWAPer::get.ASCII.file.header(destFile$file.name, 'tmax', workingFolder, filedate_str, remove.file=F)
+        headerData <- AWAPer::get.ASCII.file.header('tmax', workingFolder, filedate_str, remove.file=F)
         nCols  <- headerData$nCols
         nRows  <- headerData$nRows
         SWLong <- headerData$SWLong
@@ -194,7 +194,7 @@ makeNetCDF_file <- function(
       if (is.na(urlPrecip)) {
         # Get the grid geometry of the non solar data
         message('... Getting grid gemoetry from file.')
-        headerData <- AWAPer::get.ASCII.file.header(destFile$file.name, 'vprp', workingFolder, filedate_str, remove.file=F)
+        headerData <- AWAPer::get.ASCII.file.header('vprp', workingFolder, filedate_str, remove.file=F)
         nCols  <- headerData$nCols
         nRows  <- headerData$nRows
         SWLong <- headerData$SWLong
@@ -216,7 +216,7 @@ makeNetCDF_file <- function(
 
     # Get the grid geometry of the non solar data
     message('... Getting grid gemoetry from file.')
-    headerData <- AWAPer::get.ASCII.file.header(destFile$file.name, 'solarrad.', workingFolder, filedate_str, remove.file=T)
+    headerData <- AWAPer::get.ASCII.file.header('solarrad.', workingFolder, filedate_str, remove.file=T)
     nCols_solar  <- headerData$nCols
     nRows_solar  <- headerData$nRows
     SWLong_solar <- headerData$SWLong
@@ -412,8 +412,10 @@ makeNetCDF_file <- function(
 
       # Get precip grid and add to Net CDF grid
       if (!is.na(urlPrecip) && file.exists(destFile_precip) && didFail_precip==0) {
+        # Re-extra header data in case the NODATA number chnages with time (resolving https://github.com/peterson-tim-j/AWAPer/issues/19)
+        headerData.tmp <- AWAPer::get.ASCII.file.header('precip.', workingFolder, datestring, remove.file=F)
 
-        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_precip, nRows, noData=nodata)
+        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_precip, nRows, noData=headerData.tmp$nodata)
         ncdf4::ncvar_put( ncout, "precip", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlPrecip) && file.exists(destFile_precip) && !keepFiles)
@@ -421,7 +423,10 @@ makeNetCDF_file <- function(
 
       # Get tmin grid and add to Net CDF grid
       if (!is.na(urlTmin) && file.exists(destFile_tmin) && didFail_tmin==0) {
-        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_tmin, nRows, noData=nodata)
+        # Re-extra header data in case the NODATA number chnages with time (resolving https://github.com/peterson-tim-j/AWAPer/issues/19)
+        headerData.tmp <- AWAPer::get.ASCII.file.header('tmin.', workingFolder, datestring, remove.file=F)
+
+        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_tmin, nRows, noData=headerData.tmp$nodata)
         ncdf4::ncvar_put( ncout, "tmin", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlTmin) && file.exists(destFile_tmin) && !keepFiles)
@@ -429,7 +434,10 @@ makeNetCDF_file <- function(
 
       # Get tmax grid and add to Net CDF grid
       if (!is.na(urlTmax) && file.exists(destFile_tmax) && didFail_tmax==0) {
-        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_tmax, nRows, noData=nodata)
+        # Re-extra header data in case the NODATA number chnages with time (resolving https://github.com/peterson-tim-j/AWAPer/issues/19)
+        headerData.tmp <- AWAPer::get.ASCII.file.header('tmax.', workingFolder, datestring, remove.file=F)
+
+        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_tmax, nRows, noData=headerData.tmp$nodata)
         ncdf4::ncvar_put( ncout, "tmax", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlTmax) && file.exists(destFile_tmax) && !keepFiles)
@@ -437,7 +445,10 @@ makeNetCDF_file <- function(
 
       # Get vapour pr grid and add to Net CDF grid
       if (!is.na(urlVprp) && file.exists(destFile_vprp) && didFail_vprp==0) {
-        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_vprp, nRows, noData=nodata)
+        # Re-extra header data in case the NODATA number chnages with time (resolving https://github.com/peterson-tim-j/AWAPer/issues/19)
+        headerData.tmp <- AWAPer::get.ASCII.file.header('vprp.', workingFolder, datestring, remove.file=F)
+
+        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_vprp, nRows, noData=headerData.tmp$nodata)
         ncdf4::ncvar_put( ncout, "vprp", AWAPgrid, start=c(1, 1, ind), count=c(nCols, nRows, 1), verbose=F )
       }
       if (!is.na(urlVprp) && file.exists(destFile_vprp) && !keepFiles)
@@ -595,15 +606,18 @@ makeNetCDF_file <- function(
       # Download the file
       didFail=1
       if (!is.na(urlSolarrad)) {
-        destFile <- AWAPer::download.ASCII.file(urlSolarrad, 'solarrad', workingFolder, datestring)
+        destFile <- AWAPer::download.ASCII.file(urlSolarrad, 'solarrad.', workingFolder, datestring)
         destFile_solarrad <- destFile$file.name
         didFail <- destFile$didFail
       }
 
       # Get vapour pr grid and add to Net CDF grid
       if (file.exists(destFile_solarrad) && didFail==0) {
+        # Re-extra header data in case the NODATA number chnages with time (resolving https://github.com/peterson-tim-j/AWAPer/issues/19)
+        headerData.tmp <- AWAPer::get.ASCII.file.header('solarrad.', workingFolder, datestring, remove.file=F)
+
         # Import file
-        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_solarrad, nRows_solar, noData=nodata_solar)
+        AWAPgrid <- AWAPer::readin.ASCII.file(destFile_solarrad, nRows_solar, noData=headerData.tmp$nodata)
 
         # Infill NA values of grid by taking the local average and convert back to matrix.
         AWAPgrid <- raster::raster(AWAPgrid)

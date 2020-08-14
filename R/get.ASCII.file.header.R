@@ -8,7 +8,7 @@
 #' @keywords internal
 #'
 #' @export
-get.ASCII.file.header <- function (des.file.name, data.type.label, workingFolder, datestring, remove.file=T) {
+get.ASCII.file.header <- function (data.type.label, workingFolder, datestring, remove.file=T) {
 
   OS <- Sys.info()
   OS <- OS[1]
