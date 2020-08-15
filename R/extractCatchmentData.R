@@ -50,7 +50,7 @@
 #' @param catchments is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 #' already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected), use the ellipsoid GRS 80, and the first column should be a unique ID.
 #' @param temporal.timestep character string for the time step of the output data. The options are \code{daily}, \code{weekly}, \code{monthly}, \code{quarterly},
-#' \code{annual}  or a user-defined index for, say, water-years (see \code{\link{xts::apply.period}}). The default is \code{daily}.
+#' \code{annual}  or a user-defined index for, say, water-years (see \code{xts::period.apply}). The default is \code{daily}.
 #' @param temporal.function.name character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
 #' Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.
 #' @param spatial.function.name character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
@@ -213,7 +213,7 @@ extractCatchmentData <- function(
   }
 
   # Check temporal analysis funcion is valid.
-  data.junk = t(as.matrix(runif(100, 0.0, 1.0)*100))
+  data.junk = t(as.matrix(stats::runif(100, 0.0, 1.0)*100))
   result = tryCatch({
     apply(data.junk, 1,FUN=temporal.function.name)
   }, warning = function(w) {
@@ -338,7 +338,7 @@ extractCatchmentData <- function(
 
   if (do.spatial.analysis) {
     # Check spatial analysis funcion is valid.
-    data.junk = t(as.matrix(runif(100, 0.0, 1.0)*100))
+    data.junk = t(as.matrix(stats::runif(100, 0.0, 1.0)*100))
     result = tryCatch({
       apply(data.junk, 1,FUN=spatial.function.name)
     }, warning = function(w) {
@@ -733,7 +733,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(precip.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(precip.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(precip.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(precip.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(precip.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
     }
 
@@ -747,7 +747,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(tmin.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(tmin.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(tmin.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(tmin.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(tmin.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
     }
 
@@ -761,7 +761,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(tmax.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(tmax.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(tmax.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(tmax.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(tmax.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
     }
 
@@ -775,7 +775,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(vprp.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(vprp.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(vprp.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(vprp.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(vprp.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
     }
 
@@ -789,7 +789,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(solarrad.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(solarrad.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(solarrad.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(solarrad.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(solarrad.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
 
       solarrad_interp.xts = xts::as.xts(solarrad_interp[,ind], order.by=extractDate)
@@ -801,7 +801,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(solarrad_interp.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(solarrad_interp.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(solarrad_interp.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(solarrad_interp.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(solarrad_interp.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
     }
 
@@ -815,7 +815,7 @@ extractCatchmentData <- function(
           xts::apply.monthly(ET.xts, apply, 2, temporal.function.name), # monthly timestep
           xts::apply.quarterly(ET.xts, apply, 2, temporal.function.name), # quarterly timestep
           xts::apply.yearly(ET.xts, apply, 2, temporal.function.name), # annual timestep
-          xts::apply.period(ET.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
+          xts::period.apply(ET.xts, INDEX=temporal.timestep.index, apply, 2, temporal.function.name), # user defined period
         )
     }
     #-----------------------------
@@ -973,7 +973,7 @@ extractCatchmentData <- function(
       gridCoords = data.frame(Long=longLat.all[,1], Lat=longLat.all[,2])
       catchmentAvg = cbind.data.frame(gridCoords, catchmentAvg)
       sp::coordinates(catchmentAvg) <- ~Long+Lat
-      gridded(catchmentAvg) <- T
+      sp::gridded(catchmentAvg) <- T
     }
   }
 

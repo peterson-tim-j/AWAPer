@@ -60,7 +60,7 @@ for the calculation of Morton's PET. The Australian 9 second DEM can be loaded u
 already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected), use the ellipsoid GRS 80, and the first column should be a unique ID.}
 
 \item{temporal.timestep}{character string for the time step of the output data. The options are \code{daily}, \code{weekly}, \code{monthly}, \code{quarterly},
-\code{annual}  or a user-defined index for, say, water-years (see \code{\link{xts::apply.period}}). The default is \code{daily}.}
+\code{annual}  or a user-defined index for, say, water-years (see \code{xts::period.apply}). The default is \code{daily}.}
 
 \item{temporal.function.name}{character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
 Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.}

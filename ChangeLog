@@ -32,3 +32,9 @@ Change log for AWAPer
 
 14-Aug-2020
 * Issue #19 (https://github.com/peterson-tim-j/AWAPer/issues/19) fixed so that NODATA codes that chnage with time are handled.
+
+15-Aug-2020
+* Bug fixed in calling xts::period.apply within extractCatchmentData().
+* gridded() updated to sp::gridded() within extractCatchmentData().
+* Decsription file updated with ORCIDs.
+* Citation to paper updated.
