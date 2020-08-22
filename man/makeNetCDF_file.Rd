@@ -81,19 +81,25 @@ derived from this function. To not build or update a variable, set its respectiv
 # For an additional example see \url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
 #---------------------------------------
 
-# Set dates for building netCDFs and extracting data.
-startDate = as.Date("2000-01-01","\%Y-\%m-\%d")
-endDate = as.Date("2000-02-28","\%Y-\%m-\%d")
+# Set dates for building netCDFs and extracting data from 15 to 5 days ago.
+startDate = as.Date(Sys.Date()-15,"\%Y-\%m-\%d")
+endDate = as.Date(Sys.Date()-5,"\%Y-\%m-\%d")
 
 # Set names for netCDF files (in the system temp. directory).
 ncdfFilename = tempfile(fileext='.nc')
 ncdfSolarFilename = tempfile(fileext='.nc')
 
-# Build netCDF grids for all data but only over a defined time period.
 \donttest{
+# Build netCDF grids for all data but only over the defined time period.
 file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
              ncdfSolarFilename=ncdfSolarFilename,
              updateFrom=startDate, updateTo=endDate)
+
+# Now, to demonstrate updating the netCDF grids to one dat ago, rerun with
+# the same file names but \code{updateFrom=NA}.
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+             ncdfSolarFilename=ncdfSolarFilename,
+             updateFrom=NA)
 }
 }
 \references{

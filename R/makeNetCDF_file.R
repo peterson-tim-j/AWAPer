@@ -54,19 +54,25 @@
 #' # For an additional example see \url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
 #' #---------------------------------------
 #'
-#' # Set dates for building netCDFs and extracting data.
-#' startDate = as.Date("2000-01-01","%Y-%m-%d")
-#' endDate = as.Date("2000-02-28","%Y-%m-%d")
+#' # Set dates for building netCDFs and extracting data from 15 to 5 days ago.
+#' startDate = as.Date(Sys.Date()-15,"%Y-%m-%d")
+#' endDate = as.Date(Sys.Date()-5,"%Y-%m-%d")
 #'
 #' # Set names for netCDF files (in the system temp. directory).
 #' ncdfFilename = tempfile(fileext='.nc')
 #' ncdfSolarFilename = tempfile(fileext='.nc')
 #'
-#' # Build netCDF grids for all data but only over a defined time period.
 #' \donttest{
+#' # Build netCDF grids for all data but only over the defined time period.
 #' file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 #'              ncdfSolarFilename=ncdfSolarFilename,
 #'              updateFrom=startDate, updateTo=endDate)
+#'
+#' # Now, to demonstrate updating the netCDF grids to one dat ago, rerun with
+#' # the same file names but \code{updateFrom=NA}.
+#' file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+#'              ncdfSolarFilename=ncdfSolarFilename,
+#'              updateFrom=NA)
 #' }
 #' @export
 makeNetCDF_file <- function(
@@ -238,13 +244,18 @@ makeNetCDF_file <- function(
         updateFrom = as.Date("1900-01-01","%Y-%m-%d")
       } else if (is.character(updateFrom))
         updateFrom = as.Date(updateFrom,'%Y-%m-%d');
-      if (is.character(updateTo))
+      if (is.na(updateTo) || nchar(updateTo)==0) {
+        updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
+      } else if (is.character(updateTo)) {
         updateTo = as.Date(updateTo,'%Y-%m-%d');
+      } else if (class(updateTo)=="Date") {
+          updateTo = min(c(as.Date(Sys.Date()-1,"%Y-%m-%d"),updateTo));
+      }
       if (updateFrom >= updateTo)
         stop('The update dates are invalid. updateFrom must be prior to updateTo')
 
       # Set data time points
-      timepoints = seq( as.Date("1900-01-01","%Y-%m-%d"), by="day", to=as.Date(Sys.Date(),"%Y-%m-%d"))
+      timepoints = seq( as.Date("1900-01-01","%Y-%m-%d"), by="day", to=updateTo)
 
       # Get x and y vectors (dimensions)
       Longvector = seq(SWLong, by=DPixel,length.out = nCols)
@@ -321,7 +332,9 @@ makeNetCDF_file <- function(
       timePoints_R = chron::chron(timePoints_netCDF, origin = c(tmonth, tday, tyear));
 
       # Set updateFrom to the end of the netCDF file if updateFrom is NA or ''.
-      if (is.character(updateFrom)) {
+      if (is.na(updateFrom)) {
+        updateFrom = max(as.Date(timePoints_R));
+      } else if (is.character(updateFrom)) {
         if (nchar(updateFrom)>0) {
           updateFrom = min(c(max(as.Date(timePoints_R)),as.Date(updateFrom,'%Y-%m-%d')));
         } else {
@@ -334,22 +347,20 @@ makeNetCDF_file <- function(
             message('Now quitting. Note, to update the data form the last day in the netCDF files, set updateFrom=NA')
             return()
           }
-        } else if (is.na(updateFrom)) {
-          updateFrom = max(as.Date(timePoints_R));
         }
       }
 
       # Set updateTo to the min of the input data and now.
-      if (is.character(updateTo)) {
+      if (is.na(updateTo)) {
+        updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
+      } else if (is.character(updateTo)) {
         if (nchar(updateTo)>0) {
-          updateTo = min(c(as.Date(Sys.Date(),"%Y-%m-%d"),as.Date(updateTo,'%Y-%m-%d')));
+          updateTo = min(c(as.Date(Sys.Date()-1,"%Y-%m-%d"),as.Date(updateTo,'%Y-%m-%d')));
         } else {
-          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+          updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
         }
-      } else {
-        if (is.na(updateTo)) {
-          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
-        }
+      } else if (class(updateTo)=="Date") {
+        updateTo = min(c(as.Date(Sys.Date()-1,"%Y-%m-%d"),updateTo));
       }
     }
 
@@ -481,7 +492,7 @@ makeNetCDF_file <- function(
   if (haveGridGeometry_solar) {
 
     # Set data time points
-    timepoints = seq( as.Date("1990-01-01","%Y-%m-%d"), by="day", to=as.Date(Sys.Date(),"%Y-%m-%d"))
+    timepoints = seq( as.Date("1990-01-01","%Y-%m-%d"), by="day", to=as.Date(Sys.Date()-1,"%Y-%m-%d"))
 
     if (!doUpdate_solar) {
 
@@ -564,13 +575,13 @@ makeNetCDF_file <- function(
       # Set updateTo to the end of the netCDF file if updateTo is NA or ''.
       if (is.character(updateTo)) {
         if (nchar(updateTo)>0) {
-          updateTo = min(c(as.Date(Sys.Date(),"%Y-%m-%d"), as.Date(updateTo,'%Y-%m-%d')));
+          updateTo = min(c(as.Date(Sys.Date()-1,"%Y-%m-%d"), as.Date(updateTo,'%Y-%m-%d')));
         } else {
-          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+          updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
         }
       } else {
         if (is.na(updateTo)) {
-          updateTo = as.Date(Sys.Date(),"%Y-%m-%d")
+          updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
         }
       }
 

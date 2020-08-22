@@ -38,3 +38,8 @@ Change log for AWAPer
 * gridded() updated to sp::gridded() within extractCatchmentData().
 * Decsription file updated with ORCIDs.
 * Citation to paper updated.
+
+22-Aug-2020
+* Bug fixed with input updateTo=NA to makeNetCDF_file(). Update now correctly updates netCDF grids to yesterday.
+* Documentation example for makeNetCDF_file() extended to show updating of netCDFs.
+* Badges added to README.md
