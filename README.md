@@ -1,3 +1,11 @@
+<!-- badges: start -->
+
+[![CRAN
+version](http://www.r-pkg.org/badges/version/AWAPer)](https://cran.r-project.org/package=AWAPer)
+[![CRAN RStudio mirror
+downloads](http://cranlogs.r-pkg.org/badges/AWAPer)](https://cran.r-project.org/package=AWAPer)
+<!-- badges: end -->
+
 # AWAPer
 This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily, weekly, monthly, quarterly or annual catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of various measures of potential evaporation. The package development was funded by the Victorian Government The Department of Environment, Land, Water and Planning _Climate and Water Initiate_ (https://www.water.vic.gov.au/climate-change/research/vicwaci). 
 
