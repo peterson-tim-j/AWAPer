@@ -7,7 +7,7 @@ downloads](http://cranlogs.r-pkg.org/badges/AWAPer)](https://cran.r-project.org/
 
 <!-- badges: end -->
 
-# AWAPer - an R-package for catchment-weighted climate data anywhere in Australia
+# _AWAPer_ - an R-package for catchment-weighted climate data anywhere in Australia
 This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily, weekly, monthly, quarterly or annual catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of various measures of potential evaporation. 
 
 The package development was funded by the Victorian Government The Department of Environment, Land, Water and Planning _Climate and Water Initiate_ (https://www.water.vic.gov.au/climate-change/research/vicwaci). 
@@ -51,7 +51,7 @@ Alternatively, to install the latest version:
 1. Load the required packages using the R command: `library(c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
 1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder). For example on a PC `install.packages("C:\MY_FOLDER\AWAPer\AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")` and for Mac `install.packages(“~/Users/MyFolder/AWAPer/AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")`
 
-# Example 1. Build and then updating netCDF files
+# Example 1. Build and then update netCDF files with the latest data
 
 This example shows the steps required to build the two netCDF files, and then update the data to yesterday.
 
