@@ -7,13 +7,15 @@ downloads](http://cranlogs.r-pkg.org/badges/AWAPer)](https://cran.r-project.org/
 
 <!-- badges: end -->
 
-# AWAPer
-This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily, weekly, monthly, quarterly or annual catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of various measures of potential evaporation. The package development was funded by the Victorian Government The Department of Environment, Land, Water and Planning _Climate and Water Initiate_ (https://www.water.vic.gov.au/climate-change/research/vicwaci). 
+# _AWAPer_ - an R-package for catchment-weighted climate data anywhere in Australia
+This R package builds netCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids and allows efficient extraction of daily, weekly, monthly, quarterly or annual catchment average precipitation, Tmin, Tmax, vapour pressure, solar radiation and then estimation of various measures of potential evaporation. 
+
+The package development was funded by the Victorian Government The Department of Environment, Land, Water and Planning _Climate and Water Initiate_ (https://www.water.vic.gov.au/climate-change/research/vicwaci). 
 
 For details of the appraoch see the paper "Peterson, Tim J, Wasko, C, Saft, M, Peel, MC. AWAPer: An R package for area weighted catchment daily meteorological data anywhere within Australia. _Hydrological Processes_. 2020; 34: 1301– 1306. https://doi.org/10.1002/hyp.13637". For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf. Alternatively see the lastest CRAN published version at https://CRAN.R-project.org/package=AWAPer 
 
 Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. Below are details of the system requirements, how to install AWAPer and the following examples:
-1. Building the required netCDF files (![see here](https://github.com/peterson-tim-j/AWAPer#example-1-build-netcdf-files))
+1. Building and updating the required netCDF files (![see here](https://github.com/peterson-tim-j/AWAPer#example-1-build-netcdf-files))
 1. Extract and check daily point precipitation data against rain gauge observations (![see here](https://github.com/peterson-tim-j/AWAPer#example-2-extract-point-precip-data-and-check-with-osberved-data))
 1. Extract daily areal weighted precipitation and calculate two measures of ET (![see here](https://github.com/peterson-tim-j/AWAPer#example-3-calculate-precip-and-evapotranspiration))
 1. Calculate all measures of ET possible with AWAPer (![see here](https://github.com/peterson-tim-j/AWAPer#example-4-calculate-evapotranspiration))
@@ -49,17 +51,29 @@ Alternatively, to install the latest version:
 1. Load the required packages using the R command: `library(c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
 1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder). For example on a PC `install.packages("C:\MY_FOLDER\AWAPer\AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")` and for Mac `install.packages(“~/Users/MyFolder/AWAPer/AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")`
 
-# Example 1. Build netCDF files
+# Example 1. Build and then update netCDF files with the latest data
 
-This example shows the steps required to build the two netCDF files, each containing 1 years of data.
+This example shows the steps required to build the two netCDF files, and then update the data to yesterday.
 
 ```R
-# Set working directory.
-setwd('~/')`
+# Set dates for building netCDFs and extracting data from 15 to 5 days ago.
+startDate = as.Date(Sys.Date()-15,"%Y-%m-%d")
+endDate = as.Date(Sys.Date()-5,"%Y-%m-%d")
 
-# Make two netCDF files of AWAP data.
-makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.nc', 
-                updateFrom='2010-1-1',updateTo='2011-12-1')
+# Set names for netCDF files (in the system temp. directory).
+ncdfFilename = tempfile(fileext='.nc')
+ncdfSolarFilename = tempfile(fileext='.nc')
+
+# Build netCDF grids for all met. data but only over the defined time period.
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+             ncdfSolarFilename=ncdfSolarFilename,
+             updateFrom=startDate, updateTo=endDate)
+
+# Now, to demonstrate updating the netCDF grids to one dat ago, rerun with
+# the same file names but updateFrom=NA.
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+             ncdfSolarFilename=ncdfSolarFilename,
+             updateFrom=NA)                               
 ```
 # Example 2. Extract point precip. data and check with osberved data.
 This example was developed by Ms Xinyang Fan (Uni. Melbourne) and shows how to extract point estimates of daily precipitation at four goundwater bore locations and at one rainfall gauge. The extracted data is then plotted. The rain gauge is also compared against the observed rain gauge. The latter shows that the results are unbiased, but minor differences do exist due to AWAP data having a 5x5 km grid-cell resolution. The plots below show (1) the locattions of the five sites (2) bar graphs of the daily precip. and (3) plots of the observed vs AWAPer estimated precip. at the rainfall gauge.
