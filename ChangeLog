@@ -43,3 +43,10 @@ Change log for AWAPer
 * Bug fixed with input updateTo=NA to makeNetCDF_file(). Update now correctly updates netCDF grids to yesterday.
 * Documentation example for makeNetCDF_file() extended to show updating of netCDFs.
 * Badges added to README.md
+
+12-Sep-2020
+* Import R.utils replaced with utils
+* Finish message added to makeNetCDF
+
+13-Sep-2020
+* LICENSE.md rebuilt to resolve 'note' in CRAN submission.

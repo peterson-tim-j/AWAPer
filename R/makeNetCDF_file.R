@@ -659,6 +659,7 @@ makeNetCDF_file <- function(
     ncdf4::nc_close(ncout)
   }
 
+  message('Data extraction FINISHED..')
   return(list(ncdfFilename=ncdfFilename, ncdfSolarFilename = ncdfSolarFilename))
 
 }

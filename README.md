@@ -47,8 +47,8 @@ Alternatively, to install the latest version:
 1. Open R. 
 1. Install the netCDF package using the following command: `install.packages("ncdf4")` . **Importantly** this step may require installation of netCDF software outside of R. Please read the output R console messages carefully.
 1. Install the remaining required packages using the R command:
-`install.packages(c("R.utils", "sp", "raster", "chron", "maptools", "Evapotranspiration","devtools","zoo", "methods", "xts"))`
-1. Load the required packages using the R command: `library(c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
+`install.packages(c("utils", "sp", "raster", "chron", "maptools", "Evapotranspiration","devtools","zoo", "methods", "xts"))`
+1. Load the required packages using the R command: `library(c('Evapotranspiration', 'ncdf4', 'utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
 1. Install the AWAPer package using the following example R command (NOTE: use the full file path to the AWAPer folder). For example on a PC `install.packages("C:\MY_FOLDER\AWAPer\AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")` and for Mac `install.packages(“~/Users/MyFolder/AWAPer/AWAPer_0.1.4.tar.gz", repos = NULL, type = "source")`
 
 # Example 1. Build and then update netCDF files with the latest data
@@ -505,7 +505,7 @@ This example illustrates how to extract data at a monthly time step. Note, extra
 
 ```R
 # Load required librraies
-x = c('Evapotranspiration', 'ncdf4', 'R.utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
+x = c('Evapotranspiration', 'ncdf4', 'utils', 'raster', 'chron', 'maptools', 'sp', 'zoo', 'methods', 'xts')
 lapply(x, library, character.only = TRUE)
         
 # Set dates for building netCDFs and extracting data.
