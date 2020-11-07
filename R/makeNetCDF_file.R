@@ -89,10 +89,6 @@ makeNetCDF_file <- function(
   urlVprp = getURLs()$vprp,
   urlSolarrad = getURLs()$solarrad)  {
 
-  # NOTE, to build pdf manual:
-  # path <- find.package("AWAPer")
-  # system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path)))
-
   # Check that the ncdf files
   doUpdate = F;
   doUpdate_solar = F;

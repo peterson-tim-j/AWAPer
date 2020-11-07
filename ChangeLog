@@ -59,3 +59,6 @@ Change log for AWAPer
 * Bug #21 fixed (ie check for getSolarrad=F but when getET=T)
 * check added to ensure solarrad netCDF is provided when calculated ET when needed.
 * One vignette added to demonstrate extraction of point precip.
+
+Nov 7 2020
+* vignette build locally to reduce installation time. The vignette was prebuilt using the commmand "knitr::knit("Point_rainfall.Rmd.orig", output = "Point_rainfall.Rmd")" following https://ropensci.org/technotes/2019/12/08/precompute-vignettes/
