@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 AWAPer.pdf
 ^LICENSE\.md$
+build_commands.R
