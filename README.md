@@ -12,7 +12,11 @@ This R package builds netCDF files of the Bureau of Meteorology Australian Water
 
 The package development was funded by the Victorian Government The Department of Environment, Land, Water and Planning _Climate and Water Initiate_ (https://www.water.vic.gov.au/climate-change/research/vicwaci). 
 
-For details of the appraoch see the paper "Peterson, Tim J, Wasko, C, Saft, M, Peel, MC. AWAPer: An R package for area weighted catchment daily meteorological data anywhere within Australia. _Hydrological Processes_. 2020; 34: 1301– 1306. https://doi.org/10.1002/hyp.13637". For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf. Alternatively see the lastest CRAN published version at https://CRAN.R-project.org/package=AWAPer 
+For details of the appraoch see the paper "Peterson, Tim J, Wasko, C, Saft, M, Peel, MC. AWAPer: An R package for area weighted catchment daily meteorological data anywhere within Australia. _Hydrological Processes_. 2020; 34: 1301– 1306. https://doi.org/10.1002/hyp.13637". 
+
+For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf. Alternatively see the lastest CRAN published version at https://CRAN.R-project.org/package=AWAPer 
+
+Package vignettes can also be found using the R-command: 'r browseVignettes("AWAPer")'
 
 Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. Below are details of the system requirements, how to install AWAPer and the following examples:
 1. Building and updating the required netCDF files (![see here](https://github.com/peterson-tim-j/AWAPer#example-1-build-netcdf-files))
