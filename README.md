@@ -16,7 +16,10 @@ For details of the appraoch see the paper "Peterson, Tim J, Wasko, C, Saft, M, P
 
 For package details see the PDF manual https://github.com/peterson-tim-j/AWAPer/blob/master/AWAPer.pdf. Alternatively see the lastest CRAN published version at https://CRAN.R-project.org/package=AWAPer 
 
-Package vignettes can also be found using the R-command: 'r browseVignettes("AWAPer")'
+Package vignettes can also be found using the R-command:
+```R
+browseVignettes("AWAPer")
+```
 
 Using the default compression settings, each meteorlogical variable requires ~5GB of hard-drive storage for the full record (1900 to 2019). Additionally, the netCDF files should be stored locally, and not over a network, to minimise the time for data extraction. Below are details of the system requirements, how to install AWAPer and the following examples:
 1. Building and updating the required netCDF files (![see here](https://github.com/peterson-tim-j/AWAPer#example-1-build-netcdf-files))
