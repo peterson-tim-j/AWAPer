@@ -50,3 +50,12 @@ Change log for AWAPer
 
 13-Sep-2020
 * LICENSE.md rebuilt to resolve 'note' in CRAN submission.
+
+15-Sept-2020
+* catchments.rda data re-saved to version 3.
+* R version requirement updated to>=3.5.
+
+30-Oct-2020
+* Bug #21 fixed (ie check for getSolarrad=F but when getET=T)
+* check added to ensure solarrad netCDF is provided when calculated ET when needed.
+* One vignette added to demonstrate extraction of point precip.

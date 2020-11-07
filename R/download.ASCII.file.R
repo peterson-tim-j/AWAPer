@@ -10,6 +10,12 @@
 #' @export
 download.ASCII.file <- function (url.string, data.type.label,  workingFolder, datestring) {
 
+  if (!is.character(url.string))
+    stop(paste('The input URL for',data.type.label,'must be a URL string.'))
+
+  if (!startsWith(url.string,'http://'))
+    stop(paste('The input URL string for',data.type.label,'must start "with http://" '))
+
   didFail = 1
   url = paste(url.string,datestring, datestring,'.grid.Z',sep='')
 

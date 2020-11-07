@@ -170,8 +170,6 @@ extractCatchmentData <- function(
 
   # Open NetCDF grids
   awap <- ncdf4::nc_open(ncdfFilename)
-  if (getSolarrad)
-    awap_solar <- ncdf4::nc_open(ncdfSolarFilename)
 
   # Check if the required variable is within the netcdf file.
   netCDF.variables = names(awap$var)
@@ -227,6 +225,7 @@ extractCatchmentData <- function(
 
   # Check ET inputs
   if (getET) {
+
     if (length(ET.constants)==0)
       stop('ET.constants must be input from Evapotranspiration package using the command: data(constants)')
 
@@ -272,6 +271,14 @@ extractCatchmentData <- function(
       stop('Calculation of ET for the given function requires extractions of tmax (i.e. set getVprp=T)')
     if (ET.inputdata.filt$Precip[1] && !getPrecip)
       stop('Calculation of ET for the given function requires extractions of precip (i.e. set getPrecip=T)')
+    if (ET.inputdata.filt$Rs[1]) {
+      if (!file.exists(ncdfSolarFilename)) {
+        stop('The input ncdfSolarFilename is required for the selected ET function.')
+      }
+      if (!getSolarrad) {
+        stop('Calculation of ET for the given function requires extractions of solar radiation (i.e. set getSolarrad=T)')
+      }
+    }
   }
 
   # Checking the DEM
@@ -350,6 +357,10 @@ extractCatchmentData <- function(
     }
     )
   }
+
+  # Open solar rad netCDF file
+  if (getSolarrad)
+    awap_solar <- ncdf4::nc_open(ncdfSolarFilename)
 
   # Get netCDF geometry
   timePoints <- ncdf4::ncvar_get(awap, "time")
