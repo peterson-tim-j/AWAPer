@@ -122,6 +122,10 @@ makeNetCDF_file <- function(
   }
 
 
+  # Increase maximum file download time from 60 sec to 300 sec.
+  # This is following the requat from Em. Prof. Brian Ripley on 9/12/2020.
+  options(timeout = max(300, getOption("timeout")))
+
   # Test the AWAP downloading
   filedate_str = '20000101'
   haveGridGeometry = FALSE;

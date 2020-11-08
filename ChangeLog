@@ -62,3 +62,7 @@ Change log for AWAPer
 
 Nov 7 2020
 * vignette build locally to reduce installation time. The vignette was prebuilt using the commmand "knitr::knit("Point_rainfall.Rmd.orig", output = "Point_rainfall.Rmd")" following https://ropensci.org/technotes/2019/12/08/precompute-vignettes/
+
+Nov 9 2020
+* System maximum file download time increased from the default of 60 sec to 300 sec (requested by Em. Prof. Brian Ripley)
+* Citation author format updated.

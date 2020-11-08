@@ -9,6 +9,7 @@ system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(pat
 # NOTE: Must manually move image files from vignettes/figure/ to vignettes/ after knit
 #       and remove figure/ from .Rmd
 knitr::knit("vignettes/Point_rainfall.Rmd.orig", output = "vignettes/Point_rainfall.Rmd")
+browseVignettes("AWAPer")
 
 # Build the pavkage for CRAN
 devtools::build(".")
