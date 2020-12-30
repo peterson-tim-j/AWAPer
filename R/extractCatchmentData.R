@@ -102,12 +102,16 @@
 #'    is.removed = file.remove(ncdfSolarFilename)
 #'
 #' # Build netCDF grids and over a defined time period.
+#' # Only precip data is to be added to the netCDF files.
+#' # This is because the URLs for the other variables are set to zero.
 #' \donttest{
 #' file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 #'              ncdfSolarFilename=ncdfSolarFilename,
-#'              updateFrom=startDate, updateTo=endDate)
+#'              updateFrom=startDate, updateTo=endDate,
+#'              urlTmin=NA, urlTmax=NA, urlVprp=NA, urlSolarrad=NA)
 #'
-#' # Load example catchment boundaries.
+#' # Load example catchment boundaries and remove all but the first.
+#' # Note, this is done only to speed up the example runtime.
 #' data("catchments")
 #'
 #' # Extract daily precip. data (not Tmin, Tmax, VPD, ET).
@@ -115,7 +119,8 @@
 #' climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
 #'               ncdfSolarFilename=file.names$ncdfSolarFilename,
 #'               extractFrom=startDate, extractTo=endDate,
-#'               getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
+#'               getTmin = FALSE, getTmax = FALSE, getVprp = FALSE,
+#'               getSolarrad = FALSE, getET = FALSE,
 #'               catchments=catchments)
 #'
 #' # Extract the daily catchment average data.
@@ -129,7 +134,8 @@
 #'               ncdfSolarFilename=file.names$ncdfSolarFilename,
 #'               extractFrom=startDate, extractTo=endDate,
 #'               catchments=catchments,
-#'               getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
+#'               getTmin = FALSE, getTmax = FALSE, getVprp = FALSE,
+#'               getSolarrad = FALSE, getET = FALSE,
 #'               temporal.timestep = 'monthly', temporal.function.name = 'sum')
 #'
 #' # Extract the monthly precip. sum data.
