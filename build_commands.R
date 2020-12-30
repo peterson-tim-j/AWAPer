@@ -8,7 +8,9 @@ system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(pat
 # Pre-build the vignettes to avod their execuation during package installation.
 # NOTE: Must manually move image files from vignettes/figure/ to vignettes/ after knit
 #       and remove figure/ from .Rmd
+library(knitr)
 knitr::knit("vignettes/Point_rainfall.Rmd.orig", output = "vignettes/Point_rainfall.Rmd")
+knitr::knit("vignettes/Catchment_avg_ET_rainfall.Rmd.orig", output = "vignettes/Catchment_avg_ET_rainfall.Rmd")
 browseVignettes("AWAPer")
 
 # Build the pavkage for CRAN

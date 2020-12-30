@@ -33,17 +33,8 @@ getDEM downloads the Geoscience Australia 9 second DEM and then imports the grid
 
 The DEM is required for the calculation of evaportranspiration within \code{extractCatchmentData}. For details of the DEM see
 \url{https://www.data.gov.au/dataset/geodata-9-second-dem-and-d8-digital-elevation-model-version-3-and-flow-direction-grid-2008}
-}
-\examples{
-# Download the DEM.
-\donttest{
-# Set file name for DEM file to the system temp. directory.
-DEM.file = tempfile(fileext='.asc')
 
-# Download and import the Australian 9 second DEM.
-DEM_9s = getDEM(workingFolder=dirname(DEM.file),
-         DEMfilename=basename(DEM.file))
-}
+For an example of how to download the DEM see the vignette "Extract daily area weighted potential evapotranspiration (PET) and precipitation".
 }
 \seealso{
 \code{\link{extractCatchmentData}} for extracting catchment daily average and variance data.

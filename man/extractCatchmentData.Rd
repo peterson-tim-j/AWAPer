@@ -158,22 +158,16 @@ file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
              ncdfSolarFilename=ncdfSolarFilename,
              updateFrom=startDate, updateTo=endDate)
 
-# Load example cacthment boundaries.
+# Load example catchment boundaries.
 data("catchments")
 
-# Get the constanrs required for ET estimation.
-data(constants,package='Evapotranspiration')
-
-# Download and import the Australian 9 second DEM.
-# Note, the DEM only needs be downloaded if ET is be estimated.
-DEM_9s = getDEM()
-
-# Extract daily climate data (precip, Tmin, Tmax, VPD, ET).
+# Extract daily precip. data (not Tmin, Tmax, VPD, ET).
 # Note, the input "catchments" can also be a file to a ESRI shape file.
 climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
               ncdfSolarFilename=file.names$ncdfSolarFilename,
               extractFrom=startDate, extractTo=endDate,
-              catchments=catchments,DEM=DEM_9s, ET.constants=constants)
+              getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
+              catchments=catchments)
 
 # Extract the daily catchment average data.
 climateDataAvg = climateData$catchmentTemporal.mean

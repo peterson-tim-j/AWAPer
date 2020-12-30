@@ -158,7 +158,7 @@ for (i in 1:nrow(coordinates.data)){
 legend('topright',legend=c('Bore-10084446','Rain-63005'),lty=2:3)
 ```
 
-![plot of chunk unnamed-chunk-5](unnamed-chunk-5-1.png)
+![Time series plot of point plot of precip. at two sites.](unnamed-chunk-5-1.png)
 
 ## Check AWAPer data against precipitation gauge date
 Use the following observed precipitation (from gauge_63005) to check the AWAPer data. Note, the observed data is hardcoded in and sourced from the Australian Bureau of Meteorology.
@@ -186,7 +186,7 @@ plot(obsPrecip$precip_mm,climateData.data$precip_mm[filt2],
 abline(0,1, col='grey', lty=2)
 ```
 
-![plot of chunk unnamed-chunk-6](unnamed-chunk-6-1.png)
+![Observed vs. estimated daily precip.](unnamed-chunk-6-1.png)
 
 ```r
 
@@ -198,4 +198,4 @@ plot(cumsum(obsPrecip$precip_mm),cumsum(climateData.data$precip_mm[filt2]),
 abline(0,1, col='grey', lty=2)
 ```
 
-![plot of chunk unnamed-chunk-6](unnamed-chunk-6-2.png)
+![Observed vs. estimated cumulative precip.](unnamed-chunk-6-2.png)
