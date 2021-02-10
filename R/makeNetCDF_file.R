@@ -68,7 +68,7 @@
 #'              ncdfSolarFilename=ncdfSolarFilename,
 #'              updateFrom=startDate, updateTo=endDate)
 #'
-#' # Now, to demonstrate updating the netCDF grids to one dat ago, rerun with
+#' # Now, to demonstrate updating the netCDF grids to one day ago, rerun with
 #' # the same file names but \code{updateFrom=NA}.
 #' file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 #'              ncdfSolarFilename=ncdfSolarFilename,
@@ -486,7 +486,7 @@ makeNetCDF_file <- function(
   #----------------------------------------------
 
   if (!haveGridGeometry_solar)
-    warning('Thesolar radiation data netCDF file will not be built or updated.')
+    warning('Note, the solar radiation data netCDF file will not be built or updated.')
 
   # Create net CDF files
   if (haveGridGeometry_solar) {

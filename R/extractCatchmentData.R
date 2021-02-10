@@ -86,20 +86,16 @@
 #' # The example shows how to extract and save data.
 #' # For an additional example see \url{https://github.com/peterson-tim-j/AWAPer/blob/master/README.md}
 #' #---------------------------------------
+#' library(sp)
 #'
 #' # Set dates for building netCDFs and extracting data.
+#' # Note, to reduce runtime this is done only a fortnight (14 days).
 #' startDate = as.Date("2000-01-01","%Y-%m-%d")
-#' endDate = as.Date("2000-02-28","%Y-%m-%d")
+#' endDate = as.Date("2000-01-14","%Y-%m-%d")
 #'
 #' # Set names for netCDF files.
-#' ncdfFilename = 'AWAPer_demo.nc'
-#' ncdfSolarFilename = 'AWAPer_solar_demo.nc'
-#'
-#' # Remove any existing netCDF demo files.
-#' if (file.exists(ncdfFilename))
-#'    is.removed = file.remove(ncdfFilename)
-#' if (file.exists(ncdfSolarFilename))
-#'    is.removed = file.remove(ncdfSolarFilename)
+#' ncdfFilename = tempfile(fileext='.nc')
+#' ncdfSolarFilename = tempfile(fileext='.nc')
 #'
 #' # Build netCDF grids and over a defined time period.
 #' # Only precip data is to be added to the netCDF files.
@@ -113,6 +109,7 @@
 #' # Load example catchment boundaries and remove all but the first.
 #' # Note, this is done only to speed up the example runtime.
 #' data("catchments")
+#' catchments = catchments[1,]
 #'
 #' # Extract daily precip. data (not Tmin, Tmax, VPD, ET).
 #' # Note, the input "catchments" can also be a file to a ESRI shape file.
@@ -121,25 +118,14 @@
 #'               extractFrom=startDate, extractTo=endDate,
 #'               getTmin = FALSE, getTmax = FALSE, getVprp = FALSE,
 #'               getSolarrad = FALSE, getET = FALSE,
-#'               catchments=catchments)
+#'               catchments=catchments,
+#'               temporal.timestep = 'daily')
 #'
 #' # Extract the daily catchment average data.
 #' climateDataAvg = climateData$catchmentTemporal.mean
 #'
 #' # Extract the daily catchment variance data.
 #' climateDataVar = climateData$catchmentSpatial.var
-#'
-#' # Extract the monthly total precipitation.
-#' monthlyPrecipData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
-#'               ncdfSolarFilename=file.names$ncdfSolarFilename,
-#'               extractFrom=startDate, extractTo=endDate,
-#'               catchments=catchments,
-#'               getTmin = FALSE, getTmax = FALSE, getVprp = FALSE,
-#'               getSolarrad = FALSE, getET = FALSE,
-#'               temporal.timestep = 'monthly', temporal.function.name = 'sum')
-#'
-#' # Extract the monthly precip. sum data.
-#' monthlyPrecipData.sum = monthlyPrecipData$catchmentTemporal.sum
 #' }
 #' @export
 extractCatchmentData <- function(
@@ -573,15 +559,23 @@ extractCatchmentData <- function(
       if (sum(ind)==1) {
         solarrad_avg[j,] = solarrad[ind,];
       } else {
-        solarrad_avg[j,] = apply(stats::na.omit(solarrad[ind,]),2,mean)
+        if (ncol(solarrad)==1) {
+          solarrad_avg[j,] = mean(solarrad[ind,],na.rm=T)
+        } else {
+          solarrad_avg[j,] = apply(stats::na.omit(solarrad[ind,]),2,mean)
+        }
+
       }
     }
 
     # Assign the daily average solar radiation to each day prior to 1 Jan 1990
     for (j in 1:length(timepoints2Extract)) {
       if (timepoints2Extract[j]<as.Date('1990-1-1','%Y-%m-%d')) {
-        ind = monthdayUnique==monthdayAll[j];
-        solarrad_interp[j,] = solarrad_avg[ind,]
+        ind = which(monthdayUnique==monthdayAll[j])
+        if (length(ind)==1) {
+          solarrad_interp[j,] = solarrad_avg[ind,]
+        }
+
       }
     }
 
@@ -665,10 +659,11 @@ extractCatchmentData <- function(
         # if (!ET.inputdata.filt$Precip)
         #   dataRAW$Precip = NULL
 
-        # Convert to required format for ET package
+        # Convert to required format for ET package.
+        # Note, missing_method changed from NULL to "DoY average" because individual grid cells can be NA. eg
         dataPP=Evapotranspiration::ReadInputs(ET.var.names ,dataRAW,constants=NA,stopmissing = c(99,99,99),
                                               interp_missing_days=ET.interp_missing_days, interp_missing_entries=ET.interp_missing_entries, interp_abnormal=ET.interp_abnormal,
-                                              missing_method=NULL, abnormal_method='DoY average', message = "no")
+                                              missing_method="DoY average", abnormal_method='DoY average', message = "no")
 
         # Update constants for the site
         constants$Elev = DEMpoints[j]

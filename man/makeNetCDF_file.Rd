@@ -95,7 +95,7 @@ file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
              ncdfSolarFilename=ncdfSolarFilename,
              updateFrom=startDate, updateTo=endDate)
 
-# Now, to demonstrate updating the netCDF grids to one dat ago, rerun with
+# Now, to demonstrate updating the netCDF grids to one day ago, rerun with
 # the same file names but \code{updateFrom=NA}.
 file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
              ncdfSolarFilename=ncdfSolarFilename,
