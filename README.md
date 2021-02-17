@@ -221,13 +221,13 @@ srt.date = as.Date("2010-06-01","%Y-%m-%d")
 end.date = as.Date("2010-10-01","%Y-%m-%d")
 
 # Convert year, month and day columns from extractions to a date.
-climateData.ET.JensenHaise.var.date = as.Date(paste0(climateData.ET.JensenHaise.var$catchmentAvg$year, "-", 
-                                                     climateData.ET.JensenHaise.var$catchmentAvg$month, "-",
-                                                     climateData.ET.JensenHaise.var$catchmentAvg$day))
+climateData.ET.JensenHaise.var.date = as.Date(paste0(climateData.ET.JensenHaise.var$catchmentTemporal.mean$year, "-", 
+                                                     climateData.ET.JensenHaise.var$catchmentTemporal.mean$month, "-",
+                                                     climateData.ET.JensenHaise.var$catchmentTemporal.mean$day))
 
-climateData.ET.MortonCRAE.var.date = as.Date(paste0(climateData.ET.MortonCRAE.var$catchmentAvg$year, "-", 
-                                                    climateData.ET.MortonCRAE.var$catchmentAvg$month, "-",
-                                                    climateData.ET.MortonCRAE.var$catchmentAvg$day))
+climateData.ET.MortonCRAE.var.date = as.Date(paste0(climateData.ET.MortonCRAE.var$catchmentTemporal.mean$year, "-", 
+                                                    climateData.ET.MortonCRAE.var$catchmentTemporal.mean$month, "-",
+                                                    climateData.ET.MortonCRAE.var$catchmentTemporal.mean$day))
 
 i1.s = match(srt.date, climateData.ET.JensenHaise.var.date)
 i1.e = match(end.date, climateData.ET.JensenHaise.var.date)
@@ -236,15 +236,15 @@ i2.e = match(end.date, climateData.ET.MortonCRAE.var.date)
 
 # Plot rainfall and standard deviation against observations
 # ---------------------------------------------------------
-max.y = max(climateData.ET.JensenHaise.var$catchmentAvg$precip_mm[i1.s:i1.e] + 
-              sqrt(climateData.ET.JensenHaise.var$catchmentvar$precip_mm[i1.s:i1.e]))
+max.y = max(climateData.ET.JensenHaise.var$catchmentTemporal.mean$precip_mm[i1.s:i1.e] + 
+              sqrt(climateData.ET.JensenHaise.var$catchmentSpatial.var$precip_mm[i1.s:i1.e]))
 
 # Change the plot margins
 par(mar =  c(5, 7.5, 4, 2.7) + 0.1)
 
 # Rainfall
 plot(climateData.ET.JensenHaise.var.date[i1.s:i1.e],
-     climateData.ET.JensenHaise.var$catchmentAvg$precip_mm[i1.s:i1.e],
+     climateData.ET.JensenHaise.var$catchmentTemporal.mean$precip_mm[i1.s:i1.e],
      type = "h", col = "#e31a1c", lwd = 3, mgp = c(2, 0.5, 0), ylim = c(0, 80),
      ylab = "", xlab = "2010", xaxs = "i", yaxt = "n", bty = "l", yaxs = "i")
 axis(side = 2, mgp = c(2, 0.5, 0), line = 0.5, at = seq(from = 0, to = 80, by = 20),
@@ -253,20 +253,20 @@ axis(side = 2, mgp = c(2, 0.5, 0), line = 0.5, at = seq(from = 0, to = 80, by = 
 # Standard deviation
 for (i in 1:length(climateData.ET.JensenHaise.var.date[i1.s:i1.e])) {
   x.plot = rep(climateData.ET.JensenHaise.var.date[i1.s:i1.e][i], 2)
-  y.plot = c(climateData.ET.JensenHaise.var$catchmentAvg$precip_mm[i1.s:i1.e][i] + 
-               sqrt(climateData.ET.JensenHaise.var$catchmentvar$precip_mm[i1.s:i1.e][i]),
-             climateData.ET.JensenHaise.var$catchmentAvg$precip_mm[i1.s:i1.e][i] - 
-               sqrt(climateData.ET.JensenHaise.var$catchmentvar$precip_mm[i1.s:i1.e][i]))
+  y.plot = c(climateData.ET.JensenHaise.var$catchmentTemporal.mean$precip_mm[i1.s:i1.e][i] + 
+               sqrt(climateData.ET.JensenHaise.var$catchmentSpatial.var$precip_mm[i1.s:i1.e][i]),
+             climateData.ET.JensenHaise.var$catchmentTemporal.mean$precip_mm[i1.s:i1.e][i] - 
+               sqrt(climateData.ET.JensenHaise.var$catchmentSpatial.var$precip_mm[i1.s:i1.e][i]))
   lines(x.plot, y.plot, col = "black", lwd = 1.2)
   
 }
 
 # Plot evap data.
 par(new = TRUE)
-plot(climateData.ET.JensenHaise.var.date[i1.s:i1.e], climateData.ET.JensenHaise.var$catchmentAvg$ET_mm[i1.s:i1.e], col = "#bc80bd", lwd = 2, ylab = "",
+plot(climateData.ET.JensenHaise.var.date[i1.s:i1.e], climateData.ET.JensenHaise.var$catchmentTemporal.mean$ET_mm[i1.s:i1.e], col = "#bc80bd", lwd = 2, ylab = "",
      ylim = c(0, 4), lty = 1, xlab = "", xaxs = "i", yaxt = "n", xaxt = "n", type = "l", bty = "n", yaxs = "i")
 axis(side = 2, line = 2.3, mgp = c(2, 0.5, 0), labels = c("0", "1", "2", "3", "4mm"), at = seq(from = 0, to = 4, by = 1), col = "#bc80bd", col.axis = "#bc80bd")
-lines(climateData.ET.MortonCRAE.var.date[i2.s:i2.e], climateData.ET.MortonCRAE.var$catchmentAvg$ET_mm[i2.s:i2.e], col = "#bc80bd", lwd = 2, lty = 2)
+lines(climateData.ET.MortonCRAE.var.date[i2.s:i2.e], climateData.ET.MortonCRAE.var$catchmentTemporal.mean$ET_mm[i2.s:i2.e], col = "#bc80bd", lwd = 2, lty = 2)
 
 # Legend
 legend("topleft", cex = 0.8, lwd = 2, bty = "n", inset = c(0.01, -0.01),
@@ -369,58 +369,58 @@ climateData.ET.Turc = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
 
 # Plot the ET estimates for one of the catchmnts.
 #----------------------------------------
-filt = climateData.ET.HargreavesSamani$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.HargreavesSamani$catchmentAvg$year, 
-      climateData.ET.HargreavesSamani$catchmentAvg$month, 
-      climateData.ET.HargreavesSamani$catchmentAvg$day)
-plot(d[filt], climateData.ET.HargreavesSamani$catchmentAvg$ET_mm[filt], 
+filt = climateData.ET.HargreavesSamani$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.HargreavesSamani$catchmentTemporal.mean$year, 
+      climateData.ET.HargreavesSamani$catchmentTemporal.mean$month, 
+      climateData.ET.HargreavesSamani$catchmentTemporal.mean$day)
+plot(d[filt], climateData.ET.HargreavesSamani$catchmentTemporal.mean$ET_mm[filt], 
       col='black',lty=1, xlim = c(ISOdate(2010,1,1), ISOdate(2010,12,1)), ylim=c(0, 30),type='l', ylab='ET [mm/d]',xlab='Date')
 
-filt = climateData.ET.JensenHaise$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.JensenHaise$catchmentAvg$year, 
-      climateData.ET.JensenHaise$catchmentAvg$month, climateData.ET.JensenHaise$catchmentAvg$day)
-lines(d[filt], climateData.ET.JensenHaise$catchmentAvg$ET_mm[filt], col='red',lty=1)
+filt = climateData.ET.JensenHaise$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.JensenHaise$catchmentTemporal.mean$year, 
+      climateData.ET.JensenHaise$catchmentTemporal.mean$month, climateData.ET.JensenHaise$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.JensenHaise$catchmentTemporal.mean$ET_mm[filt], col='red',lty=1)
 
-filt = climateData.ET.Makkink$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.Makkink$catchmentAvg$year, climateData.ET.Makkink$catchmentAvg$month, 
-      climateData.ET.Makkink$catchmentAvg$day)
-lines(d[filt], climateData.ET.Makkink$catchmentAvg$ET_mm[filt], col='green',lty=1)
+filt = climateData.ET.Makkink$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.Makkink$catchmentTemporal.mean$year, climateData.ET.Makkink$catchmentTemporal.mean$month, 
+      climateData.ET.Makkink$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.Makkink$catchmentTemporal.mean$ET_mm[filt], col='green',lty=1)
 
-filt = climateData.ET.McGuinnessBordne$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.McGuinnessBordne$catchmentAvg$year, climateData.ET.McGuinnessBordne$catchmentAvg$month,      
-      climateData.ET.McGuinnessBordne$catchmentAvg$day)
-lines(d[filt], climateData.ET.McGuinnessBordne$catchmentAvg$ET_mm[filt], col='blue',lty=1)
+filt = climateData.ET.McGuinnessBordne$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.McGuinnessBordne$catchmentTemporal.mean$year, climateData.ET.McGuinnessBordne$catchmentTemporal.mean$month,      
+      climateData.ET.McGuinnessBordne$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.McGuinnessBordne$catchmentTemporal.mean$ET_mm[filt], col='blue',lty=1)
 
-filt = climateData.ET.MortonCRAE.potentialET$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRAE.potentialET$catchmentAvg$year, 
-      climateData.ET.MortonCRAE.potentialET$catchmentAvg$month, climateData.ET.MortonCRAE.potentialET$catchmentAvg$day)
-lines(d[filt], climateData.ET.MortonCRAE.potentialET$catchmentAvg$ET_mm[filt], col='black',lty=2)
+filt = climateData.ET.MortonCRAE.potentialET$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.MortonCRAE.potentialET$catchmentTemporal.mean$year, 
+      climateData.ET.MortonCRAE.potentialET$catchmentTemporal.mean$month, climateData.ET.MortonCRAE.potentialET$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.MortonCRAE.potentialET$catchmentTemporal.mean$ET_mm[filt], col='black',lty=2)
 
-filt = climateData.ET.MortonCRAE.wetarealET$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRAE.wetarealET$catchmentAvg$year,     
-      climateData.ET.MortonCRAE.wetarealET$catchmentAvg$month, climateData.ET.MortonCRAE.wetarealET$catchmentAvg$day)
-lines(d[filt], climateData.ET.MortonCRAE.wetarealET$catchmentAvg$ET_mm[filt], col='red',lty=2)
+filt = climateData.ET.MortonCRAE.wetarealET$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.MortonCRAE.wetarealET$catchmentTemporal.mean$year,     
+      climateData.ET.MortonCRAE.wetarealET$catchmentTemporal.mean$month, climateData.ET.MortonCRAE.wetarealET$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.MortonCRAE.wetarealET$catchmentTemporal.mean$ET_mm[filt], col='red',lty=2)
 
-filt = climateData.ET.MortonCRAE.actualarealET$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRAE.actualarealET$catchmentAvg$year, 
-      climateData.ET.MortonCRAE.actualarealET$catchmentAvg$month, 
-      climateData.ET.MortonCRAE.actualarealET$catchmentAvg$day)
-lines(d[filt], climateData.ET.MortonCRAE.actualarealET$catchmentAvg$ET_mm[filt], col='green',lty=2)
+filt = climateData.ET.MortonCRAE.actualarealET$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.MortonCRAE.actualarealET$catchmentTemporal.mean$year, 
+      climateData.ET.MortonCRAE.actualarealET$catchmentTemporal.mean$month, 
+      climateData.ET.MortonCRAE.actualarealET$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.MortonCRAE.actualarealET$catchmentTemporal.mean$ET_mm[filt], col='green',lty=2)
 
-filt = climateData.ET.MortonCRWE$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRWE$catchmentAvg$year, climateData.ET.MortonCRWE$catchmentAvg$month, 
-      climateData.ET.MortonCRWE$catchmentAvg$day)
-lines(d[filt], climateData.ET.MortonCRWE$catchmentAvg$ET_mm[filt], col='blue',lty=2)
+filt = climateData.ET.MortonCRWE$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.MortonCRWE$catchmentTemporal.mean$year, climateData.ET.MortonCRWE$catchmentTemporal.mean$month, 
+      climateData.ET.MortonCRWE$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.MortonCRWE$catchmentTemporal.mean$ET_mm[filt], col='blue',lty=2)
 
-filt = climateData.ET.MortonCRWE.shallowLake$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.MortonCRWE.shallowLake$catchmentAvg$year, 
-      climateData.ET.MortonCRWE.shallowLake$catchmentAvg$month, climateData.ET.MortonCRWE.shallowLake$catchmentAvg$day)
-lines(d[filt], climateData.ET.MortonCRWE.shallowLake$catchmentAvg$ET_mm[filt], col='black',lty=3)
+filt = climateData.ET.MortonCRWE.shallowLake$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.MortonCRWE.shallowLake$catchmentTemporal.mean$year, 
+      climateData.ET.MortonCRWE.shallowLake$catchmentTemporal.mean$month, climateData.ET.MortonCRWE.shallowLake$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.MortonCRWE.shallowLake$catchmentTemporal.mean$ET_mm[filt], col='black',lty=3)
 
-filt = climateData.ET.Turc$catchmentAvg$CatchID==407214
-d = ISOdate(climateData.ET.Turc$catchmentAvg$year, climateData.ET.Turc$catchmentAvg$month, 
-      climateData.ET.Turc$catchmentAvg$day)
-lines(d[filt], climateData.ET.Turc$catchmentAvg$ET_mm[filt], col='red',lty=3)
+filt = climateData.ET.Turc$catchmentTemporal.mean$CatchID==407214
+d = ISOdate(climateData.ET.Turc$catchmentTemporal.mean$year, climateData.ET.Turc$catchmentTemporal.mean$month, 
+      climateData.ET.Turc$catchmentTemporal.mean$day)
+lines(d[filt], climateData.ET.Turc$catchmentTemporal.mean$ET_mm[filt], col='red',lty=3)
 
 legend(x='topright', legend=c(
   'Hargreaves Samani (ref. crop)', 'Jensen Haise (PET)', 'Makkink (ref. crop)', 'McGuinness Bordne (PET)', 'Morton CRAE (PET)',

@@ -413,7 +413,7 @@ extractCatchmentData <- function(
   }
 
   # Build a matrix of catchment weights, lat longs, and a loopup table for each catchment.
-  message('... Building catchment weights:');
+  message('... Building catchment weights');
   if (isCatchmentsPolygon) {
 
     w.all = c();
@@ -425,7 +425,14 @@ extractCatchmentData <- function(
         message(paste('   ... Building weights for catchment ', i,' of ',length(catchments)));
         raster::removeTmpFiles(h=0)
       }
-      w = raster::rasterize(x=catchments[i,], y=precipGrd,fun='last',getCover=T)
+
+      # Extract the weights for grid cells within the catchments polygon.
+      # Note, the AWAP raster grid is cropped to the extent of the catchment polygon.
+      # This was undertaken to improve the run time performance but more importantly to overcome an error
+      # thrown by raster::rasterize when the raster is large (see https://github.com/rspatial/raster/issues/192).
+      # This solution should work when the catchments polygon is not very large (e.g. not a reasonable fraction of the
+      # Australian land mass)
+      w = raster::rasterize(x=catchments[i,], y=raster::crop(precipGrd, catchments[i,], snap='out'), fun='last',getCover=T)
 
       # Extract the mask values (i.e. fraction of each grid cell within the polygon.
       w2 = raster::getValues(w);
