@@ -76,3 +76,6 @@ Dec 30 2020
 11 Feb 2021
 * Bug fixed in extractCatchmentData() that caused an error when ET was estimated for a single grid point
 * Bug fixed in extractCatchmentData() that caused an error when the source data (other that solar radiation) had a data-gap and ET was estimated. This was resolved  by interpolatiing the point using 'DoY average'.
+
+17 Feb 2021
+* major bug fixed in extractCatchmentData() arising from raster::rasterize throwing an error when the raster grid is large (see https://github.com/rspatial/raster/issues/192). The was resolved here by cropping the AWAP raster to the catchment polygon extent (using snap='out'). For details see https://github.com/peterson-tim-j/AWAPer/blob/5fff85dc5665489d39e56fab86237f30ce4a78a8/R/extractCatchmentData.R#L435 . Note,  work around may not work when the polygon area (i.e. catchment boundary) is a large fraction of the Australian land area.
