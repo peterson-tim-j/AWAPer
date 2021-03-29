@@ -25,7 +25,7 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
     if (didFail==0) {
-      exitMessage = system(paste0('7z e -aoa -bso0 "',des.file.name, '"'),intern = T)
+      exitMessage = system(paste0('7z e -aoa -bso0 "',des.file.name, '"', ' -o', workingFolder),intern = T)
       file.remove(des.file.name)
       if (!is.null(attr(exitMessage,'status'))) {
         message('------------------------------------------------------------------------------------')
