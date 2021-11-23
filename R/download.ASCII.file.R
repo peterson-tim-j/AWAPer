@@ -24,6 +24,19 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
   if (OS=='Windows') {
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
+    if (didFail) {
+      didFail = tryCatch(
+        {
+          message('Http request failed. Trying with a Mozila 5.0 useragent')
+          content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
+          writeBin(content, des.file.name)
+        },
+        error = function(cond) {
+          return(TRUE)
+        }
+      )
+      didFail = 0
+    }
     if (didFail==0) {
 
       displayErrorMessage <- function() {
@@ -69,6 +82,19 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
 
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T)},error = function(cond) {return(TRUE)})
+    if (didFail) {
+      didFail = tryCatch(
+        {
+          message('Http request failed. Trying with a Mozila 5.0 useragent')
+          content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
+          writeBin(content, des.file.name)
+        },
+        error = function(cond) {
+          return(TRUE)
+        }
+      )
+      didFail = 0
+    }
     if (didFail==0) {
       system(paste('znew -f ',des.file.name));
       des.file.name = gsub('.Z', '.gz', des.file.name)
