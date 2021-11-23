@@ -25,13 +25,12 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
     if (didFail==0) {
-      exitMessage = system(paste0('7z e -aoa -bso0 "',des.file.name, '"', ' -o', workingFolder),intern = T)
-      file.remove(des.file.name)
-      if (!is.null(attr(exitMessage,'status'))) {
+
+      displayErrorMessage <- function() {
         message('------------------------------------------------------------------------------------')
         message('The program "7z" is either not installed or cannot be found. If not installed then')
         message('install it from https://www.7-zip.org/download.html .')
-        message('Once installed, do the following step:')
+        message('Once installed, do the following steps:')
         message('  1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.')
         message('  2. In the "User variables" window, select the "Path", and click "Edit..."')
         message('  3. In the "Edit environmental variable" window, click "New".')
@@ -41,6 +40,27 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
         message('     If setup correctly, this should output details such as the version, descriptions of commands, etc.')
         message('------------------------------------------------------------------------------------')
         stop()
+      }
+
+      exitMessage = tryCatch(
+        {
+          return(system(paste0('7z e -aoa -bso0 "',des.file.name, '"', ' -o', workingFolder),intern = T))
+        },
+        error = function(cond) {
+          try_again = tryCatch(
+            {
+              message('7-zip not found in path, trying default Windows installation location.')
+              return(system(paste0('"C:\\Program Files\\7-Zip\\7z.exe" e -aoa -bso0 "',des.file.name, '"', ' -o', workingFolder),intern = T))
+            },
+            error = function(cond) {
+              displayErrorMessage()
+            }
+          )
+        }
+      )
+      file.remove(des.file.name)
+      if (!is.null(attr(exitMessage,'status'))) {
+        displayErrorMessage()
       }
 
       des.file.name = gsub('.Z', '', des.file.name)
