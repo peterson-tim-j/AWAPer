@@ -23,20 +23,16 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
   OS <- OS[1]
   if (OS=='Windows') {
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
-    didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
-    if (didFail) {
-      didFail = tryCatch(
-        {
-          message('Http request failed. Trying with a Mozila 5.0 useragent')
-          content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
-          writeBin(content, des.file.name)
-        },
-        error = function(cond) {
-          return(TRUE)
-        }
-      )
-      didFail = 0
-    }
+    didFail = tryCatch(
+      {
+        content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
+        writeBin(content, des.file.name)
+      },
+      error = function(cond) {
+        return(TRUE)
+      }
+    )
+    if (length(didFail) == 0) {didFail <- 0}
     if (didFail==0) {
 
       displayErrorMessage <- function() {
@@ -62,7 +58,6 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
         error = function(cond) {
           try_again = tryCatch(
             {
-              message('7-zip not found in path, trying default Windows installation location.')
               return(system(paste0('"C:\\Program Files\\7-Zip\\7z.exe" e -aoa -bso0 "',des.file.name, '"', ' -o', workingFolder),intern = T))
             },
             error = function(cond) {
@@ -81,20 +76,16 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
   } else {
 
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
-    didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T)},error = function(cond) {return(TRUE)})
-    if (didFail) {
-      didFail = tryCatch(
-        {
-          message('Http request failed. Trying with a Mozila 5.0 useragent')
-          content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
-          writeBin(content, des.file.name)
-        },
-        error = function(cond) {
-          return(TRUE)
-        }
-      )
-      didFail = 0
-    }
+    didFail = tryCatch(
+      {
+        content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
+        writeBin(content, des.file.name)
+      },
+      error = function(cond) {
+        return(TRUE)
+      }
+    )
+    if (length(didFail) == 0) {didFail <- 0}
     if (didFail==0) {
       system(paste('znew -f ',des.file.name));
       des.file.name = gsub('.Z', '.gz', des.file.name)
