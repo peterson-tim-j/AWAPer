@@ -25,8 +25,11 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
     didFail = tryCatch(
       {
-        content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
-        writeBin(content, des.file.name)
+        # only download the file if the .Z file isn't saved in the working directory
+        if (!file.exists(des.file.name)) {
+          content <- RCurl::getBinaryURL(url, verbose=FALSE, .opts=list(useragent='Mozila 5.0'))
+          writeBin(content, des.file.name)
+        }
       },
       error = function(cond) {
         return(TRUE)
@@ -66,8 +69,8 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
           )
         }
       )
-      file.remove(des.file.name)
       if (!is.null(attr(exitMessage,'status'))) {
+        file.remove(des.file.name)
         displayErrorMessage()
       }
 
