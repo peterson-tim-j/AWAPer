@@ -32,15 +32,17 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
         }
       },
       error = function(cond) {
+        failureMessage <- cond
         return(TRUE)
       }
     )
     if (length(didFail) == 0) {didFail <- 0}
-    if (didFail==0) {
-
+    if (didFail == 0) {
+      
       displayErrorMessage <- function() {
         message('------------------------------------------------------------------------------------')
-        message('The program "7z" is either not installed or cannot be found. If not installed then')
+        message('If the below error is not obvious, it may be that the program "7z" is either not installed')
+        message('or cannot be found. If not installed then')
         message('install it from https://www.7-zip.org/download.html .')
         message('Once installed, do the following steps:')
         message('  1. Click "Search Windows", search "Edit environmental variables for your account" and click on it.')
@@ -51,7 +53,7 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
         message('  6. Open the "Command Prompt" and enter the command "7z".')
         message('     If setup correctly, this should output details such as the version, descriptions of commands, etc.')
         message('------------------------------------------------------------------------------------')
-        stop()
+        stop(failureMessage)
       }
 
       exitMessage = tryCatch(
