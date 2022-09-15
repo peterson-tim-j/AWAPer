@@ -98,6 +98,7 @@ makeNetCDF_file <- function(
     message('Starting to update both netCDF files.')
   } else if (file.exists(ncdfFilename) && !file.exists(ncdfSolarFilename)) {
     message('Starting to update the main climate data netCDF file and will build the solar radiation netcdf file.')
+    doUpdate = TRUE
   } else if (!file.exists(ncdfFilename) && file.exists(ncdfSolarFilename)) {
     message('Starting to update the solar radiation netcdf file and will build the main climate data netcdf file.')
     doUpdate_solar = TRUE;
