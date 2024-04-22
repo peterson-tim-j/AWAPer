@@ -89,6 +89,13 @@ makeNetCDF_file <- function(
   urlVprp = getURLs()$vprp,
   urlSolarrad = getURLs()$solarrad)  {
 
+
+  # To Update HTML documentationm:
+  # devtools::document()
+  # NOTE, to build pdf manual. For Windows install: install.packages("tinytex"):
+  # path <- find.package("AWAPer")
+  # system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path)))
+
   # Check that the ncdf files
   doUpdate = F;
   doUpdate_solar = F;
