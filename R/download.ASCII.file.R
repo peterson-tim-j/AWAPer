@@ -23,11 +23,17 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
   OS <- OS[1]
   if (OS=='Windows') {
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
-    didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T, mode = "wb")},error = function(cond) {return(TRUE)})
-    if (didFail==0) {
+
+    didFail = tryCatch({
+      bin.data = RCurl::getBinaryURL(url)
+      fid <- file(des.file.name, "wb")
+      writeBin(bin.data, fid)
+      close(fid)
+      },error = function(cond) {return(TRUE)})
+    if (file.exists(des.file.name) && didFail==0) {
       exitMessage = system(paste0('7z e -aoa -bso0 "',des.file.name, '"', ' -o', workingFolder),intern = T)
       file.remove(des.file.name)
-      if (!is.null(attr(exitMessage,'status'))) {
+      if (!is.null(attr(exitMessage,'status')) && attr(exitMessage,'status')!=2) {
         message('------------------------------------------------------------------------------------')
         message('The program "7z" is either not installed or cannot be found. If not installed then')
         message('install it from https://www.7-zip.org/download.html .')
@@ -48,8 +54,15 @@ download.ASCII.file <- function (url.string, data.type.label,  workingFolder, da
   } else {
 
     des.file.name = file.path(workingFolder,paste(data.type.label,datestring,'.grid.Z',sep=''))
-    didFail = tryCatch({utils::download.file(url,des.file.name, quiet = T)},error = function(cond) {return(TRUE)})
-    if (didFail==0) {
+
+    didFail = tryCatch({
+      bin.data = RCurl::getBinaryURL(url)
+      fid <- file(des.file.name, "wb")
+      writeBin(bin.data, fid)
+      close(fid)
+      },error = function(cond) {return(TRUE)})
+
+    if (file.exists(des.file.name) && didFail==0) {
       system(paste('znew -f ',des.file.name));
       des.file.name = gsub('.Z', '.gz', des.file.name)
     }
