@@ -289,7 +289,13 @@ extractCatchmentData <- function(
       stop(paste('The following input file for the catchments could not be found:',catchments))
 
     # Read in polygons
-    catchments = maptools::readShapeSpatial(catchments, force_ring=TRUE)
+    catchments <- sf::st_read(catchments)
+
+    # Drop z vector if included
+    catchments = sf::st_zm(catchments, drop=T)
+
+    # Convert to sp spatial object
+    catchments = as(catchments,'Spatial')
 
   } else if (!methods::is(catchments,"SpatialPolygonsDataFrame") && !methods::is(catchments,"SpatialPointsDataFrame")) {
     stop('The input for "catchments" must be a file name to a shape file or a SpatialPolygonsDataFrame or a SpatialPointsDataFrame object.')
@@ -493,6 +499,8 @@ extractCatchmentData <- function(
   message('... Starting to extract data across all catchments:')
   for (j in 1:length(timepoints2Extract)){
 
+    #if (j>=8466)
+    #  browser()
     # Find index to the date to update within the net CDF grid
     ind = as.integer(difftime(timepoints2Extract[j], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
 
