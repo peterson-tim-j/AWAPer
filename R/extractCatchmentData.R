@@ -295,7 +295,7 @@ extractCatchmentData <- function(
     catchments = sf::st_zm(catchments, drop=T)
 
     # Convert to sp spatial object
-    catchments = as(catchments,'Spatial')
+    catchments = methods::as(catchments,'Spatial')
 
   } else if (!methods::is(catchments,"SpatialPolygonsDataFrame") && !methods::is(catchments,"SpatialPointsDataFrame")) {
     stop('The input for "catchments" must be a file name to a shape file or a SpatialPolygonsDataFrame or a SpatialPointsDataFrame object.')
