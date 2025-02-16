@@ -79,3 +79,13 @@ Dec 30 2020
 
 17 Feb 2021
 * major bug fixed in extractCatchmentData() arising from raster::rasterize throwing an error when the raster grid is large (see https://github.com/rspatial/raster/issues/192). The was resolved here by cropping the AWAP raster to the catchment polygon extent (using snap='out'). For details see https://github.com/peterson-tim-j/AWAPer/blob/5fff85dc5665489d39e56fab86237f30ce4a78a8/R/extractCatchmentData.R#L435 . Note,  work around may not work when the polygon area (i.e. catchment boundary) is a large fraction of the Australian land area.
+
+22 Apr 2024
+ * File downloads in download.ASCII.file.R changed to use RCurl package
+
+15 Feb 2025
+* maptools package deprecation replaced with sf package.
+* Check added during extaction for non-NA catchment IDs and being unique.
+
+16 Feb 2025
+* Error in ET estimation omitted site elevation and coordinates. Bug fixed.

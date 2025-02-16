@@ -685,9 +685,9 @@ extractCatchmentData <- function(
                                               missing_method="DoY average", abnormal_method='DoY average', message = "no")
 
         # Update constants for the site
-        constants$Elev = DEMpoints[j]
-        constants$lat = longLat.all[j,2]
-        constants$lat_rad = longLat.all[j,2]/180.0*pi
+        ET.constants$Elev = DEMpoints[j]
+        ET.constants$lat = longLat.all[j,2]
+        ET.constants$lat_rad = longLat.all[j,2]/180.0*pi
 
         # Call  ET package
         if (ET.function=='ET.Abtew') {
@@ -706,7 +706,9 @@ extractCatchmentData <- function(
           results <- Evapotranspiration::ET.MortonCRWE(dataPP, ET.constants,est=ET.Mortons.est, ts=ET.timestep,solar="data",Tdew=FALSE, AdditionalStats='no', message='no');
         } else if(ET.function=='ET.Turc') {
           results <- Evapotranspiration::ET.Turc(dataPP, ET.constants, ts=ET.timestep,solar="data",humid=F, AdditionalStats='no', message='no');
-        }
+        } #else if (ET.function=='ET.PenmanMonteith') {
+        #  results <- Evapotranspiration::ET.PenmanMonteith(dataPP, ET.constants, ts=ET.timestep, solar="data", wind="no", message="no", AdditionalStats="no")
+        #}
 
 
         # Interpolate monthly or annual data
