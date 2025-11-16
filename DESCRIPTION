@@ -1,14 +1,14 @@
 Package: AWAPer
 Type: Package
 Title: Catchment Area Weighted Climate Data Anywhere in Australia
-Version: 0.1.47
+Version: 0.1.48
 Authors@R: c(
     person("Tim", "Peterson", email = "tim.peterson@monash.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-1885-0826")),
     person("Conrad", "Wasko", email = "conrad.wasko@unimelb.edu.au", role = "ctb", comment = c(ORCID = "0000-0002-9166-8289"))) 
 Maintainer: Tim Peterson <tim.peterson@monash.edu>
 Description: NetCDF files of the Bureau of Meteorology Australian Water Availability Project daily national climate grids are built and used for the efficient extraction of point and catchment area weighted precipitation, minimum temperature, maximum temperature, vapour pressure, solar radiation and various measures of evapotranspiration. For details on the source climate data see <http://www.bom.gov.au/jsp/awap/>.
-Depends: R (>= 3.5)
-Imports: Evapotranspiration (>= 1.14), ncdf4, utils, raster, chron, maptools, sp, zoo, methods, xts, stats
+Depends: R (>= 4.0)
+Imports: Evapotranspiration (>= 1.14), ncdf4, utils, raster, chron, sf, sp, zoo, methods, xts, stats, RCurl
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 BugReports: https://github.com/peterson-tim-j/AWAPer/issues
@@ -16,5 +16,5 @@ URL: https://github.com/peterson-tim-j/AWAPer
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 SystemRequirements: 7z (Windows only)

@@ -48,7 +48,7 @@
 #' @param DEM is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used
 #' for the calculation of Morton's PET. The Australian 9 second DEM can be loaded using \code{getDEM()}.
 #' @param catchments is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
-#' already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected), use the ellipsoid GRS 80, and the first column should be a unique ID.
+#' already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected), use the ellipsoid GRS 80, and the first column must be a unique ID.
 #' @param temporal.timestep character string for the time step of the output data. The options are \code{daily}, \code{weekly}, \code{monthly}, \code{quarterly},
 #' \code{annual}  or a user-defined index for, say, water-years (see \code{xts::period.apply}). The default is \code{daily}.
 #' @param temporal.function.name character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
@@ -289,7 +289,13 @@ extractCatchmentData <- function(
       stop(paste('The following input file for the catchments could not be found:',catchments))
 
     # Read in polygons
-    catchments = maptools::readShapeSpatial(catchments, force_ring=TRUE)
+    catchments <- sf::st_read(catchments)
+
+    # Drop z vector if included
+    catchments = sf::st_zm(catchments, drop=T)
+
+    # Convert to sp spatial object
+    catchments = methods::as(catchments,'Spatial')
 
   } else if (!methods::is(catchments,"SpatialPolygonsDataFrame") && !methods::is(catchments,"SpatialPointsDataFrame")) {
     stop('The input for "catchments" must be a file name to a shape file or a SpatialPolygonsDataFrame or a SpatialPointsDataFrame object.')
@@ -304,6 +310,12 @@ extractCatchmentData <- function(
     message('WARNING: The projection string of the catchment boundaries does not appear to be +proj=longlat +ellps=GRS80. Attempting to transform coordinates...')
     catchments = sp::spTransform(catchments,sp::CRS('+proj=longlat +ellps=GRS80'))
   }
+
+  # Check each catchment or point has a unique (non-NA) ID. Note.
+  if (any(is.na(catchments[[1]])))
+    stop('The list of catchments IDs (first column) contains NAs. Please remove these or rename')
+  if ( length(unique(catchments[[1]])) != length(catchments[[1]]) )
+    stop('The list of catchments IDs (first column) is not unique. Please remove the duplicates')
 
   # Check if catchments are points or a polygon.
   isCatchmentsPolygon=TRUE;
@@ -401,8 +413,6 @@ extractCatchmentData <- function(
   # Recalculate the time points to extract.
   timepoints2Extract = seq( as.Date(extractFrom,'%Y-%m-%d'), by="day", to=as.Date(extractTo,'%Y-%m-%d'))
 
-
-
   message(paste('    Data will be extracted from ',format.Date(extractFrom,'%Y-%m-%d'),' to ', format.Date(extractTo,'%Y-%m-%d'),' at ',length(catchments),' catchments '));
   message('Starting data extraction:')
 
@@ -493,6 +503,8 @@ extractCatchmentData <- function(
   message('... Starting to extract data across all catchments:')
   for (j in 1:length(timepoints2Extract)){
 
+    #if (j>=8466)
+    #  browser()
     # Find index to the date to update within the net CDF grid
     ind = as.integer(difftime(timepoints2Extract[j], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
 
@@ -673,9 +685,9 @@ extractCatchmentData <- function(
                                               missing_method="DoY average", abnormal_method='DoY average', message = "no")
 
         # Update constants for the site
-        constants$Elev = DEMpoints[j]
-        constants$lat = longLat.all[j,2]
-        constants$lat_rad = longLat.all[j,2]/180.0*pi
+        ET.constants$Elev = DEMpoints[j]
+        ET.constants$lat = longLat.all[j,2]
+        ET.constants$lat_rad = longLat.all[j,2]/180.0*pi
 
         # Call  ET package
         if (ET.function=='ET.Abtew') {
@@ -694,7 +706,9 @@ extractCatchmentData <- function(
           results <- Evapotranspiration::ET.MortonCRWE(dataPP, ET.constants,est=ET.Mortons.est, ts=ET.timestep,solar="data",Tdew=FALSE, AdditionalStats='no', message='no');
         } else if(ET.function=='ET.Turc') {
           results <- Evapotranspiration::ET.Turc(dataPP, ET.constants, ts=ET.timestep,solar="data",humid=F, AdditionalStats='no', message='no');
-        }
+        } #else if (ET.function=='ET.PenmanMonteith') {
+        #  results <- Evapotranspiration::ET.PenmanMonteith(dataPP, ET.constants, ts=ET.timestep, solar="data", wind="no", message="no", AdditionalStats="no")
+        #}
 
 
         # Interpolate monthly or annual data

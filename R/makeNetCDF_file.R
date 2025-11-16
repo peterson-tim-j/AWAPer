@@ -255,7 +255,7 @@ makeNetCDF_file <- function(
         updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
       } else if (is.character(updateTo)) {
         updateTo = as.Date(updateTo,'%Y-%m-%d');
-      } else if (class(updateTo)=="Date") {
+      } else if (methods::is(updateTo,"Date")) {
           updateTo = min(c(as.Date(Sys.Date()-1,"%Y-%m-%d"),updateTo));
       }
       if (updateFrom >= updateTo)
@@ -366,7 +366,7 @@ makeNetCDF_file <- function(
         } else {
           updateTo = as.Date(Sys.Date()-1,"%Y-%m-%d")
         }
-      } else if (class(updateTo)=="Date") {
+      } else if ( methods::is(updateTo,"Date") ) {
         updateTo = min(c(as.Date(Sys.Date()-1,"%Y-%m-%d"),updateTo));
       }
     }
