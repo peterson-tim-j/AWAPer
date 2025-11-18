@@ -388,7 +388,7 @@ makeNetCDF_file <- function(
 
       # Get datestring for input filenames
       datestring<-format(timepoints2Update[date], "%Y%m%d")
-      message(paste('Working on grid time point:', format(timepoints2Update[date], "%Y-%m-%d")))
+      message(paste('    ... Working on grid time point:', format(timepoints2Update[date], "%Y-%m-%d")))
 
       # Find index to the date to update within the net CDF grid
       ind = as.integer(difftime(timepoints2Update[date], as.Date("1900-1-1",'%Y-%m-%d'),units = "days" ))+1
@@ -613,7 +613,7 @@ makeNetCDF_file <- function(
 
       # Get datestring for input filenames
       datestring<-format(timepoints2Update[date], "%Y%m%d")
-      message(paste('Working on solar grid time point:', format(timepoints2Update[date], "%Y-%m-%d")))
+      message(paste('    ... Working on solar grid time point:', format(timepoints2Update[date], "%Y-%m-%d")))
 
       # Find index to the date to update within the net CDF grid
       ind = as.integer(difftime(timepoints2Update[date], as.Date("1990-1-1",'%Y-%m-%d'),units = "days" ))+1
@@ -666,7 +666,7 @@ makeNetCDF_file <- function(
     ncdf4::nc_close(ncout)
   }
 
-  message('Data construction FINISHED..')
+  message('Data construction FINISHED.')
   return(list(ncdfFilename=ncdfFilename, ncdfSolarFilename = ncdfSolarFilename))
 
 }
