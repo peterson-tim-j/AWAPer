@@ -94,3 +94,4 @@ Dec 30 2020
 * Required to download a DEM (for ET estimates) is removed and replaced with elevatr package. Change made to resolve CRAN rejection on large file downloads.
 * extractCatchmentData() input 'catchments' changed to 'locations'. This is done to avoid confutions with  data(catchments).
 * Check added on extractTo to be prior to today.
+* Check added on extraction dates to ensure greater than the ET.timestep.

@@ -234,6 +234,16 @@ extractCatchmentData <- function(
       stop(paste('The ET.timestep must be one of the following:',ET.timestep.all))
     }
 
+    # Check that extractFrom and extractTo span more than one ET timestep
+    if (ET.timestep == 'monthly') {
+      if (zoo::as.yearmon(timepoints2Extract[1]) == zoo::as.yearmon(timepoints2Extract[length(timepoints2Extract)]))
+          stop('When the ET.timestep is monthly, the extraction dates must span more than one month.')
+    }
+    if (ET.timestep == 'annual') {
+      if (format(timepoints2Extract[1],'%Y') == format(timepoints2Extract[length(timepoints2Extract)],'%Y'))
+        stop('When the ET.timestep is annual, the extraction dates must span more than one year.')
+    }
+
     # Check the appropriate time step is used.
     if ( (ET.function == 'ET.MortonCRAE' || ET.function == 'ET.MortonCRWE') && ET.timestep=='daily' ) {
       stop('The ET.timstep must be monthly or annual when using ET.MortonCRAE or ET.MortonCRWE')
