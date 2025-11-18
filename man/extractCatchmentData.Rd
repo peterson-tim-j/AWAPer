@@ -15,8 +15,8 @@ extractCatchmentData(
   getVprp = TRUE,
   getSolarrad = TRUE,
   getET = TRUE,
-  DEM = "",
-  catchments = "",
+  DEM.res = 10,
+  locations = NULL,
   temporal.timestep = "daily",
   temporal.function.name = "mean",
   spatial.function.name = "var",
@@ -53,10 +53,9 @@ extractCatchmentData(
 \item{getET}{logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T},
 \code{getVprp=T} and \code{getSolarrad=T}. Default is \code{TRUE}.}
 
-\item{DEM}{is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used
-for the calculation of Morton's PET. The Australian 9 second DEM can be loaded using \code{getDEM()}.}
+\item{DEM.res}{is the zoom resolution for the land surface elevation. \code{elevatr} package is used to extract elevation (metres) from AWS Open Data Terrain Tiles. This input controls the zoom resolution. Higher values increase accuracy, but are significantly slower. See details. Default is 10.}
 
-\item{catchments}{is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
+\item{locations}{is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected), use the ellipsoid GRS 80, and the first column must be a unique ID.}
 
 \item{temporal.timestep}{character string for the time step of the output data. The options are \code{daily}, \code{weekly}, \code{monthly}, \code{quarterly},
@@ -65,11 +64,11 @@ already imported using readShapeSpatial(). Either way the shape file must be in 
 \item{temporal.function.name}{character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
 Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.}
 
-\item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
+\item{spatial.function.name}{character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{locations} is a polygon, then
 the spatial data is returned. The default is \code{var}.}
 
 \item{interpMethod}{character string defining the method for interpolating the gridded data (see \code{raster::extract}). The options are: \code{'simple'}, \code{'bilinear'} and \code{''}. The default
-is \code{''}. This will set the interpolation to \code{'simple'} when \code{catchments} is a polygon(s) and to \code{'bilinear'} when \code{catchments} are points.}
+is \code{''}. This will set the interpolation to \code{'simple'} when \code{locations} is a polygon(s) and to \code{'bilinear'} when \code{locations} are points.}
 
 \item{ET.function}{character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
@@ -91,14 +90,14 @@ For \code{ET.MortonCRWE}, the options are \code{potential ET} or \code{shallow l
 \item{ET.constants}{list of constants from Evapotranspiration package required for ET calculations. To get the data use the command \code{data(constants)}. Default is \code{list()}.}
 }
 \value{
-When \code{catchments} are polygons and \code{spatial.function.name} is not \code{NA} or \code{""}, then the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
+When \code{locations} are polygons and \code{spatial.function.name} is not \code{NA} or \code{""}, then the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
 metrics named \code{catchmentTemporal.} with a suffix as defined by \code{temporal.function.name}). The second is the measure of spatial variability
 named \code{catchmentSpatial.} with a suffix as defined by \code{spatial.function.name}).
 
-When \code{catchments} are polygons and \code{spatial.function.name} does equal \code{NA} or \code{""}, then the returned variable is a \code{sp::SpatialPixelsDataFrame} where the first colum is the catchment IDs
+When \code{locations} are polygons and \code{spatial.function.name} does equal \code{NA} or \code{""}, then the returned variable is a \code{sp::SpatialPixelsDataFrame} where the first colum is the location/catchmet IDs
 and the latter columns are the results for each variable at each time point as defined by \code{temporal.timestep}.
 
-When \code{catchments} are points, the returned variable is a data.frame containing daily climate data at each point.
+When \code{locations} are points, the returned variable is a data.frame containing daily climate data at each point.
 }
 \description{
 extractCatchmentData extracts the AWAP climate data for each point or polygon. For the latter, either the daily spatial mean and variance (or user defined function) of
@@ -128,7 +127,13 @@ radiation is required for the ET function, data is only available from 1/1/1990.
 are dependent upon the end date extracted. Re-running the estimation of ET with a later extractTo data will change the estimates of ET
 prior to 1990.
 
-Also, when "catchments" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
+Some measures of ET require land surface elevation. Here, elevation at the centre of each 0.05 degree grid cell is obtained using the \code{elevatr} package, which here uses data from the
+Amazon Web Service AWS Open Data Terrain Tiles. The data sources change with the user set \code{DEM.res} zoom. The options are
+1 to 15. The default of 10 is reasonably computationally efficient and has a resolution of about 108 m, with is acceptable
+given the 0.05 degree resolution of the BOM source data grids equates to about 5 km x 5 km.
+For details see \url{https://github.com/tilezen/joerd/blob/master/docs/data-sources.md}
+
+Also, when "locations" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
 the closest 4 grid cells.
 
 Lastly, data is extracted for all time points and no temporal infilling is undertaken if the grid cells are blank.
@@ -163,13 +168,13 @@ data("catchments")
 catchments = catchments[1,]
 
 # Extract daily precip. data (not Tmin, Tmax, VPD, ET).
-# Note, the input "catchments" can also be a file to a ESRI shape file.
+# Note, the input "locations" can also be a file to a ESRI shape file.
 climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
               ncdfSolarFilename=file.names$ncdfSolarFilename,
               extractFrom=startDate, extractTo=endDate,
               getTmin = FALSE, getTmax = FALSE, getVprp = FALSE,
               getSolarrad = FALSE, getET = FALSE,
-              catchments=catchments,
+              locations=catchments,
               temporal.timestep = 'daily')
 
 # Extract the daily catchment average data.

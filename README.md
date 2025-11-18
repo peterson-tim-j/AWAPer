@@ -132,7 +132,7 @@ with(coordinates.data, text(sp::coordinates(coordinates.data)[,1],sp::coordinate
 climateData.data = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
                    extractFrom=as.Date("2010-08-01","%Y-%m-%d"),
                    extractTo=as.Date("2010-10-01","%Y-%m-%d"),
-                   catchments=coordinates.data,
+                   locations=coordinates.data,
                    getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F)
 
 
@@ -204,7 +204,7 @@ data(constants,package='Evapotranspiration')
 # the Jensen Haise estimate of potential ET.
 climateData.ET.JensenHaise.var = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
                                                       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2010-1-1","%Y-%m-%d"),
-                                                      extractTo=as.Date("2010-12-31","%Y-%m-%d"), catchments=catchments[2,], 
+                                                      extractTo=as.Date("2010-12-31","%Y-%m-%d"), locations=catchments[2,], 
                                                       DEM=DEM_9s, ET.function='ET.JensenHaise',
                                                       ET.timestep='daily', ET.constants=constants);
 
@@ -212,7 +212,7 @@ climateData.ET.JensenHaise.var = extractCatchmentData(ncdfFilename='AWAP_demo.nc
 # the Mortons CRAE estimate of potential ET.
 climateData.ET.MortonCRAE.var = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
                                                      ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2010-1-1","%Y-%m-%d"),
-                                                     extractTo=as.Date("2010-12-31","%Y-%m-%d"), catchments=catchments[2,], 
+                                                     extractTo=as.Date("2010-12-31","%Y-%m-%d"), locations=catchments[2,], 
                                                      DEM=DEM_9s, ET.function='ET.MortonCRAE',
                                                      ET.timestep='monthly', ET.constants=constants);
 
@@ -303,67 +303,67 @@ data(constants,package='Evapotranspiration')
 #----------------------------------------------
 climateData.ET.HargreavesSamani = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.HargreavesSamani',
       ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.JensenHaise = extractCatchmentData(ncdfFilename='AWAP_demo.nc', 
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.JensenHaise',
       ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.Makkink = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc',extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.Makkink'
       ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.McGuinnessBordne = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.McGuinnessBordne',
       ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.MortonCRAE = extractCatchmentData(ncdfFilename='AWAP_demo.nc', 
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
       ET.timestep = 'monthly', ET.constants= constants);
 
 climateData.ET.MortonCRAE.potentialET = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
       ET.timestep = 'monthly', ET.Mortons.est='potential ET', ET.constants= constants);
 
 climateData.ET.MortonCRAE.wetarealET = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
       ET.timestep = 'monthly', ET.Mortons.est='wet areal ET', ET.constants= constants);
 
 climateData.ET.MortonCRAE.actualarealET = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc',extractFrom=as.Date("2009-1-1","%Y-%m-%d"), 
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
       ET.timestep = 'monthly', ET.Mortons.est='actual areal ET', ET.constants= constants);
 
 climateData.ET.MortonCRWE = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRWE',
       ET.timestep = 'monthly', ET.constants= constants);
 
 climateData.ET.MortonCRWE.shallowLake = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRWE',
       ET.timestep = 'monthly', ET.Mortons.est = 'shallow lake ET', ET.constants= constants);
 
 climateData.ET.Turc = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),catchments=catchments, 
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
       spatial.function.name='IQR',DEM=DEM, ET.function='ET.Turc',
       ET.timestep = 'daily', ET.constants= constants);
 
@@ -534,7 +534,7 @@ data("catchments")
 monthlySumPrecip = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
                                          ncdfSolarFilename=file.names$ncdfSolarFilename,
                                          extractFrom=startDate, extractTo=endDate,
-                                         catchments=catchments,
+                                         locations=catchments,
                                          getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
                                          temporal.timestep = 'monthly', temporal.function.name = 'sum',
                                          spatial.function.name='var')
@@ -591,7 +591,7 @@ data("catchments")
 monthlyPrecipData = extractCatchmentData(ncdfFilename=ncdfFilename,
                                          ncdfSolarFilename=ncdfSolarFilename,
                                          extractFrom=startDate, extractTo=endDate,
-                                         catchments=catchments,
+                                         locations=catchments,
                                          getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,spatial.function.name = '',
                                          temporal.timestep = 'monthly', temporal.function.name = 'sum')
 

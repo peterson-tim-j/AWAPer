@@ -29,7 +29,13 @@
 #' are dependent upon the end date extracted. Re-running the estimation of ET with a later extractTo data will change the estimates of ET
 #' prior to 1990.
 #'
-#' Also, when "catchments" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
+#' Some measures of ET require land surface elevation. Here, elevation at the centre of each 0.05 degree grid cell is obtained using the \code{elevatr} package, which here uses data from the
+#' Amazon Web Service AWS Open Data Terrain Tiles. The data sources change with the user set \code{DEM.res} zoom. The options are
+#' 1 to 15. The default of 10 is reasonably computationally efficient and has a resolution of about 108 m, with is acceptable
+#' given the 0.05 degree resolution of the BOM source data grids equates to about 5 km x 5 km.
+#' For details see \url{https://github.com/tilezen/joerd/blob/master/docs/data-sources.md}
+#'
+#' Also, when "locations" is points (not polygons), then the netCDF grids are interpolate using bilinear interpolation of
 #' the closest 4 grid cells.
 #'
 #' Lastly, data is extracted for all time points and no temporal infilling is undertaken if the grid cells are blank.
@@ -45,18 +51,17 @@
 #' @param getSolarrad logical variable for extracting solar radiation. Default is \code{TRUE}.
 #' @param getET logical variable for calculating Morton's potential ET. Note, to calculate set \code{getTmin=T}, \code{getTmax=T},
 #' \code{getVprp=T} and \code{getSolarrad=T}. Default is \code{TRUE}.
-#' @param DEM is either the full file name to a ESRI ASCII grid (as lat/long and using GDA94) or a raster class grid object. The DEM is used
-#' for the calculation of Morton's PET. The Australian 9 second DEM can be loaded using \code{getDEM()}.
-#' @param catchments is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
+#' @param DEM.res is the zoom resolution for the land surface elevation. \code{elevatr} package is used to extract elevation (metres) from AWS Open Data Terrain Tiles. This input controls the zoom resolution. Higher values increase accuracy, but are significantly slower. See details. Default is 10.
+#' @param locations is either the full file name to an ESRI shape file of points or polygons (latter assumed to be catchment boundaries) or a shape file
 #' already imported using readShapeSpatial(). Either way the shape file must be in long/lat (i.e. not projected), use the ellipsoid GRS 80, and the first column must be a unique ID.
 #' @param temporal.timestep character string for the time step of the output data. The options are \code{daily}, \code{weekly}, \code{monthly}, \code{quarterly},
 #' \code{annual}  or a user-defined index for, say, water-years (see \code{xts::period.apply}). The default is \code{daily}.
 #' @param temporal.function.name character string for the function name applied to aggregate the daily data to \code{temporal.timestep}.
 #' Note, NA values are not removed from the aggregation calculation. If this is required then consider writing your own function. The default is \code{mean}.
-#' @param spatial.function.name character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{catchments} is a polygon, then
+#' @param spatial.function.name character string for the function name applied to estimate the daily spatial spread in each variable. If \code{NA} or \code{""} and \code{locations} is a polygon, then
 #' the spatial data is returned. The default is \code{var}.
 #' @param interpMethod character string defining the method for interpolating the gridded data (see \code{raster::extract}). The options are: \code{'simple'}, \code{'bilinear'} and \code{''}. The default
-#' is \code{''}. This will set the interpolation to \code{'simple'} when \code{catchments} is a polygon(s) and to \code{'bilinear'} when \code{catchments} are points.
+#' is \code{''}. This will set the interpolation to \code{'simple'} when \code{locations} is a polygon(s) and to \code{'bilinear'} when \code{locations} are points.
 #' @param ET.function character string for the evapotranspiration function to be used. The methods that can be derived from the AWAP data are are \code{\link[Evapotranspiration]{ET.Abtew}},
 #' \code{\link[Evapotranspiration]{ET.HargreavesSamani}}, \code{\link[Evapotranspiration]{ET.JensenHaise}}, \code{\link[Evapotranspiration]{ET.Makkink}}, \code{\link[Evapotranspiration]{ET.McGuinnessBordne}}, \code{\link[Evapotranspiration]{ET.MortonCRAE}} ,
 #' \code{\link[Evapotranspiration]{ET.MortonCRWE}}, \code{\link[Evapotranspiration]{ET.Turc}}. Default is \code{\link[Evapotranspiration]{ET.MortonCRAE}}.
@@ -70,14 +75,14 @@
 #' @param ET.constants list of constants from Evapotranspiration package required for ET calculations. To get the data use the command \code{data(constants)}. Default is \code{list()}.
 #'
 #' @return
-#' When \code{catchments} are polygons and \code{spatial.function.name} is not \code{NA} or \code{""}, then the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
+#' When \code{locations} are polygons and \code{spatial.function.name} is not \code{NA} or \code{""}, then the returned variable is a list variable containing two data.frames. The first is the areal aggreggated climate
 #' metrics named \code{catchmentTemporal.} with a suffix as defined by \code{temporal.function.name}). The second is the measure of spatial variability
 #' named \code{catchmentSpatial.} with a suffix as defined by \code{spatial.function.name}).
 #'
-#' When \code{catchments} are polygons and \code{spatial.function.name} does equal \code{NA} or \code{""}, then the returned variable is a \code{sp::SpatialPixelsDataFrame} where the first colum is the catchment IDs
+#' When \code{locations} are polygons and \code{spatial.function.name} does equal \code{NA} or \code{""}, then the returned variable is a \code{sp::SpatialPixelsDataFrame} where the first colum is the location/catchmet IDs
 #' and the latter columns are the results for each variable at each time point as defined by \code{temporal.timestep}.
 #'
-#' When \code{catchments} are points, the returned variable is a data.frame containing daily climate data at each point.
+#' When \code{locations} are points, the returned variable is a data.frame containing daily climate data at each point.
 #'
 #' @seealso
 #' \code{\link{makeNetCDF_file}} for building the NetCDF files of daily climate data.
@@ -112,13 +117,13 @@
 #' catchments = catchments[1,]
 #'
 #' # Extract daily precip. data (not Tmin, Tmax, VPD, ET).
-#' # Note, the input "catchments" can also be a file to a ESRI shape file.
+#' # Note, the input "locations" can also be a file to a ESRI shape file.
 #' climateData = extractCatchmentData(ncdfFilename=file.names$ncdfFilename,
 #'               ncdfSolarFilename=file.names$ncdfSolarFilename,
 #'               extractFrom=startDate, extractTo=endDate,
 #'               getTmin = FALSE, getTmax = FALSE, getVprp = FALSE,
 #'               getSolarrad = FALSE, getET = FALSE,
-#'               catchments=catchments,
+#'               locations=catchments,
 #'               temporal.timestep = 'daily')
 #'
 #' # Extract the daily catchment average data.
@@ -139,8 +144,8 @@ extractCatchmentData <- function(
   getVprp = TRUE,
   getSolarrad = TRUE,
   getET = TRUE,
-  DEM='',
-  catchments='',
+  DEM.res=10,
+  locations=NULL,
   temporal.timestep = 'daily',
   temporal.function.name = 'mean',
   spatial.function.name = 'var',
@@ -265,62 +270,52 @@ extractCatchmentData <- function(
         stop('Calculation of ET for the given function requires extractions of solar radiation (i.e. set getSolarrad=T)')
       }
     }
-  }
 
-  # Checking the DEM
-  if (getET) {
-    if (is.character(DEM)) {
-      if (!file.exists(DEM))
-        stop(paste('The following input file for the DEM could not be found:',DEM))
+    if (!is.numeric(DEM.res))
+      stop('DEM.res must be a numeric value between 1 anf 15.')
 
-      # Read in DEM
-      DEM = sp::read.asciigrid(DEM,  proj4string = sp::CRS("+proj=longlat +ellps=GRS80"))
-
-      # Convert to Raster object
-      DEM = raster::raster(DEM)
-    } else if (!methods::is(DEM,"RasterLayer")) {
-      stop('The input for the DEM is not a raster layer object.')
-    }
+    if (DEM.res < 1 || DEM.res>15)
+      stop('DEM.res must be a numeric value between 1 anf 15.')
   }
 
   # Open file with polygons
-  if (is.character(catchments)) {
-    if (!file.exists(catchments))
-      stop(paste('The following input file for the catchments could not be found:',catchments))
+  if (is.character(locations)) {
+    if (!file.exists(locations))
+      stop(paste('The following input file for the locations could not be found:',locations))
 
     # Read in polygons
-    catchments <- sf::st_read(catchments)
+    locations <- sf::st_read(locations)
 
     # Drop z vector if included
-    catchments = sf::st_zm(catchments, drop=T)
+    locations = sf::st_zm(locations, drop=T)
 
     # Convert to sp spatial object
-    catchments = methods::as(catchments,'Spatial')
+    locations = methods::as(locations,'Spatial')
 
-  } else if (!methods::is(catchments,"SpatialPolygonsDataFrame") && !methods::is(catchments,"SpatialPointsDataFrame")) {
-    stop('The input for "catchments" must be a file name to a shape file or a SpatialPolygonsDataFrame or a SpatialPointsDataFrame object.')
+  } else if (!methods::is(locations,"SpatialPolygonsDataFrame") && !methods::is(locations,"SpatialPointsDataFrame")) {
+    stop('The input for "locations" must be a file name to a shape file or a SpatialPolygonsDataFrame or a SpatialPointsDataFrame object.')
   }
 
-  # Check projection of catchments
-  if (is.na(sp::proj4string(catchments))) {
-    message('WARNING: The projection string of the catchment boundaries is NA. Setting to +proj=longlat +ellps=GRS80.')
-    sp::proj4string(catchments) = '+proj=longlat +ellps=GRS80'
+  # Check projection of locations
+  if (is.na(sp::proj4string(locations))) {
+    message('WARNING: The projection string of the locations is NA. Setting to +proj=longlat +ellps=GRS80.')
+    sp::proj4string(locations) = '+proj=longlat +ellps=GRS80'
   }
-  if (sp::proj4string(catchments) != '+proj=longlat +ellps=GRS80') {
-    message('WARNING: The projection string of the catchment boundaries does not appear to be +proj=longlat +ellps=GRS80. Attempting to transform coordinates...')
-    catchments = sp::spTransform(catchments,sp::CRS('+proj=longlat +ellps=GRS80'))
+  if (sp::proj4string(locations) != '+proj=longlat +ellps=GRS80') {
+    message('WARNING: The projection string of the locations does not appear to be +proj=longlat +ellps=GRS80. Attempting to transform coordinates...')
+    locations = sp::spTransform(locations,sp::CRS('+proj=longlat +ellps=GRS80'))
   }
 
   # Check each catchment or point has a unique (non-NA) ID. Note.
-  if (any(is.na(catchments[[1]])))
-    stop('The list of catchments IDs (first column) contains NAs. Please remove these or rename')
-  if ( length(unique(catchments[[1]])) != length(catchments[[1]]) )
-    stop('The list of catchments IDs (first column) is not unique. Please remove the duplicates')
+  if (any(is.na(locations[[1]])))
+    stop('The list of locations IDs (first column) contains NAs. Please remove these or rename')
+  if ( length(unique(locations[[1]])) != length(locations[[1]]) )
+    stop('The list of locations IDs (first column) is not unique. Please remove the duplicates')
 
-  # Check if catchments are points or a polygon.
-  isCatchmentsPolygon=TRUE;
-  if (methods::is(catchments,"SpatialPointsDataFrame")) {
-    isCatchmentsPolygon=FALSE;
+  # Check if locations are points or a polygon.
+  islocationsPolygon=TRUE;
+  if (methods::is(locations,"SpatialPointsDataFrame")) {
+    islocationsPolygon=FALSE;
   }
 
   # Check the interpolation method.
@@ -328,7 +323,7 @@ extractCatchmentData <- function(
     stop('The input for "interpMethod" must either "simple" or "bilinear".')
   }
   if (interpMethod=='') {
-    if (isCatchmentsPolygon) {
+    if (islocationsPolygon) {
       interpMethod='simple';
     } else {
       interpMethod='bilinear';
@@ -337,7 +332,7 @@ extractCatchmentData <- function(
 
   # Check if the spatial data should be returned or analysed.
   do.spatial.analysis=T
-  if (isCatchmentsPolygon && is.na(spatial.function.name) || (is.character(spatial.function.name) && spatial.function.name=='')) {
+  if (islocationsPolygon && is.na(spatial.function.name) || (is.character(spatial.function.name) && spatial.function.name=='')) {
     do.spatial.analysis=F
   }
 
@@ -413,7 +408,7 @@ extractCatchmentData <- function(
   # Recalculate the time points to extract.
   timepoints2Extract = seq( as.Date(extractFrom,'%Y-%m-%d'), by="day", to=as.Date(extractTo,'%Y-%m-%d'))
 
-  message(paste('    Data will be extracted from ',format.Date(extractFrom,'%Y-%m-%d'),' to ', format.Date(extractTo,'%Y-%m-%d'),' at ',length(catchments),' catchments '));
+  message(paste('    Data will be extracted from ',format.Date(extractFrom,'%Y-%m-%d'),' to ', format.Date(extractTo,'%Y-%m-%d'),' at ',length(locations),' locations '));
   message('Starting data extraction:')
 
   # Get one netCDF layer.
@@ -424,25 +419,25 @@ extractCatchmentData <- function(
 
   # Build a matrix of catchment weights, lat longs, and a loopup table for each catchment.
   message('... Building catchment weights');
-  if (isCatchmentsPolygon) {
+  if (islocationsPolygon) {
 
     w.all = c();
     longLat.all = matrix(NA,0,2)
-    catchment.lookup = matrix(NA,length(catchments),2);
+    location.lookup = matrix(NA,length(locations),2);
 
-    for (i in 1:length(catchments)) {
+    for (i in 1:length(locations)) {
       if (i%%10 ==0 ) {
-        message(paste('   ... Building weights for catchment ', i,' of ',length(catchments)));
+        message(paste('   ... Building weights for catchment ', i,' of ',length(locations)));
         raster::removeTmpFiles(h=0)
       }
 
-      # Extract the weights for grid cells within the catchments polygon.
+      # Extract the weights for grid cells within the locations polygon.
       # Note, the AWAP raster grid is cropped to the extent of the catchment polygon.
       # This was undertaken to improve the run time performance but more importantly to overcome an error
       # thrown by raster::rasterize when the raster is large (see https://github.com/rspatial/raster/issues/192).
-      # This solution should work when the catchments polygon is not very large (e.g. not a reasonable fraction of the
+      # This solution should work when the locations polygon is not very large (e.g. not a reasonable fraction of the
       # Australian land mass)
-      w = raster::rasterize(x=catchments[i,], y=raster::crop(precipGrd, catchments[i,], snap='out'), fun='last',getCover=T)
+      w = raster::rasterize(x=locations[i,], y=raster::crop(precipGrd, locations[i,], snap='out'), fun='last',getCover=T)
 
       # Extract the mask values (i.e. fraction of each grid cell within the polygon.
       w2 = raster::getValues(w);
@@ -453,13 +448,13 @@ extractCatchmentData <- function(
       # Normalise the weights
       w = w/sum(w);
 
-      # Add to data set of all catchments
+      # Add to data set of all locations
       if (length(w.all)==0) {
-        catchment.lookup[i,] = c(1,length(w));
+        location.lookup[i,] = c(1,length(w));
         w.all = w;
         longLat.all = wLongLat;
       } else {
-        catchment.lookup[i,] = c(length(w.all)+1,length(w.all)+length(w));
+        location.lookup[i,] = c(length(w.all)+1,length(w.all)+length(w));
         w.all = c(w.all, w)
         longLat.all = rbind(longLat.all, wLongLat);
       }
@@ -467,18 +462,23 @@ extractCatchmentData <- function(
   } else {
 
     # For point data, set weights to 1 and coordinates from point locations
-    w.all = rep(1,length(catchments))
-    longLat.all = cbind(as.numeric(sp::coordinates(catchments)[,1]),as.numeric(sp::coordinates(catchments)[,2]))
-    catchment.lookup = cbind(seq(1,length(catchments),by=1),seq(1,length(catchments),by=1));
+    w.all = rep(1,length(locations))
+    longLat.all = cbind(as.numeric(sp::coordinates(locations)[,1]),as.numeric(sp::coordinates(locations)[,2]))
+    location.lookup = cbind(seq(1,length(locations),by=1),seq(1,length(locations),by=1));
   }
 
   raster::removeTmpFiles(h=0)
 
   if (getSolarrad && getET) {
-    message('... Extracted DEM elevations.')
-    DEMpoints <- raster::extract(DEM, longLat.all)
+    message('... Extracted DEM elevations from AWS.')
+    longLat.all.df = data.frame(x=longLat.all[,1], y=longLat.all[,2])
+    crsAUS = sp::CRS("+proj=longlat +ellps=GRS80")
+    DEMpoints = elevatr::get_elev_point(locations=data.frame(x=longLat.all[,1], y=longLat.all[,2]),
+                                        prj = crsAUS,
+                                        src='aws',ncpu=8, z=DEM.res)
+    DEMpoints = DEMpoints$elevation
     if (any(is.na(DEMpoints))) {
-      warning('NA DEM values were derived. Please check the projections of the DEM and shape file.')
+      warning('NA DEM values were derived. Trying increasing the resolution zoom.')
     }
   }
 
@@ -500,7 +500,7 @@ extractCatchmentData <- function(
     extractDay_solar = c();
   }
 
-  message('... Starting to extract data across all catchments:')
+  message('... Starting to extract data across all locations:')
   for (j in 1:length(timepoints2Extract)){
 
     #if (j>=8466)
@@ -626,14 +626,14 @@ extractCatchmentData <- function(
       stop('ET.constants is empty or not a list.')
   }
   message('... Calculating catchment weighted daily data.')
-  for (i in 1:length(catchments)) {
+  for (i in 1:length(locations)) {
 
     if (j%%100 ==0 ) {
-      message(paste('    ... Calculating catchment ', i,' of ',length(catchments)));
+      message(paste('    ... Calculating location ', i,' of ',length(locations)));
     }
 
     # Get the weights for the catchment
-    ind = catchment.lookup[i,1]:catchment.lookup[i,2]
+    ind = location.lookup[i,1]:location.lookup[i,2]
     w = w.all[ind]
 
     # Calculate Morton's PET at each grid cell and time point. NOTE, va is divided by 10 to go from hPa to Kpa
@@ -745,7 +745,7 @@ extractCatchmentData <- function(
 
     }
 
-    # Calculate catchment stats and add data to the data.frame for all catchments
+    # Calculate catchment stats and add data to the data.frame for all locations
     #----------------------------------------------------------------------------------------
     extractDate = ISOdate(year=extractYear,month=extractMonth,day=extractDay)
 
@@ -878,7 +878,7 @@ extractCatchmentData <- function(
     #-----------------------------
     if (do.spatial.analysis) {
       # Create data frame for final results
-      catchmentAvgTmp = data.frame(CatchmentID=catchments[i,1],year=as.integer(format(timesteps,"%Y")) ,month=as.integer(format(timesteps,"%m")),day=as.integer(format(timesteps,"%d")),row.names = NULL);
+      catchmentAvgTmp = data.frame(CatchmentID=locations[i,1],year=as.integer(format(timesteps,"%Y")) ,month=as.integer(format(timesteps,"%m")),day=as.integer(format(timesteps,"%d")),row.names = NULL);
       catchmentVarTmp = catchmentAvgTmp
 
       # Check if there are enough grid cells to calculate the variance.
@@ -945,8 +945,8 @@ extractCatchmentData <- function(
       # Do not undertake spatial aggregation. Instead collate
       # results for each grid cell.
 
-      nGridCells = catchment.lookup[i,2] - catchment.lookup[i,1] +1
-      catchmentAvgTmp = data.frame(CatchmentID=rep(catchments@data[i,1],nGridCells))
+      nGridCells = location.lookup[i,2] - location.lookup[i,1] +1
+      catchmentAvgTmp = data.frame(CatchmentID=rep(locations@data[i,1],nGridCells))
       catchmentVar = NA
       if (getPrecip) {
         newDataCol = as.data.frame(t(precip.xts))
@@ -1000,7 +1000,7 @@ extractCatchmentData <- function(
   }
   # end for-loop
 
-  if (isCatchmentsPolygon) {
+  if (islocationsPolygon) {
     if (do.spatial.analysis) {
       catchmentAvg = list(catchmentAvg, catchmentVar)
       names(catchmentAvg) = c(paste('catchmentTemporal.',temporal.function.name,sep=''), paste('catchmentSpatial.',spatial.function.name,sep=''))
