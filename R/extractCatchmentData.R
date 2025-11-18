@@ -179,10 +179,12 @@ extractCatchmentData <- function(
   if (is.character(extractTo))
     extractTo = as.Date(extractTo,'%Y-%m-%d');
   if (extractFrom >= extractTo)
-    stop('The update dates are invalid. extractFrom must be prior to extractTo')
+    stop('The extract dates are invalid. extractFrom must be prior to extractTo.')
+  if (extractTo > as.Date(Sys.Date()-1,"%Y-%m-%d"))
+    stop('The extractTo date must be prior to today.')
   timepoints2Extract = seq( as.Date(extractFrom,'%Y-%m-%d'), by="day", to=as.Date(extractTo,'%Y-%m-%d'))
   if (length(timepoints2Extract)==0)
-    stop('The dates to extract produce a zero vector of dates of zero length. Check the inputs dates are as YYYY-MM-DD')
+    stop('The dates to extract produce a zero vector of dates of zero length. Check the inputs dates are as YYYY-MM-DD.')
 
   # Check time step
   temporal.timestep.options = c('daily','weekly','monthly','quarterly','annual', 'period')
