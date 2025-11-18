@@ -263,6 +263,7 @@ makeNetCDF_file <- function(
 
       # Set data time points
       timepoints = seq( as.Date("1900-01-01","%Y-%m-%d"), by="day", to=updateTo)
+      timepoints = seq( as.Date(updateFrom,"%Y-%m-%d"), by="day", to=updateTo)
 
       # Get x and y vectors (dimensions)
       Longvector = seq(SWLong, by=DPixel,length.out = nCols)
@@ -271,7 +272,6 @@ makeNetCDF_file <- function(
       # define dimensions
       londim <- ncdf4::ncdim_def("Long","degrees",vals=Longvector)
       latdim <- ncdf4::ncdim_def("Lat","degrees",vals=Latvector)
-      timedim <- ncdf4::ncdim_def("time","days since 1900-01-01 00:00:00.0 -0:00",unlim=T, vals=0:(length(timepoints)-1), calendar='standard')
 
       # define variables
       fillvalue <- NA
@@ -380,7 +380,7 @@ makeNetCDF_file <- function(
     if (length(timepoints2Update)==0)
         stop('The dates to update produce a zero vector of dates of zero length. Check the inputs dates are as YYYY-MM-DD')
 
-    message(paste('... NetCDF data will be  extracted from ',format.Date(updateFrom,'%Y-%m-%d'),' to ', format.Date(updateTo,'%Y-%m-%d')));
+    message(paste('... NetCDF data will be  updated from ',format.Date(updateFrom,'%Y-%m-%d'),' to ', format.Date(updateTo,'%Y-%m-%d')));
 
     # Start Filling the netCDF grid.
     message('... Starting to add data AWAP netcdf file.')
