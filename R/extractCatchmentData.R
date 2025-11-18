@@ -6,8 +6,8 @@
 #' each climate metric is calculated or the spatial data is returned.
 #'
 #' @details
-#' Daily data is extracted and can be aggregated to a weekly, monthly, quarterly, annual or a user-defined timestep using a user-defined funcion
-#' (e.g. sum, mean, min, max as defined by \code{temporal.function.name}). The temporally aggreated data at each grid cell is then used to derive the spatial
+#' Daily data is extracted and can be aggregated to a weekly, monthly, quarterly, annual or a user-defined timestep using a user-defined function
+#' (e.g. sum, mean, min, max as defined by \code{temporal.function.name}). The temporally aggregated data at each grid cell is then used to derive the spatial
 #' mean or the spatial variance (or any other function as defined by \code{spatial.function.name}).
 #'
 #' The calculation of the spatial mean uses the fraction of each AWAP grid cell within the catchment polygon.
@@ -20,9 +20,9 @@
 #' and end dates are input by the user.
 #'
 #' The ET can be calculated using one of eight methods at a user defined calculation time-step; that is the \code{ET.timestep} defines the
-#' time step at which the estimates are serived and differs from the output timestep as defined by \code{temporal.function.name}). When \code{ET.timestep} is monthly or annual then
+#' time step at which the estimates are derived and differs from the output timestep as defined by \code{temporal.function.name}). When \code{ET.timestep} is monthly or annual then
 #' the ET estimate is linearly interpolated to a daily time step (using zoo:na.spline()) and then constrained to >=0. In calculating ET, the input data
-#' is pre-processed using Evapotranspiration::ReadInputs() such that missing days, missing enteries and abnormal values are interpolated
+#' is pre-processed using Evapotranspiration::ReadInputs() such that missing days, missing entries and abnormal values are interpolated
 #' (by default) with the former two interpolated using the "DoY average", i.e. replacement with same day-of-the-year average. Additionally, when AWAP solar
 #' radiation is required for the ET function, data is only available from 1/1/1990. To derive ET values <1990, the average solar radiation for each day of the year from
 #' 1/1/990 to "extractTo" is derived (i.e. 365 values) and then applied to each day prior to 1990. Importantly, in this situation the estimates of ET <1990
