@@ -1,7 +1,7 @@
 Package: AWAPer
 Type: Package
 Title: Catchment Area Weighted Climate Data Anywhere in Australia
-Version: 0.1.48
+Version: 0.1.50
 Authors@R: c(
     person("Tim", "Peterson", email = "tim.peterson@monash.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-1885-0826")),
     person("Conrad", "Wasko", email = "conrad.wasko@unimelb.edu.au", role = "ctb", comment = c(ORCID = "0000-0002-9166-8289"))) 
