@@ -95,3 +95,7 @@ Dec 30 2020
 * extractCatchmentData() input 'catchments' changed to 'locations'. This is done to avoid confutions with  data(catchments).
 * Check added on extractTo to be prior to today.
 * Check added on extraction dates to ensure greater than the ET.timestep.
+
+19 Nov 2025
+* netCDF dataset range embedded into units definition of the time dimensions.
+* netCDF date range check during extraction. extractFrom and extractTo adjusted to be within data set range.

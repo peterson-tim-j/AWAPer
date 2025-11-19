@@ -389,6 +389,15 @@ extractCatchmentData <- function(
   tday = as.integer(unlist(tdstr)[3])
   tyear = as.integer(unlist(tdstr)[1])
   timePoints_R = as.Date(chron::chron(timePoints, origin = c(month=tmonth, day=tday, year=tyear),format=c(dates = "y-m-d")));
+
+  # Get start and end date of netCDF data
+  doDataExtendCheck = F
+  if (length(tustr[[1]])==12) {
+    ncdf.dataFrom = as.Date(tustr[[1]][8], '%Y-%m-%d')
+    ncdf.dataTo = as.Date(tustr[[1]][12], '%Y-%m-%d')
+    doDataExtendCheck = T
+  }
+
   if (getSolarrad) {
     tunits <- ncdf4::ncatt_get(awap_solar, "time", "units")
     tustr <- strsplit(tunits$value, " ")
@@ -397,20 +406,55 @@ extractCatchmentData <- function(
     tday = as.integer(unlist(tdstr)[3])
     tyear = as.integer(unlist(tdstr)[1])
     timePoints_solar_R = as.Date(chron::chron(timePoints_solar, origin = c(tmonth, tday, tyear),format=c(dates = "y-m-d")));
+
+    # Get start and end datea of netCDF data
+    if (length(tustr[[1]]==12)) {
+      ncdf_solar.dataFrom = as.Date(tustr[[1]][8], '%Y-%m-%d')
+      ncdf_solar.dataTo = as.Date(tustr[[1]][12], '%Y-%m-%d')
+    }
   }
 
-  # Write summary of Net CDF data.
-  message('Extraction data summary:');
-  message(paste('    NetCDF non-solar radiation climate data exists from ',format.Date(min(timePoints_R),'%Y-%m-%d'),' to ', format.Date(max(timePoints_R),'%Y-%m-%d')));
-  if (getSolarrad)
-    message(paste('    NetCDF solar radiation data exists from ',format.Date(min(timePoints_solar_R),'%Y-%m-%d'),' to ', format.Date(max(timePoints_solar_R),'%Y-%m-%d')));
+  # Build and provide summary of extraction dates and data extent.
+  message('Extraction data summary:')
+  if (doDataExtendCheck) {
 
-  # Limit the extraction time points to the data range
-  extractFrom = max(c(extractFrom,min(timePoints_R)));
-  if (getSolarrad) {
-    extractTo = min(c(extractTo,max(timePoints_R),max(timePoints_solar_R)));
-  } else {
-    extractTo = min(c(extractTo,max(timePoints_R)));
+    # Write summary of Net CDF data.
+    message(paste('    NetCDF non-solar radiation climate data exists from', ncdf.dataFrom,'to', ncdf.dataTo));
+    if (getSolarrad)
+      message(paste('    NetCDF solar radiation data exists from', ncdf_solar.dataFrom,'to', ncdf_solar.dataTo));
+
+    # Warn user is the requested extraction dates are outside of the data record length.
+    if (getSolarrad) {
+      if (extractFrom < max(ncdf.dataFrom,ncdf_solar.dataFrom)) {
+        message('    WARNING: The extraction start date is prior to the existing data start date.');
+        message('             Dates are adjusted accordingly.');
+        message('             Consider extending the existing date range using makeNetCDF_file()');
+      }
+      if (extractTo > min(ncdf.dataTo, ncdf_solar.dataTo)) {
+        message('    WARNING: The extraction end date is after to the existing data end date.');
+        message('             Dates are adjusted accordingly.');
+        message('             Consider extending the existing date range using makeNetCDF_file()');
+      }
+    } else {
+      if (extractFrom < ncdf.dataFrom) {
+        message('    WARNING: The extraction start date is prior to the existing data start date.');
+        message('             Dates are adjusted accordingly.');
+        message('             Consider extending the existing date range using makeNetCDF_file()');
+      }
+      if (extractTo > ncdf.dataTo) {
+        message('    WARNING: The extraction end date is after to the existing data end date.');
+        message('             Dates are adjusted accordingly.');
+        message('             Consider extending the existing date range using makeNetCDF_file()');
+      }
+    }
+
+    # Limit the extraction time points to the data range
+    extractFrom = max(c(extractFrom, ncdf.dataFrom))
+    extractto = min(c(extractTo, ncdf.dataTo))
+    if (getSolarrad) {
+      extractFrom = min(c(extractFrom,ncdf_solar.dataFrom));
+      extractTo = min(c(extractTo,ncdf_solar.dataTo));
+    }
   }
 
   if (extractTo < extractFrom) {
@@ -429,7 +473,7 @@ extractCatchmentData <- function(
     solarGrd = raster::raster(ncdfSolarFilename, band=nTimePoints_solar, varname='solarrad',lvar=3)
   }
 
-  # Build a matrix of catchment weights, lat longs, and a loopup table for each catchment.
+  # Build a matrix of catchment weights, lat longs, and a lookup table for each catchment.
   message('... Building catchment weights');
   if (islocationsPolygon) {
 
