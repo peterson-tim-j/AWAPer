@@ -22,7 +22,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        r-version: ['4.3.1', '4.5.0']
+        r-version: ['4.4.0']
 
     steps:
       - uses: actions/checkout@v4
@@ -35,12 +35,12 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
-      - uses: r-lib/actions/check-r-package@v2
-      - name: Install dependencies
+      - name: Install R dependencies
         run: |
           install.packages(c("remotes", "rcmdcheck"))
-          remotes::install_deps(dependencies = TRUE)
-        shell: Rscript {0}
+          remotes::install_deps(dependencies = TRUE)    
+        shell: Rscript {0}  
+      - uses: r-lib/actions/check-r-package@v2
       - name: Check
         run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
         shell: Rscript {0}
