@@ -31,7 +31,7 @@ jobs:
         with:
           r-version: ${{ matrix.r-version }}
       - name: Set up system dependencies    
-      - uses: r-lib/actions/setup-r-dependencies@f57f1301a053485946083d7a45022b278929a78a
+        uses: r-lib/actions/setup-r-dependencies@f57f1301a053485946083d7a45022b278929a78a
         with:
           extra-packages:any::rcmdcheck
           needs:check
