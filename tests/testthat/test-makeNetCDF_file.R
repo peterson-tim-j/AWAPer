@@ -1,12 +1,12 @@
 #Test the create of netCDF files
-test_that("Precipitation netCDF grid can be created",
+test_that("netCDF grid can be created",
     {
       # define temp direcory for netCDF files
       fdir = tempdir()
 
       # Set dates for building netCDFs and extracting data from yesterday to one week ago.
-      startDate = Sys.Date()-8
-      endDate = Sys.Date()-1
+      startDate = Sys.Date()-9
+      endDate = Sys.Date()-2
 
       # Set names for netCDF files (in the system temp. directory).
       ncdfFilename = file.path(fdir, 'data.nc')
@@ -50,7 +50,7 @@ test_that("Precipitation netCDF grid can be created",
 
       # Update netcDF grids and expect no errors
       endDate = startDate
-      startDate = Sys.Date()-10
+      startDate = Sys.Date()-11
       expect_no_error(
         makeNetCDF_file(ncdfFilename=ncdfFilename,
                         ncdfSolarFilename=ncdfSolarFilename,
