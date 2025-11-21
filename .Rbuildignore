@@ -1,5 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 AWAPer.pdf
+^\.RData$
 ^LICENSE\.md$
 build_commands.R
+^\.github$
