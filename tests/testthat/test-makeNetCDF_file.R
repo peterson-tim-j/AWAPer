@@ -1,22 +1,29 @@
 #Test the create of netCDF files
 test_that("netCDF grid can be created",
     {
-      # define temp direcory for netCDF files
-      fdir = tempdir()
 
-      # Set dates for building netCDFs and extracting data from yesterday to one week ago.
-      startDate = Sys.Date()-9
-      endDate = Sys.Date()-2
+      expect_no_error(
+        {
+          # Set dates for building netCDFs and extracting data from yesterday to one week ago.
+          startDate = Sys.Date()-9
+          endDate = Sys.Date()-2
 
-      # Set names for netCDF files (in the system temp. directory).
-      ncdfFilename = file.path(fdir, 'data.nc')
-      ncdfSolarFilename = file.path(fdir, 'solar.nc')
+          # define temp direcory for netCDF files
+          fdir = tempdir()
+          setwd(fdir)
 
+          # Set names for netCDF files (in the system temp. directory).
+          ncdfFilename = file.path(fdir,'data.nc')
+          ncdfSolarFilename = file.path(fdir, 'solar.nc')
 
-      # Build netCDF grids for all data but only over the defined time period.
-      file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
-                                   ncdfSolarFilename=ncdfSolarFilename,
-                                   updateFrom=startDate, updateTo=endDate)
+          # Build netCDF grids for all data but only over the defined time period.
+          file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+                                       ncdfSolarFilename=ncdfSolarFilename,
+                                       updateFrom=startDate, updateTo=endDate)
+        },
+        message='Testing creaion of netCDF grids.'
+      )
+
 
       # Test the files were created
       expect_true(file.exists(ncdfFilename),'Testing creation of non-solar netCDF file for data from one week ago')
@@ -57,5 +64,10 @@ test_that("netCDF grid can be created",
                         updateFrom=startDate, updateTo=endDate),
         message='Testing updating of netCDF grids by two days prior'
       )
+
+      # Delete temp files and folder
+      unlink(ncdfFilename)
+      unlink(ncdfSolarFilename)
+      unlink(fdir, recursive = TRUE)
     }
 )

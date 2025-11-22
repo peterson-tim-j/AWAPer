@@ -6,8 +6,7 @@
 #' \code{\link{extractCatchmentData}} for extracting catchment average climate data.
 #'
 #' @examples
-#' # Load example cacthment boundaries.
+#' # Load example catchment boundaries.
 #' data("catchments")
 #'
-#' @export
 "catchments"

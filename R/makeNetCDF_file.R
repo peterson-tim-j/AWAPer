@@ -73,6 +73,10 @@
 #' file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 #'              ncdfSolarFilename=ncdfSolarFilename,
 #'              updateFrom=NA)
+#'
+#'  # Remove temp. files
+#'  unlink(ncdfFilename)
+#'  unlink(ncdfSolarFilename)
 #' }
 #' @export
 makeNetCDF_file <- function(
@@ -88,7 +92,6 @@ makeNetCDF_file <- function(
   urlTmax = getURLs()$Tmax,
   urlVprp = getURLs()$vprp,
   urlSolarrad = getURLs()$solarrad)  {
-
 
   # To Update HTML documentationm:
   # devtools::document()

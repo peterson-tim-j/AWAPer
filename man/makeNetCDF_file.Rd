@@ -100,6 +100,10 @@ file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
              ncdfSolarFilename=ncdfSolarFilename,
              updateFrom=NA)
+
+ # Remove temp. files
+ unlink(ncdfFilename)
+ unlink(ncdfSolarFilename)
 }
 }
 \references{

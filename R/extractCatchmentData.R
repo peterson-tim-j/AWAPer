@@ -131,6 +131,10 @@
 #'
 #' # Extract the daily catchment variance data.
 #' climateDataVar = climateData$catchmentSpatial.var
+#'
+#' # Remove temp. files
+#' unlink(ncdfFilename)
+#' unlink(ncdfSolarFilename)
 #' }
 #' @export
 extractCatchmentData <- function(
