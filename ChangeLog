@@ -100,3 +100,7 @@ Dec 30 2020
 * netCDF dataset range embedded into units definition of the time dimensions.
 * netCDF date range check during extraction. extractFrom and extractTo adjusted to be within data set range.
 * Version number updated to 0.1.50
+
+23 Nov 2025
+* Package tests passsed and testing action (r.yaml) running on Github
+* codecoverage report added to GitHub
