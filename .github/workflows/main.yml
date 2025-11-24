@@ -6,7 +6,7 @@
 # See https://github.com/r-lib/actions/tree/master/examples#readme for
 # additional example workflows available for the R community.
 
-name: Core_CI
+name: Core  testing script
 
 on:
   # workflow_call is a required field of the "on" property,

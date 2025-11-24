@@ -3,6 +3,6 @@ on: push
 
 jobs:
   ubuntu-latest-build:
-    uses: main.yml
+    uses: ./.github/workflows/main.yml
     with:
       os: ubuntu-latest
