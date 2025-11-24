@@ -5,8 +5,7 @@
 ![Ubuntu](https://github.com/peterson-tim-j/AWAPer/actions/workflows/ubuntu-latest.yml/badge.svg)
 ![Macos](https://github.com/peterson-tim-j/AWAPer/actions/workflows/macos-latest.yml/badge.svg)
 [![Codecov](https://img.shields.io/codecov/c/github/peterson-tim-j/AWAPer?logo=CODECOV)](https://app.codecov.io/github/peterson-tim-j/AWAPer) 
-[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/grand-total/AWAPer)](https://cran.r-project.org/package=AWAPer)  
-[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/AWAPer)](https://cran.r-project.org/package=AWAPer)
+[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/grand-total/AWAPer)](https://cran.r-project.org/package=AWAPer)  [![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/AWAPer)](https://cran.r-project.org/package=AWAPer)
 <!-- badges: end -->
 
 # _AWAPer_ - an R-package for catchment-weighted climate data anywhere in Australia
