@@ -104,3 +104,6 @@ Dec 30 2020
 23 Nov 2025
 * Package tests passsed and testing action (r.yaml) running on Github
 * codecoverage report added to GitHub
+
+24 Nov 2025
+* Tests added for three OS's (Windows, Ubuntu, Mac) plus badges for each.

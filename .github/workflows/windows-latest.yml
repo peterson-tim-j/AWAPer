@@ -1,0 +1,8 @@
+name: windows-latest
+on: push
+
+jobs:
+  windows-latest-build:
+    uses: ./.github/workflows/main.yml
+    with:
+      os: windows-latest
