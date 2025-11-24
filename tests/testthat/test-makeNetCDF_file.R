@@ -3,9 +3,6 @@ test_that("netCDF grid can be created",
     {
 
       Sys.setenv(R_TESTS="")
-
-      x = 10
-      expect_true(x>1,'Dummp test')
       expect_no_error(
         {
           # Set dates for building netCDFs and extracting data from yesterday to one week ago.
