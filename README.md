@@ -86,8 +86,6 @@ file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
 # Example 2. Extract point precip. data and check with osberved data.
 This example was developed by Ms Xinyang Fan (Uni. Melbourne) and shows how to extract point estimates of daily precipitation at four goundwater bore locations and at one rainfall gauge. The extracted data is then plotted. The rain gauge is also compared against the observed rain gauge. The latter shows that the results are unbiased, but minor differences do exist due to AWAP data having a 5x5 km grid-cell resolution. The plots below show (1) the locattions of the five sites (2) bar graphs of the daily precip. and (3) plots of the observed vs AWAPer estimated precip. at the rainfall gauge.
 
-Importantly, this example downloads the Australia 9-second DEM. This is ~3GB.
-
 ![Example 2. Site locations](https://user-images.githubusercontent.com/8623994/68077541-ee782700-fe19-11e9-93fa-c0eae4606af1.png)
 
 ![Example 2. Daily precip at sites](https://user-images.githubusercontent.com/8623994/68077652-9d693280-fe1b-11e9-9c2e-fbebce8013cd.png)
@@ -104,14 +102,6 @@ fnames = makeNetCDF_file(ncdfFilename ='AWAP_demo.nc',
               updateTo=as.Date("2010-10-01","%Y-%m-%d"),
               urlTmin=NA, urlTmax=NA, urlVprp=NA, urlSolarrad=NA)
 
-# Download and import the DEM if it's not in the working directory
-if (!file.exists('DEM.RData')) {
-  DEM_9s = getDEM()
-  save(DEM_9s,file="DEM.RData" )
-} else {
-  load('DEM.RData')
-}
-
 # Set coordinates to four bores locations and one rainfall gauge.
 coordinates.data = data.frame( ID =c('Bore-70015656','Bore-50038039','Bore-20057861','Bore-10084446','Rain-63005'),
                    Longitude = c(131.33588, 113.066933, 143.118263, 153.551875, 149.5559),
@@ -123,8 +113,7 @@ sp::coordinates(coordinates.data) <- ~Longitude + Latitude
 # Set projection to GDA94
 sp::proj4string(coordinates.data) = '+proj=longlat +ellps=GRS80'
 
-# Plot coordinates on top of DEM 9s
-raster::plot(DEM_9s)
+# Plot coordinates
 sp::plot(coordinates.data, add =T)
 with(coordinates.data, text(sp::coordinates(coordinates.data)[,1],sp::coordinates(coordinates.data)[,2],
                             labels = coordinates.data$ID, pos = 1))
@@ -192,9 +181,6 @@ This example calculates the catchment weighted precipitation at Bet Bet Creek (V
 makeNetCDF_file(ncdfFilename ='AWAP_demo.nc',ncdfSolarFilename='AWAP_solar_demo.nc', 
                 updateFrom=as.Date("2010-1-1","%Y-%m-%d"),updateTo=as.Date("2011-12-1","%Y-%m-%d"))
 
-# Download and import the DEM
-DEM_9s = getDEM()
-
 # Load example catchment boundaries.
 data("catchments")
 
@@ -206,16 +192,14 @@ data(constants,package='Evapotranspiration')
 climateData.ET.JensenHaise.var = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
                                                       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2010-1-1","%Y-%m-%d"),
                                                       extractTo=as.Date("2010-12-31","%Y-%m-%d"), locations=catchments[2,], 
-                                                      DEM=DEM_9s, ET.function='ET.JensenHaise',
-                                                      ET.timestep='daily', ET.constants=constants);
+                                                      ET.function='ET.JensenHaise', ET.timestep='daily', ET.constants=constants);
 
 # Extract catchment average data for Bet Bet Creek with 
 # the Mortons CRAE estimate of potential ET.
 climateData.ET.MortonCRAE.var = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
                                                      ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2010-1-1","%Y-%m-%d"),
                                                      extractTo=as.Date("2010-12-31","%Y-%m-%d"), locations=catchments[2,], 
-                                                     DEM=DEM_9s, ET.function='ET.MortonCRAE',
-                                                     ET.timestep='monthly', ET.constants=constants);
+                                                     ET.function='ET.MortonCRAE', ET.timestep='monthly', ET.constants=constants);
 
 # Set up start and end date indices for plotting
 srt.date = as.Date("2010-06-01","%Y-%m-%d")
@@ -278,7 +262,7 @@ legend("topleft", cex = 0.8, lwd = 2, bty = "n", inset = c(0.01, -0.01),
 
 # Example 4. Calculate evapotranspiration
 
-This example calculates and plot various estimates of evaportrnspiration using the netCDF data form the previous example. To do this, the Austrlia 9 second DEM is downloaded and two catchment boundaries are loaded from the package. The figure below shows the output plot from the example. It shows 10 different esitmates of area weighted evapotranspiration from 1/1/2010 to 31/12/2010 at catchment 407214 (Victoria, Australia).
+This example calculates and plot various estimates of evaportranspiration using the netCDF data form the previous example. To do this, two catchment boundaries are loaded from the package. The figure below shows the output plot from the example. It shows 10 different esitmates of area weighted evapotranspiration from 1/1/2010 to 31/12/2010 at catchment 407214 (Victoria, Australia).
 
 ![Example 4. ET plot](https://user-images.githubusercontent.com/8623994/64103416-8d9a8700-cdb5-11e9-977a-ea8fabdcfcf5.png)
 
@@ -289,9 +273,6 @@ setwd('~/')`
 # Make two netCDF files of AWAP data.
 makeNetCDF_file(ncdfFilename='AWAP_demo.nc', ncdfSolarFilename='AWAP_solar_demo.nc', 
                 updateFrom='2010-1-1',updateTo='2011-12-1')
-                
-# Download and import the DEM
-DEM_9s = getDEM()
 
 # Load example cacthment boundaries.
 data("catchments")
@@ -304,69 +285,62 @@ data(constants,package='Evapotranspiration')
 #----------------------------------------------
 climateData.ET.HargreavesSamani = extractCatchmentData(ncdfFilename='AWAP_demo.nc',   
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.HargreavesSamani',
-      ET.timestep = 'daily', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, spatial.function.name='IQR',
+      ET.function='ET.HargreavesSamani', ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.JensenHaise = extractCatchmentData(ncdfFilename='AWAP_demo.nc', 
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.JensenHaise',
-      ET.timestep = 'daily', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments,  spatial.function.name='IQR', 
+      ET.function='ET.JensenHaise', ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.Makkink = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc',extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.Makkink'
-      ET.timestep = 'daily', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments,  spatial.function.name='IQR', 
+      ET.function='ET.Makkink', ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.McGuinnessBordne = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.McGuinnessBordne',
-      ET.timestep = 'daily', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, spatial.function.name='IQR',
+      ET.function='ET.McGuinnessBordne', ET.timestep = 'daily', ET.constants= constants);
 
 climateData.ET.MortonCRAE = extractCatchmentData(ncdfFilename='AWAP_demo.nc', 
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
-      ET.timestep = 'monthly', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments,  spatial.function.name='IQR', 
+      ET.function='ET.MortonCRAE', ET.timestep = 'monthly', ET.constants= constants);
 
 climateData.ET.MortonCRAE.potentialET = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
-      ET.timestep = 'monthly', ET.Mortons.est='potential ET', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, spatial.function.name='IQR', 
+      ET.function='ET.MortonCRAE', ET.timestep = 'monthly', ET.Mortons.est='potential ET', 
+      ET.constants= constants);
 
 climateData.ET.MortonCRAE.wetarealET = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
-      ET.timestep = 'monthly', ET.Mortons.est='wet areal ET', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, spatial.function.name='IQR',
+      ET.function='ET.MortonCRAE', ET.timestep = 'monthly', ET.Mortons.est='wet areal ET', 
+      ET.constants= constants);
 
 climateData.ET.MortonCRAE.actualarealET = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc',extractFrom=as.Date("2009-1-1","%Y-%m-%d"), 
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRAE',
-      ET.timestep = 'monthly', ET.Mortons.est='actual areal ET', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, spatial.function.name='IQR',
+      ET.function='ET.MortonCRAE', ET.timestep = 'monthly', ET.Mortons.est='actual areal ET', 
+      ET.constants= constants);
 
 climateData.ET.MortonCRWE = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRWE',
-      ET.timestep = 'monthly', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, spatial.function.name='IQR',
+      ET.function='ET.MortonCRWE', ET.timestep = 'monthly', ET.constants= constants);
 
 climateData.ET.MortonCRWE.shallowLake = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.MortonCRWE',
-      ET.timestep = 'monthly', ET.Mortons.est = 'shallow lake ET', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"), locations=catchments, spatial.function.name='IQR', 
+      ET.function='ET.MortonCRWE', ET.timestep = 'monthly', ET.Mortons.est = 'shallow lake ET', 
+      ET.constants= constants);
 
 climateData.ET.Turc = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
       ncdfSolarFilename='AWAP_solar_demo.nc', extractFrom=as.Date("2009-1-1","%Y-%m-%d"),
-      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, 
-      spatial.function.name='IQR',DEM=DEM, ET.function='ET.Turc',
-      ET.timestep = 'daily', ET.constants= constants);
+      extractTo=as.Date("2010-12-1","%Y-%m-%d"),locations=catchments, spatial.function.name='IQR',
+      ET.function='ET.Turc', ET.timestep = 'daily', ET.constants= constants);
 
 # Plot the ET estimates for one of the catchmnts.
 #----------------------------------------
