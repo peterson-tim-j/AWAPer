@@ -58,18 +58,10 @@ The estimation of ET is undertaken within _AWAPer_ using the _evapotranspiration
 data(constants,package='Evapotranspiration')
 ```
 
-## Download and import the DEM
-The estimation of potential evapotranspiration (PET) using Morton's evapotranspiration requires estimation of the elevation throughout the catchment. Here, a 9 second resolution digital evaluation model (DEM) for Australia is downloaded. Importantly, this function downloads 3.2GB of data. To avoid reloading the DEM each time it is required, below it is saved for future reuse.
-```{r}
-DEM_9s = getDEM()
-save(DEM_9s, file='DEM.RDATA')
-```
-
 ## Map the catchment boundaries
 To check that the catchment boundaries are located as expected, they are plotted over the DEM using the _raster_ package.
 
 ```{r}
-raster::plot(DEM_9s)
 sp::plot(catchments, add =T)
 with(catchments[1,], text(sp::coordinates(catchments)[1,1],sp::coordinates(catchments)[1,2],
                             labels = catchments$CatchID[1], pos = 1))
@@ -111,10 +103,11 @@ Here the estimation of PET was undertaken using Morton's wet-environment areal e
 climateData.daily = extractCatchmentData(ncdfFilename=netCDF_filename,
                                         ncdfSolarFilename=netCDF_solar_filename,
                                         extractFrom=date.from, extractTo=date.to,
-                                        catchments=catchments, temporal.timestep = 'daily', temporal.function.name='sum',spatial.function.name='var',
+                                        catchments=catchments, temporal.timestep = 'daily',
+                                        temporal.function.name='sum',spatial.function.name='var',
                                         getTmin=T, getTmax=T, getVprp=T, getSolarrad=T, getET=T,
-                                        DEM=DEM_9s, ET.function='ET.MortonCRAE',
-                                        ET.timestep = 'monthly', ET.Mortons.est='wet areal ET', ET.constants= constants)
+                                        ET.function='ET.MortonCRAE', ET.timestep = 'monthly',
+                                        ET.Mortons.est='wet areal ET', ET.constants= constants)
 ```
 
 ## Plot the daily precipitation and PET
