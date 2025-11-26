@@ -11,11 +11,11 @@ test_that("netCDF grid can be created",
 
           # define temp direcory for netCDF files
           fdir = tempdir()
-          #setwd(fdir)
+          setwd(fdir)
 
           # Set names for netCDF files (in the system temp. directory).
-          ncdfFilename = file.path(fdir,'data.nc')
-          ncdfSolarFilename = file.path(fdir, 'solar.nc')
+          ncdfFilename = 'data.nc'
+          ncdfSolarFilename = 'solar.nc'
 
           # Build netCDF grids for all data but only over the defined time period.
           file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
