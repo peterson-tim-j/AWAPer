@@ -38,5 +38,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           name: testthat-results
           path: tests/testthat
