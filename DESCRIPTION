@@ -12,7 +12,8 @@ Imports: Evapotranspiration (>= 1.14), ncdf4, utils, raster, chron, sf, sp, zoo,
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    progress
 VignetteBuilder: knitr
 BugReports: https://github.com/peterson-tim-j/AWAPer/issues
 URL: https://github.com/peterson-tim-j/AWAPer
