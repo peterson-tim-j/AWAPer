@@ -32,10 +32,10 @@ test_that("netCDF grid can be created",
           data("catchments")
 
           # Extract catchment average monthly data P for Bet Bet Creek.
-          climateData= extractCatchmentData(ncdfFilename=ncdfFilename,
+          climateData.P= extractCatchmentData(ncdfFilename=ncdfFilename,
                                             ncdfSolarFilename=ncdfSolarFilename,
                                             extractFrom=startDate, extractTo=endDate,
-                                            locations=catchments[1,],
+                                            locations=catchments,
                                             getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
                                             temporal.timestep = 'monthly', temporal.function.name = 'sum',
                                             spatial.function.name='var');
@@ -43,23 +43,38 @@ test_that("netCDF grid can be created",
         message='Testing extraction of P monthly data.'
       )
 
-      # expect_no_error(
-      #   {
-      #     # Load the ET constants
-      #     data(constants,package='Evapotranspiration')
-      #
-      #     # Extract catchment average data for Bet Bet Creek with
-      #     # the Mortons CRAE estimate of potential ET.
-      #     climateData= extractCatchmentData(ncdfFilename=ncdfFilename,
-      #                                                          ncdfSolarFilename=ncdfSolarFilename,
-      #                                                          extractFrom=startDate, extractTo=endDate,
-      #                                                          locations=catchments[1,],
-      #                                                          temporal.timestep = 'monthly', temporal.function.name = 'sum',
-      #                                                          spatial.function.name='var',
-      #                                                          ET.function='ET.MortonCRAE',
-      #                                                          ET.timestep='monthly', ET.constants=constants);
-      #   },
-      #   message='Testing extraction of P monthly and PET data.'
-      # )
+      expect_no_error(
+        {
+          # Load the ET constants
+          data(constants,package='Evapotranspiration')
+
+          # Extract catchment average data for Bet Bet Creek with
+          # the Mortons CRAE estimate of potential ET.
+          climateData.P_PET= extractCatchmentData(ncdfFilename=ncdfFilename,
+                                                               ncdfSolarFilename=ncdfSolarFilename,
+                                                               extractFrom=startDate, extractTo=endDate,
+                                                               locations=catchments,
+                                                               temporal.timestep = 'monthly', temporal.function.name = 'sum',
+                                                               spatial.function.name='var',
+                                                               ET.function='ET.MortonCRAE',
+                                                               ET.timestep='monthly', ET.constants=constants);
+        },
+        message='Testing extraction of P monthly and PET data.'
+      )
+
+      # Check outputs are data frames
+      expect_type(climateData.P, 'list')
+      expect_type(climateData.P_PET, 'list')
+
+      # Check dimensions of outputs
+      expect_true(ncol(climateData.P$catchmentTemporal.sum) == 5, 'Test expected number of columns in precip. data')
+      expect_true(ncol(climateData.P_PET$catchmentTemporal.sum) == 11, 'Test expected number of columns in precip. and PET area weighted data')
+
+      expect_true(nrow(climateData.P$catchmentTemporal.sum) == 4, 'Test expected number of rows in precip. point data')
+      expect_true(nrow(climateData.P_PET$catchmentTemporal.sum) == 4, 'Test expected number of rows in precip. and PET area weighted data')
+
+      # check data is finite
+      expect_true(all(is.finite(climateData.P$catchmentTemporal.sum[,5])), 'Test precip results are finite')
+      expect_true(all(is.finite(climateData.P_PET$catchmentTemporal.sum[,11])), 'Test PET results are finite')
     }
 )
