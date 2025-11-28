@@ -33,11 +33,12 @@ jobs:
       - name: Run tests and compute coverage
         run: |
           Rscript -e 'covr::codecov()'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results (Artifacts)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           name: testthat-results
           path: tests/testthat
