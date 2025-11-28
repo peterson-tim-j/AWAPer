@@ -317,7 +317,7 @@ extractCatchmentData <- function(
     message('WARNING: The projection string of the locations is NA. Setting to +proj=longlat +ellps=GRS80.')
     sp::proj4string(locations) = '+proj=longlat +ellps=GRS80'
   }
-  if (sp::proj4string(locations) != '+proj=longlat +ellps=GRS80') {
+  if (!grepl('+proj=longlat', sp::proj4string(locations)) || !grepl('+ellps=GRS80', sp::proj4string(locations))) {
     message('WARNING: The projection string of the locations does not appear to be +proj=longlat +ellps=GRS80. Attempting to transform coordinates...')
     locations = sp::spTransform(locations,sp::CRS('+proj=longlat +ellps=GRS80'))
   }
