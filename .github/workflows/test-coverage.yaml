@@ -28,9 +28,14 @@ jobs:
           needs: coverage
 
       - name: Run tests and generate coverage
-        run: |
-          Rscript -e 'cov <- covr::package_coverage()'
-          Rscript -e 'covr::codecov(coverage = cov)'
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          print(cov)
+          covr::to_cobertura(cov)
+        shell: Rscript {0}
 
       # Optional: Upload coverage artifact for GitHub inspection
       - name: Save coverage artifacts
