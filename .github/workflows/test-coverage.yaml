@@ -24,7 +24,8 @@ jobs:
       - name: Install R package dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: covr
+          extra-packages: any::covr, any::xml2
+          needs: coverage
 
       - name: Run tests and generate coverage
         run: |
