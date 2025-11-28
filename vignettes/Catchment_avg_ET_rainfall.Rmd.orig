@@ -58,17 +58,6 @@ The estimation of ET is undertaken within _AWAPer_ using the _evapotranspiration
 data(constants,package='Evapotranspiration')
 ```
 
-## Map the catchment boundaries
-To check that the catchment boundaries are located as expected, they are plotted over the DEM using the _raster_ package.
-
-```{r}
-sp::plot(catchments, add =T)
-with(catchments[1,], text(sp::coordinates(catchments)[1,1],sp::coordinates(catchments)[1,2],
-                            labels = catchments$CatchID[1], pos = 1))
-with(catchments[2,], text(sp::coordinates(catchments)[2,1],sp::coordinates(catchments)[2,2],
-                            labels = catchments$CatchID[2], pos = 2))
-```
-
 ## Extract and map weekly total precipitation
 Here two features of _AWAPer_ are demonstrated: (i) the temporal aggregation of data, here set to weekly and (ii) the extraction of catchment spatial patterns. The first command extracts only precipitation data over the two catchments and calculates the weekly totals. The latter commands map the weekly precipitation.
 
@@ -84,9 +73,11 @@ To extract the weekly total precipitation, _temporal.timestep_ is set to _'weekl
 weeklyPrecipData = extractCatchmentData(ncdfFilename=netCDF_filename,
                                          ncdfSolarFilename=netCDF_solar_filename,
                                          extractFrom=date.from, extractTo=date.to,
-                                         catchments=catchments,
-                                         getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,spatial.function.name = '',
-                                         temporal.timestep = 'weekly', temporal.function.name = 'sum')
+                                         locations=catchments,
+                                         getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
+                                         spatial.function.name = '',
+                                         temporal.timestep = 'weekly',
+                                         temporal.function.name = 'sum')
 
 
 v = list("sp.polygons", catchments, col = "red",first=FALSE)
@@ -103,7 +94,7 @@ Here the estimation of PET was undertaken using Morton's wet-environment areal e
 climateData.daily = extractCatchmentData(ncdfFilename=netCDF_filename,
                                         ncdfSolarFilename=netCDF_solar_filename,
                                         extractFrom=date.from, extractTo=date.to,
-                                        catchments=catchments, temporal.timestep = 'daily',
+                                        locations=catchments, temporal.timestep = 'daily',
                                         temporal.function.name='sum',spatial.function.name='var',
                                         getTmin=T, getTmax=T, getVprp=T, getSolarrad=T, getET=T,
                                         ET.function='ET.MortonCRAE', ET.timestep = 'monthly',
@@ -135,8 +126,11 @@ for (i in 1:length(catchments$CatchID)) {
   # Rainfall
   plot(climateData.daily.date,
        climateData.daily$catchmentTemporal.sum$precip_mm[filt],
-       type = "h", col = "#e31a1c", lwd = 3, mgp = c(2, 0.5, 0), ylim = c(0, 80), main=paste('Catchment ID',catchments$CatchID[i]),
-       ylab = "", xlab = "2010", xaxs = "i", yaxt = "n", bty = "l", yaxs = "i")
+       type = "h", col = "#e31a1c", lwd = 3, mgp = c(2, 0.5, 0),
+       main=paste('Catchment ID',catchments$CatchID[i]),
+       ylim = c(0, 80), ylab = "", xlab = "2010", xaxs = "i",
+       yaxt = "n", bty = "l", yaxs = "i")
+
   axis(side = 2, mgp = c(2, 0.5, 0), line = 0.5, at = seq(from = 0, to = 80, by = 20),
        labels = c("0", "20", "40", "60", "80mm"), col = "#e31a1c", col.axis = "#e31a1c")
 
@@ -152,9 +146,12 @@ for (j in 1:length(climateData.daily.date)) {
 
 # Plot evap data.
 par(new = TRUE)
-plot(climateData.daily.date, climateData.daily$catchmentTemporal.sum$ET_mm[filt], col = "#bc80bd", lwd = 2, ylab = "",
-     ylim = c(0, 4), lty = 1, xlab = "", xaxs = "i", yaxt = "n", xaxt = "n", type = "l", bty = "n", yaxs = "i")
-axis(side = 2, line = 2.3, mgp = c(2, 0.5, 0), labels = c("0", "1", "2", "3", "4mm"), at = seq(from = 0, to = 4, by = 1), col = "#bc80bd", col.axis = "#bc80bd")
+plot(climateData.daily.date, climateData.daily$catchmentTemporal.sum$ET_mm[filt],
+    col = "#bc80bd", lwd = 2, ylab = "", ylim = c(0, 4), lty = 1,
+    xlab = "", xaxs = "i", yaxt = "n", xaxt = "n", type = "l", bty = "n", yaxs = "i")
+
+axis(side = 2, line = 2.3, mgp = c(2, 0.5, 0), labels = c("0", "1", "2", "3", "4mm"),
+  at = seq(from = 0, to = 4, by = 1), col = "#bc80bd", col.axis = "#bc80bd")
 
 # Legend
 legend("topleft", cex = 0.8, lwd = 2, bty = "n", inset = c(0.01, -0.01),
