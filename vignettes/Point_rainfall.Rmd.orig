@@ -19,9 +19,12 @@ options(tibble.print_min = 4L, tibble.print_max = 4L)
 ```{r setup}
 library(AWAPer, warn.conflicts = FALSE)
 ```
+This example shows how to build the required data files and then extract the daily rainfall at two sites. Here, one of the sites is at a rainfall gauge and the results are compared against observations.
 
 ## Make netCDF file
-The first step is to create the netCDF files. Here only one netCDF file is created and only for precipitation data (as defined by the following URLS for the source data being set to NA: urlTmin, urlTmax, urlVprp, urlSolarrad) and only between the dates _updateTo_ and _updateTo_. If the latter two dates were not input then data would be downloaded from 1/1/1900 to yesterday. The netCDF file contains grids of daily rainfall for all of Australia and is used below to extract data at points of interest. Often users run _makeNetCDF_file_ once to build netCDF data files that contain all variables over the entire record length (which requires ~5GB disk storage) and then use the netCDFs grids for multiple projects, rather than re-building the netCDF for each project. Also, if _makeNetCDF_file_ is run with the the netCDF file names pointing to existing files and _updateFrom=NA_ then the netCDF files will be updated to yesterday.
+The first step is to create the netCDF files. Here only one netCDF file is created and only for precipitation data (as defined by the following URLS for the source data being set to NA: urlTmin, urlTmax, urlVprp, urlSolarrad) and only between the dates _updateTo_ and _updateTo_. If the latter two dates were not input then data would be downloaded from 1/1/1900 to yesterday.
+
+The netCDF file contains grids of daily rainfall for all of Australia and is used below to extract data at points of interest. Often users run _makeNetCDF_file_ once to build netCDF data files that contain all variables over the entire record length (which requires ~5GB disk storage) and then use the netCDFs grids for multiple projects, rather than re-building the netCDF for each project. Also, if _makeNetCDF_file_ is run with the the netCDF file names pointing to existing files and _updateFrom=NA_ then the netCDF files will be updated to yesterday.
 
 ```{r}
 fnames = makeNetCDF_file(ncdfFilename ='AWAP_demo.nc',
@@ -42,13 +45,15 @@ sp::coordinates(coordinates.data) <- ~Longitude + Latitude
 sp::proj4string(coordinates.data) = '+proj=longlat +ellps=GRS80 +no_defs'
 ```
 
-## Extract daily precipitation data 
-Extract the daily precipitation at the two locations. The data is extracted from the netCDF file _ncdfFilename_ and between the dates _extractFrom_ and _extractTo_. The other AWAPer variables are not extracted because _getTmin_, _getTmax_, _getVprp_, _getSolarrad_ and _getET_ are set to _F_. Note the netCDF file _ncdfFilename_ must be in the working directory or the full file path must be given.
+## Extract daily precipitation data
+Extract the daily precipitation at the two locations. The data is extracted from the netCDF file _ncdfFilename_ and between the dates _extractFrom_ and _extractTo_.
+
+The other AWAPer variables are not extracted because _getTmin_, _getTmax_, _getVprp_, _getSolarrad_ and _getET_ are set to _F_. Note the netCDF file _ncdfFilename_ must be in the working directory or the full file path must be given.
 ```{r}
 climateData.data = extractCatchmentData(ncdfFilename='AWAP_demo.nc',
                                         extractFrom=as.Date("2010-08-01","%Y-%m-%d"),
                                         extractTo=as.Date("2010-10-01","%Y-%m-%d"),
-                                        catchments=coordinates.data,
+                                        locations=coordinates.data,
                                         getTmin=F, getTmax=F, getVprp=F, getSolarrad=F, getET=F)
 ```
 
@@ -61,7 +66,7 @@ for (i in 1:nrow(coordinates.data)){
 
   data2plot = climateData.data$precip_mm[filt]
   dates = ISOdate(climateData.data$year[filt],climateData.data$month[filt],climateData.data$day[filt])
-  
+
   if (i==1){
     plot(dates, data2plot, main='Extracted precip.', ylab='Precip [mm/d]', xlab='Date [day/month]', type='l',lty = i+1, cex=0.2)
   } else {
