@@ -1,0 +1,55 @@
+---
+title: "Make and update source data grids"
+description: >
+  This vignette shows how to build the netCDF data file and then
+  update it to new start and end dates.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Make source data grids}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+``` r
+library(AWAPer, warn.conflicts = FALSE)
+```
+This example shows how to build the required data files and then update them.
+
+## Make netCDF file
+This example shows the steps required to build the netCDF data grid files.
+
+First, let's define the dates for the data grids. Here the data grids are created for data between the dates _updateTo_ and _updateTo_. If the latter two dates were not input then data would be downloaded from 1/1/1900 to yesterday.
+
+```{r}
+startDate = as.Date(Sys.Date()-15,"%Y-%m-%d")
+endDate = as.Date(Sys.Date()-5,"%Y-%m-%d")
+```
+
+Next the file name for the netCDF grids need to be defined. Here we'll just use temporary files. You should change this to a non-temporary file name and folder.
+```{r}
+# Set names for netCDF files (in the system temp. directory).
+ncdfFilename = tempfile(fileext='.nc')
+ncdfSolarFilename = tempfile(fileext='.nc')
+```
+
+Now we're ready to download and build the netCDF grids.
+
+The netCDF data files contains grids of daily rainfall, temperature, vapour pressure deficit and solar radiation for all of Australia.
+```{r}
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+             ncdfSolarFilename=ncdfSolarFilename,
+             updateFrom=startDate, updateTo=endDate)
+```
+
+## Update existing data grids
+
+Now that we've built the above files, the updating can be demonstrated. Here we'll updating the data grids to one day ago.
+
+Often users run _makeNetCDF_file_ once to build netCDF data files that contain all variables over the entire record length (which requires ~5GB disk storage) and then use the netCDFs grids for multiple projects, rather than re-building the netCDF for each project.
+
+Also, if _makeNetCDF_file_ is run with the the file names pointing to existing files and _updateFrom=NA_ then the netCDF files will be updated to yesterday.
+```{r}
+file.names = makeNetCDF_file(ncdfFilename=ncdfFilename,
+             ncdfSolarFilename=ncdfSolarFilename,
+             updateFrom=NA)
+```

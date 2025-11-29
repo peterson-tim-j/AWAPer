@@ -10,18 +10,19 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = T, comment = "#>")
+options(tibble.print_min = 4L, tibble.print_max = 4L)
+```
 
-
-
-``` r
+```{r setup}
 library(AWAPer, warn.conflicts = FALSE)
 ```
 
 ## Load extra packages for the vignette
 The mapping of the results below requires the following packages.
 
-
-``` r
+```{r}
 library(raster)
 library(sp)
 ```
@@ -33,8 +34,7 @@ If the latter two dates were not input then data would be downloaded from 1/1/19
 
 Often users run _makeNetCDF_file_ once to build netCDF data files that contain all variables over the entire record length (which requires ~5GB disk storage) and then use the netCDFs grids for multiple projects, rather than re-building the netCDF for each project. Also, if _makeNetCDF_file_ is run with the the netCDF file names pointing to existing files and _updateFrom=NA_ then the netCDF files will be updated to yesterday.
 
-
-``` r
+```{r}
 netCDF_filename = 'AWAP_demo.nc'
 netCDF_solar_filename = 'AWAP_solar_demo.nc'
 date.from = as.Date("2010-08-01","%Y-%m-%d")
@@ -44,158 +44,17 @@ fnames = makeNetCDF_file(ncdfFilename = netCDF_filename,
                          ncdfSolarFilename = netCDF_solar_filename,
                          updateFrom = date.from,
                          updateTo = date.to)
-#> Starting to update both netCDF files.
-#> ... Testing downloading of AWAP precip. grid
-#> ... Getting grid gemoetry from file.
-#> ... Deleting C:/Users/tpet0008/Documents/AWAPer/vignettes/precip.20000101.grid
-#> ... Testing downloading of AWAP tmin grid
-#> ... Testing downloading of AWAP tmax grid
-#> ... Testing downloading of AWAP vapour pressure grid
-#> ... Testing downloading of AWAP solar grid
-#> ... Getting grid gemoetry from file.
-#> ... Deleting C:/Users/tpet0008/Documents/AWAPer/vignettes/solarrad.20000101.grid
-#> ... NetCDF data will be  updated from  2010-08-01  to  2010-10-01
-#> ... Starting to add data AWAP netcdf file.
-#>     ... Working on grid time point: 2010-08-01
-#>     ... Working on grid time point: 2010-08-02
-#>     ... Working on grid time point: 2010-08-03
-#>     ... Working on grid time point: 2010-08-04
-#>     ... Working on grid time point: 2010-08-05
-#>     ... Working on grid time point: 2010-08-06
-#>     ... Working on grid time point: 2010-08-07
-#>     ... Working on grid time point: 2010-08-08
-#>     ... Working on grid time point: 2010-08-09
-#>     ... Working on grid time point: 2010-08-10
-#>     ... Working on grid time point: 2010-08-11
-#>     ... Working on grid time point: 2010-08-12
-#>     ... Working on grid time point: 2010-08-13
-#>     ... Working on grid time point: 2010-08-14
-#>     ... Working on grid time point: 2010-08-15
-#>     ... Working on grid time point: 2010-08-16
-#>     ... Working on grid time point: 2010-08-17
-#>     ... Working on grid time point: 2010-08-18
-#>     ... Working on grid time point: 2010-08-19
-#>     ... Working on grid time point: 2010-08-20
-#>     ... Working on grid time point: 2010-08-21
-#>     ... Working on grid time point: 2010-08-22
-#>     ... Working on grid time point: 2010-08-23
-#>     ... Working on grid time point: 2010-08-24
-#>     ... Working on grid time point: 2010-08-25
-#>     ... Working on grid time point: 2010-08-26
-#>     ... Working on grid time point: 2010-08-27
-#>     ... Working on grid time point: 2010-08-28
-#>     ... Working on grid time point: 2010-08-29
-#>     ... Working on grid time point: 2010-08-30
-#>     ... Working on grid time point: 2010-08-31
-#>     ... Working on grid time point: 2010-09-01
-#>     ... Working on grid time point: 2010-09-02
-#>     ... Working on grid time point: 2010-09-03
-#>     ... Working on grid time point: 2010-09-04
-#>     ... Working on grid time point: 2010-09-05
-#>     ... Working on grid time point: 2010-09-06
-#>     ... Working on grid time point: 2010-09-07
-#>     ... Working on grid time point: 2010-09-08
-#>     ... Working on grid time point: 2010-09-09
-#>     ... Working on grid time point: 2010-09-10
-#>     ... Working on grid time point: 2010-09-11
-#>     ... Working on grid time point: 2010-09-12
-#>     ... Working on grid time point: 2010-09-13
-#>     ... Working on grid time point: 2010-09-14
-#>     ... Working on grid time point: 2010-09-15
-#>     ... Working on grid time point: 2010-09-16
-#>     ... Working on grid time point: 2010-09-17
-#>     ... Working on grid time point: 2010-09-18
-#>     ... Working on grid time point: 2010-09-19
-#>     ... Working on grid time point: 2010-09-20
-#>     ... Working on grid time point: 2010-09-21
-#>     ... Working on grid time point: 2010-09-22
-#>     ... Working on grid time point: 2010-09-23
-#>     ... Working on grid time point: 2010-09-24
-#>     ... Working on grid time point: 2010-09-25
-#>     ... Working on grid time point: 2010-09-26
-#>     ... Working on grid time point: 2010-09-27
-#>     ... Working on grid time point: 2010-09-28
-#>     ... Working on grid time point: 2010-09-29
-#>     ... Working on grid time point: 2010-09-30
-#>     ... Working on grid time point: 2010-10-01
-#> ... NetCDF Solar data will be  updated from  2010-08-01  to  2010-10-01
-#> ... Starting to add data AWAP Solar netcdf file.
-#>     ... Working on solar grid time point: 2010-08-01
-#>     ... Working on solar grid time point: 2010-08-02
-#>     ... Working on solar grid time point: 2010-08-03
-#>     ... Working on solar grid time point: 2010-08-04
-#>     ... Working on solar grid time point: 2010-08-05
-#>     ... Working on solar grid time point: 2010-08-06
-#>     ... Working on solar grid time point: 2010-08-07
-#>     ... Working on solar grid time point: 2010-08-08
-#>     ... Working on solar grid time point: 2010-08-09
-#>     ... Working on solar grid time point: 2010-08-10
-#>     ... Working on solar grid time point: 2010-08-11
-#>     ... Working on solar grid time point: 2010-08-12
-#>     ... Working on solar grid time point: 2010-08-13
-#>     ... Working on solar grid time point: 2010-08-14
-#>     ... Working on solar grid time point: 2010-08-15
-#>     ... Working on solar grid time point: 2010-08-16
-#>     ... Working on solar grid time point: 2010-08-17
-#>     ... Working on solar grid time point: 2010-08-18
-#>     ... Working on solar grid time point: 2010-08-19
-#>     ... Working on solar grid time point: 2010-08-20
-#>     ... Working on solar grid time point: 2010-08-21
-#>     ... Working on solar grid time point: 2010-08-22
-#>     ... Working on solar grid time point: 2010-08-23
-#>     ... Working on solar grid time point: 2010-08-24
-#>     ... Working on solar grid time point: 2010-08-25
-#>     ... Working on solar grid time point: 2010-08-26
-#>     ... Working on solar grid time point: 2010-08-27
-#>     ... Working on solar grid time point: 2010-08-28
-#>     ... Working on solar grid time point: 2010-08-29
-#>     ... Working on solar grid time point: 2010-08-30
-#>     ... Working on solar grid time point: 2010-08-31
-#>     ... Working on solar grid time point: 2010-09-01
-#>     ... Working on solar grid time point: 2010-09-02
-#>     ... Working on solar grid time point: 2010-09-03
-#>     ... Working on solar grid time point: 2010-09-04
-#>     ... Working on solar grid time point: 2010-09-05
-#>     ... Working on solar grid time point: 2010-09-06
-#>     ... Working on solar grid time point: 2010-09-07
-#>     ... Working on solar grid time point: 2010-09-08
-#>     ... Working on solar grid time point: 2010-09-09
-#>     ... Working on solar grid time point: 2010-09-10
-#>     ... Working on solar grid time point: 2010-09-11
-#>     ... Working on solar grid time point: 2010-09-12
-#>     ... Working on solar grid time point: 2010-09-13
-#>     ... Working on solar grid time point: 2010-09-14
-#>     ... Working on solar grid time point: 2010-09-15
-#>     ... Working on solar grid time point: 2010-09-16
-#>     ... Working on solar grid time point: 2010-09-17
-#>     ... Working on solar grid time point: 2010-09-18
-#>     ... Working on solar grid time point: 2010-09-19
-#>     ... Working on solar grid time point: 2010-09-20
-#>     ... Working on solar grid time point: 2010-09-21
-#>     ... Working on solar grid time point: 2010-09-22
-#>     ... Working on solar grid time point: 2010-09-23
-#>     ... Working on solar grid time point: 2010-09-24
-#>     ... Working on solar grid time point: 2010-09-25
-#>     ... Working on solar grid time point: 2010-09-26
-#>     ... Working on solar grid time point: 2010-09-27
-#>     ... Working on solar grid time point: 2010-09-28
-#>     ... Working on solar grid time point: 2010-09-29
-#>     ... Working on solar grid time point: 2010-09-30
-#>     ... Working on solar grid time point: 2010-10-01
-#> Data construction FINISHED.
 ```
 
 ## Load a catchment boundary
 The meteorological data is to be extracted for two catchments. Here the catchment boundaries built into the package are loaded. However, shape files of polygons can easily be used once imported into R, which can be done using _rgdal::readOGR()_. Here the data is imported into the _catchments_ variable.
-
-``` r
+```{r}
 data("catchments")
 ```
 
 ## Get the ET constants
 The estimation of ET is undertaken within _AWAPer_ using the _evapotranspiration_ package. It requires a set of constants, which are built into _AWAPer_ and loaded as follows.
-
-``` r
+```{r}
 data(constants,package='Evapotranspiration')
 ```
 
@@ -210,32 +69,20 @@ To extract the spatial data, and not some statistic of the spatial data such as 
 
 To extract the weekly total precipitation, _temporal.timestep_ is set to _'weekly'_  and _temporal.function.name_ to _'sum'_. For the former, the options are _daily_, _weekly_, _monthly_, _quarterly_ and _annual_. For the latter, any built-in function or user-defined function that accepts a single vector of data and returns a single number should work.
 
-
-``` r
+```{r}
 weeklyPrecipData = extractCatchmentData(ncdfFilename=netCDF_filename,
                                          ncdfSolarFilename=netCDF_solar_filename,
                                          extractFrom=date.from, extractTo=date.to,
                                          locations=catchments,
-                                         getTmin = F, getTmax = F, getVprp = F, 
-                                         getSolarrad = F, getET = F,
+                                         getTmin = F, getTmax = F, getVprp = F, getSolarrad = F, getET = F,
                                          spatial.function.name = '',
                                          temporal.timestep = 'weekly',
                                          temporal.function.name = 'sum')
-#> Extraction data summary:
-#>     NetCDF non-solar radiation climate data exists from 2010-08-01 to 2010-10-01
-#>     Data will be extracted from  2010-08-01  to  2010-10-01  at  2  locations
-#> Starting data extraction:
-#> ... Building catchment weights
-#> ... Starting to extract data across all locations:
-#> ... Calculating catchment weighted daily data.
-#> Data extraction FINISHED..
 
 
 v = list("sp.polygons", catchments, col = "red",first=FALSE)
 sp::spplot(weeklyPrecipData,2:ncol(weeklyPrecipData), sp.layout = list(v))
 ```
-
-![Weekly total rainfall maps.](figure/unnamed-chunk-6-1.png)
 
 
 ## Extract daily precipitation and PET data
@@ -243,8 +90,7 @@ Here the daily area weighted average precipitation and PET is extracted across t
 
 Here the estimation of PET was undertaken using Morton's wet-environment areal evapotranspiration (other options are available). The use of Morton's CREA formulation is defined by setting the _ET.function_ variable to _'ET.MortonCRAE'_. The calculation of the areal wet environment PET is defined by setting Morton's specific variable _ET.Mortons.est_ to _'wet areal ET'_ (note, other options exist within _AWAPer_ for both variables). Lastly, following https://hess.copernicus.org/articles/17/1331/2013/hess-17-1331-2013.pdf, here Morton's PET is calculated at a monthly timestep (not daily) to improve its reliability. The monthly estimate is then interpolated to daily.
 
-
-``` r
+```{r}
 climateData.daily = extractCatchmentData(ncdfFilename=netCDF_filename,
                                         ncdfSolarFilename=netCDF_solar_filename,
                                         extractFrom=date.from, extractTo=date.to,
@@ -253,33 +99,12 @@ climateData.daily = extractCatchmentData(ncdfFilename=netCDF_filename,
                                         getTmin=T, getTmax=T, getVprp=T, getSolarrad=T, getET=T,
                                         ET.function='ET.MortonCRAE', ET.timestep = 'monthly',
                                         ET.Mortons.est='wet areal ET', ET.constants= constants)
-#> Extraction data summary:
-#>     NetCDF non-solar radiation climate data exists from 2010-08-01 to 2010-10-01
-#>     NetCDF solar radiation data exists from 2010-08-01 to 2010-10-01
-#>     Data will be extracted from  2010-08-01  to  2010-10-01  at  2  locations
-#> Starting data extraction:
-#> ... Building catchment weights
-#> ... Extracted DEM elevations from AWS.
-#> 
- Accessing raster elevation [====================>----]  83%
- Accessing raster elevation [=========================] 100%
-#> Mosaicing & Projecting
-#> Note: Elevation units are in meters
-#> ... Starting to extract data across all locations:
-#> ... Calculating mean daily solar radiation <1990-1-1
-#> ... Linearly interpolating gaps in daily solar.
-#> ... Calculating catchment weighted daily data.
-#>            ... Calculating PET for grid cell 1  of  23
-#>            ... Calculating PET for grid cell 1  of  26
-#>            ... Calculating PET for grid cell 25  of  26
-#> Data extraction FINISHED..
 ```
 
 ## Plot the daily precipitation and PET
 Here time series of the extracted daily precipitation and PET for each catchment are plotted. The precipitation plots show both the area weighted estimate and the spatial variability on each day (as +/- one standard deviation).
 
-
-``` r
+```{r}
 # Change the plot margins and setup two rows of plots
 par(mfrow=c(2,1), mar =  c(5, 7.5, 4, 2.7) + 0.1)
 
@@ -337,5 +162,3 @@ legend("topleft", cex = 0.8, lwd = 2, bty = "n", inset = c(0.01, -0.01),
 
 }
 ```
-
-![Rainfall and ET.Morton CRAE PET at a monthly timestep.](figure/unnamed-chunk-8-1.png)
